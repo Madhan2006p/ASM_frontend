@@ -1,0 +1,195 @@
+/* ── Card Wrapper ───────────────────────────────── */
+.recent-assets {
+  padding: 0;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────── */
+.table-header {
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(59,130,246,0.05), transparent);
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.count-label {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.2);
+  color: #93C5FD;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+}
+
+/* ── Table ──────────────────────────────────────── */
+.table-container {
+  overflow-x: auto;
+}
+
+.assets-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.assets-table th {
+  padding: 0.7rem 1.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94B8D8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(6,13,30,0.6);
+  white-space: nowrap;
+}
+
+.assets-table td {
+  padding: 0.9rem 1.25rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.assets-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-row:hover td {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Cells ──────────────────────────────────────── */
+.asset-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.asset-icon {
+  color: #60A5FA;
+  flex-shrink: 0;
+}
+
+.asset-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.78rem;
+}
+
+.location-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.flag {
+  font-size: 1rem;
+}
+
+/* ── Pagination ─────────────────────────────────── */
+.pagination-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-dots .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-dots .dot:hover {
+  background-color: rgba(59,130,246,0.35);
+}
+
+.pagination-dots .dot.active {
+  background-color: #3B82F6;
+  width: 22px;
+  border-radius: 4px;
+  border-color: #3B82F6;
+  box-shadow: 0 0 8px rgba(59,130,246,0.5);
+}
+
+/* ── Light mode ─────────────────────────────────── */
+.light-mode .recent-assets {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border-color: rgba(37,99,235,0.12);
+}
+
+.light-mode .table-header {
+  background: rgba(37,99,235,0.03);
+}
+
+.light-mode .section-title {
+  color: #0F172A;
+}
+
+.light-mode .count-label {
+  background: rgba(37,99,235,0.08);
+  border-color: rgba(37,99,235,0.2);
+  color: #2563EB;
+}
+
+.light-mode .assets-table th {
+  background-color: #F1F5F9;
+  color: #475569;
+  border-bottom-color: rgba(37,99,235,0.1);
+}
+
+.light-mode .assets-table td {
+  color: #334155;
+  border-bottom-color: rgba(37,99,235,0.08);
+}
+
+.light-mode .table-row:hover td {
+  background-color: #EFF6FF;
+  color: #0F172A;
+}
+
+.light-mode .asset-name {
+  color: #0F172A;
+}
+
+.light-mode .asset-icon {
+  color: #2563EB;
+}
+
+.light-mode .pagination-dots .dot {
+  background-color: #CBD5E1;
+  border-color: #E2E8F0;
+}
+
+.light-mode .pagination-dots .dot.active {
+  background-color: #2563EB;
+  border-color: #2563EB;
+  box-shadow: 0 0 8px rgba(37,99,235,0.4);
+}

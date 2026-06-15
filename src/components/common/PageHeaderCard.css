@@ -1,0 +1,189 @@
+/* ╔══════════════════════════════════════════════════════╗
+   ║   PAGE HEADER CARD  — dark default, light via CSS  ║
+   ╚══════════════════════════════════════════════════════╝ */
+
+/* ── DARK (default) ───────────────────────────── */
+.phc-container {
+  background: linear-gradient(135deg, #0D1F40 0%, #0A1628 60%, #071020 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(59,130,246,0.15);
+  padding: 1.25rem 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.phc-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #3B82F6 40%, #6366F1 60%, transparent 100%);
+}
+
+.phc-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(59,130,246,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+.phc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(59,130,246,0.35);
+  background: rgba(59,130,246,0.1);
+  color: #93C5FD;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.phc-badge .dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #3B82F6;
+  box-shadow: 0 0 5px rgba(59,130,246,0.8);
+  animation: phcPulse 2s ease-in-out infinite;
+}
+
+@keyframes phcPulse {
+  0%, 100% { box-shadow: 0 0 3px rgba(59,130,246,0.4); }
+  50%       { box-shadow: 0 0 9px rgba(59,130,246,0.9); }
+}
+
+.phc-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.phc-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #EFF6FF;
+  margin-bottom: 0.2rem;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.phc-subtitle {
+  font-size: 0.825rem;
+  color: #93C5FD;
+  font-weight: 400;
+}
+
+.phc-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.phc-stats-grid {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.phc-stat-card {
+  flex: 1;
+  min-width: 130px;
+  background: var(--card-bg, rgba(255,255,255,0.03));
+  border-radius: 10px;
+  padding: 0.875rem 1.125rem;
+  border: 1px solid var(--card-border, rgba(59,130,246,0.12));
+  display: flex;
+  flex-direction: column;
+  transition: all 0.22s ease;
+  cursor: default;
+  box-shadow: inset 0 0 10px var(--card-glow, transparent), 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.phc-stat-card:hover {
+  background: var(--card-bg, rgba(255,255,255,0.06));
+  border-color: var(--card-border, rgba(59,130,246,0.45));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--card-glow, rgba(59,130,246,0.15)), inset 0 0 12px var(--card-glow, transparent);
+  filter: brightness(1.1);
+}
+
+.phc-stat-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: rgba(147,197,253,0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.4rem;
+}
+
+.phc-stat-val {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #EFF6FF;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.phc-stat-sub {
+  font-size: 0.72rem;
+  color: #93C5FD;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* ── LIGHT MODE — scoped to .light-mode ancestor ── */
+.light-mode .phc-container {
+  background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 60%, #EFF6FF 100%) !important;
+  border-color: rgba(37,99,235,0.15) !important;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.08) !important;
+}
+
+.light-mode .phc-container::before {
+  background: linear-gradient(90deg, transparent 0%, #3B82F6 40%, #6366F1 60%, transparent 100%) !important;
+}
+
+.light-mode .phc-badge {
+  border-color: rgba(37,99,235,0.3) !important;
+  background: rgba(37,99,235,0.1) !important;
+  color: #1D4ED8 !important;
+}
+
+.light-mode .phc-badge .dot {
+  background-color: #2563EB !important;
+  box-shadow: 0 0 5px rgba(37,99,235,0.7) !important;
+}
+
+.light-mode .phc-title  { color: #0F172A !important; }
+.light-mode .phc-subtitle { color: #2563EB !important; }
+
+.light-mode .phc-stat-card {
+  background: rgba(255,255,255,0.7) !important;
+  border-color: rgba(37,99,235,0.12) !important;
+  backdrop-filter: blur(4px);
+}
+
+.light-mode .phc-stat-card:hover {
+  background: rgba(255,255,255,0.9) !important;
+  border-color: rgba(37,99,235,0.25) !important;
+  box-shadow: 0 4px 14px rgba(37,99,235,0.1) !important;
+}
+
+.light-mode .phc-stat-label { color: rgba(37,99,235,0.7) !important; }
+.light-mode .phc-stat-val   { color: #0F172A !important; }
+.light-mode .phc-stat-sub   { color: #2563EB !important; }
