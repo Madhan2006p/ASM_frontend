@@ -1,0 +1,129 @@
+.asset-map {
+  margin-bottom: 2rem;
+  padding: 0;
+  overflow: hidden;
+}
+
+.map-header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background-color: var(--bg-main);
+}
+
+.map-controls {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.control-btn {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-btn:hover {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  width: 100%;
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: var(--bg-card);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  z-index: 10;
+}
+
+.legend-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--brand-primary);
+}
+
+.dot-1 { opacity: 0.4; transform: scale(0.6); }
+.dot-2 { opacity: 0.6; transform: scale(0.8); }
+.dot-3 { opacity: 0.8; transform: scale(1); }
+.dot-4 { opacity: 0.9; transform: scale(1.2); }
+.dot-5 { opacity: 1; transform: scale(1.4); }
+
+.map-bubble:hover {
+  fill: #312E81 !important;
+  opacity: 0.8 !important;
+}

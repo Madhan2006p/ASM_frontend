@@ -1,0 +1,62 @@
+.discovery-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.discovery-card {
+  padding: 1.5rem;
+}
+
+.discovery-card-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.discovery-card-content.justify-start {
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.card-title-muted {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.card-value-large {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.icon-wrapper-blue {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #EEF2FF;
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}
+
+.green-dot {
+  background-color: var(--status-up);
+}
+
+.blue-dot {
+  background-color: var(--status-new);
+}

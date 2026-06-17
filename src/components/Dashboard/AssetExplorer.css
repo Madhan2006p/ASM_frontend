@@ -1,0 +1,93 @@
+.asset-explorer-section {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.explorer-header {
+  margin-bottom: 1.25rem;
+}
+
+.explorer-header .section-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.explorer-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.explorer-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.explorer-tab-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.explorer-tab-btn:hover {
+  background-color: var(--bg-main);
+}
+
+.explorer-tab-btn.active {
+  background-color: #3B82F6;
+  color: white;
+  border-color: #3B82F6;
+}
+
+.explorer-divider {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.explorer-table-container {
+  overflow-x: auto;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+}
+
+.explorer-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.explorer-table th {
+  background-color: var(--bg-main);
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+}
+
+.explorer-table td {
+  padding: 1rem;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.explorer-table .table-empty-state {
+  text-align: center !important;
+  color: var(--text-secondary);
+  padding: 2rem 1rem !important;
+}
+
