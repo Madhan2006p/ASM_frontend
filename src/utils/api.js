@@ -46,7 +46,10 @@ class ApiClient {
 
   async request(path, options = {}) {
     let url = path.startsWith('http') ? path : `${BASE_URL}${path}`;
-    options.headers = options.headers || {};
+    options.headers = {
+      'ngrok-skip-browser-warning': 'true',
+      ...options.headers,
+    };
 
     if (!(options.body instanceof FormData)) {
       if (!options.headers['Content-Type']) {
