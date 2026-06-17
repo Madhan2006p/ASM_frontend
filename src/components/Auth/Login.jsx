@@ -13,7 +13,10 @@ const Login = ({ onLogin, onNavigate }) => {
   const [successMsg, setSuccessMsg] = useState('');
 
   const validate = (name, value) => {
-    if (name === 'email' && !value.trim()) return 'Email/Username is required';
+    if (name === 'email') {
+      if (!value.trim()) return 'Email is required';
+      if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) return 'Invalid email address';
+    }
     if (name === 'password' && !value) return 'Password is required';
     return '';
   };
@@ -44,10 +47,9 @@ const Login = ({ onLogin, onNavigate }) => {
       try {
         setApiError('');
         setLoading(true);
-        // Bypass user input and always login as the real standard user
         const res = await api.post('/api/auth/login/', {
-          email: 'demo@infotechsentinel.com',
-          password: 'demo'
+          email: formData.email,
+          password: formData.password
         });
         if (res.tokens) {
           api.setTokens(res.tokens.access, res.tokens.refresh);
@@ -102,11 +104,11 @@ const Login = ({ onLogin, onNavigate }) => {
               </div>
             )}
             <div className="auth-input-group">
-              <label>Username or Email</label>
+              <label>Email Address</label>
               <input
-                type="text"
+                type="email"
                 name="email"
-                placeholder="you@company.com or username"
+                placeholder="you@company.com"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
