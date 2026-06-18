@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, User, LogOut, Shield, CreditCard, Bell, AlertTriangle, Search, Building2 } from 'lucide-react';
+import { ChevronRight, User, LogOut, Shield, CreditCard, Bell, AlertTriangle, Search, Building2, Sun, Moon } from 'lucide-react';
 import './Header.css';
 
-const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [], selectedDomain, setSelectedDomain }) => {
+const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [], selectedDomain, setSelectedDomain, theme, toggleTheme }) => {
   const [showProfile, setShowProfile] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   
@@ -10,11 +10,13 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   const notificationsRef = useRef(null);
 
   const getParentLabel = () => {
-    if (['Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies'].includes(activePage)) return 'ASSET DISCOVERY';
-    if (['Email Security'].includes(activePage)) return 'EMAIL SECURITY';
-    if (['Mobile VAPT'].includes(activePage)) return 'MOBILE APP MONITORING';
-    if (['Vulnerabilities', 'SSL Certificates'].includes(activePage)) return 'VULNERABILITIES MANAGEMENT';
-    if (['Surface Web', 'Suspicious Domain', 'Phishing Domain', 'Impersonating Account', 'Anti Malware'].includes(activePage)) return 'BRAND MONITORING';
+    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'Vulnerabilities', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
+    if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';
+    if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';
+    if (['Mobile VAPT Dashboard', 'Mobile VAPT'].includes(activePage)) return 'MOBILE APP MONITORING';
+    if (['Surface Web'].includes(activePage)) return 'SURFACE WEB MONITORING';
+    if (['Brand Monitoring Dashboard', 'Suspicious Domain', 'Phishing Domain', 'Impersonating Account', 'Anti Malware'].includes(activePage)) return 'BRAND MONITORING';
+    if (['Dashboard', 'Network Discovery', 'Service Discovery', 'Web Asset Discovery', 'SSL/TLS Discovery', 'Active Directory'].includes(activePage)) return 'INTERNAL ASSET';
     if (['Marketplace', 'Settings'].includes(activePage)) return 'MANAGE';
     return 'DASHBOARD';
   };
@@ -43,10 +45,10 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   return (
     <div className="header">
       <div className="header-breadcrumbs">
-        {activePage === 'Overview' ? (
+        {activePage === 'Executive Dashboard' ? (
           <div className="header-page-title">
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Overview</h1>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>A high-level summary of your attack surface and recent assets.</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Executive Dashboard</h1>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>A complete centralized security posture overview.</p>
           </div>
         ) : (
           <>
@@ -59,8 +61,8 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
 
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         {currentUser && currentUser.organization && (
-          <div className="header-org-badge">
-            <Building2 size={14} />
+          <div className="header-org-badge" style={{ fontSize: '1.1rem', fontWeight: 700, padding: '0.4rem 1rem' }}>
+            <Building2 size={18} />
             {currentUser.organization}
           </div>
         )}
@@ -72,6 +74,11 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
           <span className="badge-dot"></span>
           Enterprise Plan
         </div>
+
+        {/* Theme toggle */}
+        <button className="header-notification-btn" onClick={toggleTheme} style={{ cursor: 'pointer' }} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
 
         {/* Notifications bar */}
         <div className="header-notifications-wrapper" ref={notificationsRef}>

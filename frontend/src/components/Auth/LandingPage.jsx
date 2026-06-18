@@ -23,8 +23,8 @@ const LandingPage = ({ onNavigate }) => {
             Take control of your external attack surface with automated scanning and real-time alerts.
           </p>
           <div className="landing-cta-group">
-            <button className="landing-btn-primary" onClick={() => onNavigate('signup')}>
-              Get Started <ArrowRight size={18} />
+            <button className="landing-btn-primary" onClick={() => onNavigate('login')}>
+              Access Platform <ArrowRight size={18} />
             </button>
           </div>
         </div>

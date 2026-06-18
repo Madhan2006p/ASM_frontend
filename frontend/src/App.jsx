@@ -18,22 +18,27 @@ import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
 import Login from './components/Auth/Login';
-import SignUp from './components/Auth/SignUp';
 import Settings from './components/Settings/Settings';
 import Marketplace from './components/Marketplace/Marketplace';
 import GlobalAlert from './components/common/GlobalAlert';
 import ScanProgressPanel from './components/ScanProgress/ScanProgressPanel';
+import InternalDashboard from './components/InternalDiscovery/InternalDashboard';
+import NetworkDiscovery from './components/InternalDiscovery/NetworkDiscovery';
+import ServiceDiscovery from './components/InternalDiscovery/ServiceDiscovery';
+import WebAssetDiscovery from './components/InternalDiscovery/WebAssetDiscovery';
+import SSLTLSDiscovery from './components/InternalDiscovery/SSLTLSDiscovery';
+import ActiveDirectory from './components/InternalDiscovery/ActiveDirectory';
+import AssetDiscoveryDashboard from './components/Dashboard/AssetDiscoveryDashboard';
+import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
+import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
+import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
 import { api } from './utils/api';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authRoute, setAuthRoute] = useState('landing');
-  const [activePage, setActivePage] = useState('Overview');
-  const [user, setUser] = useState({
-    name: 'Demo User',
-    email: 'demo@infotechsentinel.com',
-    organization: 'Infotech Sentinel'
-  });
+  const [activePage, setActivePage] = useState('Executive Dashboard');
+  const [user, setUser] = useState(null);
 
   const [activeScanId, setActiveScanId] = useState(null);
   const [activeTarget, setActiveTarget] = useState('');
@@ -120,6 +125,20 @@ function App() {
   }, [isAuthenticated]);
 
   const [selectedDomain, setSelectedDomain] = useState('');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   useEffect(() => {
     // When selected domain changes, auto-select the latest scan for that domain
@@ -141,13 +160,12 @@ function App() {
 
   if (!isAuthenticated) {
     if (authRoute === 'login')  return <Login  onLogin={handleLogin} onNavigate={setAuthRoute} />;
-    if (authRoute === 'signup') return <SignUp onLogin={handleLogin} onNavigate={setAuthRoute} />;
     return <LandingPage onNavigate={setAuthRoute} />;
   }
 
   return (
     <div className="app-container">
-      <Sidebar activePage={activePage} setActivePage={setActivePage} onLogout={handleLogout} />
+      <Sidebar activePage={activePage} setActivePage={setActivePage} onLogout={handleLogout} user={user} />
       <div className="main-content">
         <Header
           activePage={activePage}
@@ -157,19 +175,18 @@ function App() {
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
           setSelectedDomain={setSelectedDomain}
+          theme={theme}
+          toggleTheme={toggleTheme}
         />
         <div key={activePage} className="page-animate">
-          {activePage === 'Overview'              && (
-            <Overview 
-              setActivePage={setActivePage} 
+          {activePage === 'Executive Dashboard' && (
+            <ExecutiveDashboard 
               activeScanId={activeScanId} 
-              activeTarget={activeTarget} 
-              scansList={filteredScansList} 
-              handleSelectScan={handleSelectScan} 
-              fetchScans={fetchScans}
               assignedDomains={assignedDomains}
               selectedDomain={selectedDomain}
               setSelectedDomain={setSelectedDomain}
+              scansList={filteredScansList} 
+              handleSelectScan={handleSelectScan} 
             />
           )}
           {activePage === 'Subdomain Discovery'   && (
@@ -188,7 +205,17 @@ function App() {
           {activePage === 'Open Ports'            && <OpenPorts activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Directories'           && <Directories activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Technologies'          && <Technologies activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Dashboard'             && <InternalDashboard />}
+          {activePage === 'Network Discovery'     && <NetworkDiscovery />}
+          {activePage === 'Service Discovery'     && <ServiceDiscovery />}
+          {activePage === 'Web Asset Discovery'   && <WebAssetDiscovery />}
+          {activePage === 'SSL/TLS Discovery'     && <SSLTLSDiscovery />}
+          {activePage === 'Active Directory'      && <ActiveDirectory />}
           {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+
+          {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard />}
+          {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysisDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
           {activePage === 'Mobile VAPT'           && <MobileVAPT />}
           {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}

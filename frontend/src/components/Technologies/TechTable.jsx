@@ -32,7 +32,7 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const categories = ['All Categories', 'Frontend', 'Backend', 'Database', 'Web Server', 'CDN', 'Utility'];
+  const categories = ['All Categories', 'Analytics', 'Programming languages', 'JavaScript libraries', 'Security', 'CDN', 'Font scripts', 'PaaS', 'Web servers', 'Miscellaneous'];
   const eolStatuses = ['EOL Status: All', 'EOL Reached', 'Supported'];
   const risks = ['All Risks', 'Critical', 'High', 'Medium', 'Low'];
 
@@ -160,55 +160,49 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
         </div>
       </div>
 
-      {/* Main Table */}
-      <div className="global-table-wrapper">
-        <table className="tech-table">
-          <thead>
-            <tr>
-              <th>Technology Name</th>
-              <th>Version</th>
-              <th>Category</th>
-              <th>End of Life (EOL)</th>
-              <th>Risk Level</th>
-              <th>Used By</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-                  <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
-                  Loading stack inventory from database...
-                </td>
-              </tr>
-            ) : filteredData.map((row) => (
-              <tr key={row.id}>
-                <td className="font-bold">{row.name}</td>
-                <td className="font-bold font-mono text-slate-600">{row.version}</td>
-                <td>
-                  <span className="pill-category">
-                    {row.category}
-                  </span>
-                </td>
-                <td className="font-mono text-slate-600">{row.eol}</td>
-                <td>
-                  <span className={`tech-pill uppercase pill-${row.risk.toLowerCase()}`}>
-                    <span className="dot"></span>
-                    {row.risk}
-                  </span>
-                </td>
-                <td className="font-bold text-slate-600">{row.assets} Assets</td>
-              </tr>
+      {/* Grouped Category Boxes */}
+      <div className="global-table-wrapper" style={{ padding: '1.5rem', background: '#f8fafc', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+            <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
+            Loading stack inventory from database...
+          </div>
+        ) : filteredData.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+            No technologies found for this scan.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {Object.entries(
+              filteredData.reduce((acc, tech) => {
+                if (!acc[tech.category]) acc[tech.category] = [];
+                acc[tech.category].push(tech);
+                return acc;
+              }, {})
+            ).map(([category, techs]) => (
+              <div key={category} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6' }}></div>
+                  {category}
+                </h3>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                  {techs.map(tech => (
+                    <li key={tech.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
+                        <span style={{ fontWeight: '600', color: '#334155', fontSize: '0.95rem' }}>{tech.name}</span>
+                        {tech.version && (
+                          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '400' }}>
+                            {tech.version}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-            {!loading && filteredData.length === 0 && (
-              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
-                  No technologies found for this scan.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
     </div>
   );

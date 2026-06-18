@@ -75,6 +75,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             });
           });
         });
+        flat.sort((a, b) => b.risk - a.risk);
         setPortsList(flat);
       } catch (e) {
         console.error("Failed to load open ports", e);

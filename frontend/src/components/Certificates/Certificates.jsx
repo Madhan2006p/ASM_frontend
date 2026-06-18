@@ -24,7 +24,13 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         const mapped = results.map(c => {
           let days = 90; // Default fallback
           if (c.expiry_date) {
-            const expiry = new Date(c.expiry_date);
+            let dateStr = c.expiry_date;
+            // Fix DD-MM-YYYY parsing bug (JS natively parses 01-08-2026 as Jan 8th instead of Aug 1st)
+            if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+              const [dd, mm, yyyy] = dateStr.split('-');
+              dateStr = `${yyyy}-${mm}-${dd}`;
+            }
+            const expiry = new Date(dateStr);
             if (!isNaN(expiry.getTime())) {
               const diffTime = expiry - new Date();
               days = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));

@@ -17,17 +17,11 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   let currentAttemptText = "Initializing...";
   let timeoutExplanation = "";
-  if (activeScan?.vuln_scan_phase === 'running_5s') {
-    currentAttemptText = "Phase 1: Nuclei Fast Scan (5s max wait per request)";
-    timeoutExplanation = "Sending thousands of exploit payloads and waiting up to 5 seconds for each response. This phase typically takes 2-5 minutes.";
-  } else if (activeScan?.vuln_scan_phase === 'running_15s') {
-    currentAttemptText = "Phase 2: Nuclei Adaptive Scan (15s max wait per request)";
-    timeoutExplanation = "The server was slow. Retrying payloads and waiting up to 15 seconds for each response. This phase typically takes 4-6 minutes.";
-  } else if (activeScan?.vuln_scan_phase === 'running_25s') {
-    currentAttemptText = "Phase 3: Nuclei Deep Scan (25s max wait per request)";
-    timeoutExplanation = "Performing final deep checks with a very long 25-second wait time per payload to catch extremely slow responses.";
+  if (activeScan?.vuln_scan_phase === 'running_nuclei') {
+    currentAttemptText = "Phase 1: Nuclei Fast Scan";
+    timeoutExplanation = "Sending thousands of optimized exploit payloads to discover misconfigurations, CVEs, and exposures. This phase is heavily optimized for speed.";
   } else if (activeScan?.vuln_scan_phase === 'running_wapiti') {
-    currentAttemptText = "Phase 4: Wapiti Application Fuzzing (60s total)";
+    currentAttemptText = "Phase 2: Wapiti Application Fuzzing (60s total)";
     timeoutExplanation = "Crawling the application and injecting SQL/XSS payloads into forms. This takes exactly 60 seconds.";
   }
 
@@ -59,15 +53,20 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
             title: v.finding || v.vulnerability_id || 'Security Vulnerability',
             cve: v.cve || '—',
             cwe: v.cwe || '—',
+            description: v.description || 'No description provided.',
+            remediation: v.remediation || 'No remediation provided.',
+            reference: v.reference || '—',
             severity: v.severity || 'LOW',
             status: 'Open',
             cvss,
             asset: v.subdomain || v.domain || 'Target Scope',
             age: dateStr,
+            source_tool: v.source_tool || 'Nuclei',
             exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
           };
         });
 
+        mapped.sort((a, b) => b.cvss - a.cvss);
         setVulnerabilities(mapped);
       } catch (e) {
         console.error("Failed to load vulnerabilities", e);

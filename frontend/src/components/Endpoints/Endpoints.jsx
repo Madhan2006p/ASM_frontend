@@ -30,6 +30,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         setLoading(true);
         const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
         const list = Array.isArray(data) ? data : (data.results || []);
+        list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
         setEndpoints(list);
       } catch (e) {
         console.error("Failed to load endpoints", e);
@@ -265,7 +266,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                       </div>
                     </td>
                     <td>
-                      <span className={`ep-method-pill method-${ep.method.toLowerCase()}`}>{ep.method}</span>
+                      <span className={`ep-method-pill method-${(ep.method || 'GET').toLowerCase()}`}>{ep.method || 'GET'}</span>
                       <div className="ep-status-txt">Status: {ep.http_status || '200'}</div>
                     </td>
                     <td>
@@ -362,7 +363,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             <div className="ep-modal-body">
               
               <div style={{ backgroundColor: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontFamily: 'monospace', fontSize: '0.875rem', color: 'var(--text-primary)', border: '1px solid var(--border-color)', wordBreak: 'break-all' }}>
-                <span className={`ep-method-pill method-${selectedEndpoint.method.toLowerCase()}`} style={{ marginRight: '0.5rem', marginBottom: 0 }}>{selectedEndpoint.method}</span>
+                <span className={`ep-method-pill method-${(selectedEndpoint.method || 'GET').toLowerCase()}`} style={{ marginRight: '0.5rem', marginBottom: 0 }}>{selectedEndpoint.method || 'GET'}</span>
                 {selectedEndpoint.http_url}
               </div>
 
