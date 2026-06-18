@@ -31,11 +31,22 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           const techs = Array.isArray(item.technologies) ? item.technologies : [];
           techs.forEach(tech => {
             let name = tech;
-            let version = '—';
-            if (tech.includes('/')) {
-              const parts = tech.split('/');
+            let version = '';
+            
+            // Remove the tool tag e.g. [Wappalyzer], [HTTPX] for clean merging
+            const toolMatch = name.match(/\s*\[(.*?)\]$/);
+            if (toolMatch) {
+              name = name.replace(toolMatch[0], '').trim();
+            }
+
+            if (name.includes('/')) {
+              const parts = name.split('/');
               name = parts[0];
               version = parts[1];
+            } else if (name.includes(' (v')) {
+              const parts = name.split(' (v');
+              name = parts[0];
+              version = parts[1].replace(')', '');
             }
             const key = name.trim();
             techCounts[key] = (techCounts[key] || 0) + 1;
@@ -53,17 +64,24 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
 
         const parsedList = Object.keys(techCounts).map((name, idx) => {
           const nameLower = name.toLowerCase();
-          let category = 'Utility';
-          if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'webserver'].some(k => nameLower.includes(k))) {
-            category = 'Web Server';
-          } else if (['react', 'angular', 'vue', 'jquery', 'next.js', 'nuxt.js', 'bootstrap', 'semantic'].some(k => nameLower.includes(k))) {
-            category = 'Frontend';
-          } else if (['django', 'flask', 'express', 'laravel', 'php', 'python', 'node.js', 'ruby', 'spring'].some(k => nameLower.includes(k))) {
-            category = 'Backend';
-          } else if (['postgresql', 'mysql', 'mariadb', 'mongodb', 'redis', 'elasticsearch', 'sqlite'].some(k => nameLower.includes(k))) {
-            category = 'Database';
-          } else if (['cloudflare', 'cloudfront', 'fastly', 'cdn'].some(k => nameLower.includes(k))) {
+          let category = 'Miscellaneous';
+          
+          if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'openresty'].some(k => nameLower.includes(k))) {
+            category = 'Web servers';
+          } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js'].some(k => nameLower.includes(k))) {
+            category = 'JavaScript libraries';
+          } else if (['django', 'flask', 'express', 'laravel', 'php', 'python', 'node', 'ruby', 'spring', 'go', 'java'].some(k => nameLower.includes(k))) {
+            category = 'Programming languages';
+          } else if (['cloudflare', 'cloudfront', 'fastly', 'cdn', 'akamai'].some(k => nameLower.includes(k))) {
             category = 'CDN';
+          } else if (['google analytics', 'clarity', 'pixel', 'mixpanel', 'hotjar', 'segment', 'analytics', 'tag manager'].some(k => nameLower.includes(k))) {
+            category = 'Analytics';
+          } else if (['recaptcha', 'captcha', 'hcaptcha', 'waf', 'firewall', 'imperva', 'incapsula', 'security'].some(k => nameLower.includes(k))) {
+            category = 'Security';
+          } else if (['font', 'awesome', 'google font', 'typekit'].some(k => nameLower.includes(k))) {
+            category = 'Font scripts';
+          } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas'].some(k => nameLower.includes(k))) {
+            category = 'PaaS';
           }
 
           let risk = 'LOW';
@@ -73,7 +91,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           return {
             id: idx + 1,
             name,
-            version: techVersions[name] || 'latest',
+            version: techVersions[name] || '',
             category,
             eol: nameLower.includes('jquery') ? '2021-05-01' : 'Supported',
             risk,

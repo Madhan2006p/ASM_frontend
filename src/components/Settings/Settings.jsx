@@ -14,7 +14,6 @@ const Settings = ({ user, setUser }) => {
   const [loadingTools, setLoadingTools] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [notifications, setNotifications] = useState({ emailScans: true, marketing: false, weeklyReport: true, criticalAlerts: true });
-  const [scanning, setScanning]   = useState({ autoScan: true, nightScan: false, deepScan: false });
 
   const currentUser = user || {
     name: 'Demo User',
@@ -72,7 +71,6 @@ const Settings = ({ user, setUser }) => {
   const tabs = [
     { id: 'profile',       label: 'Profile',        icon: <User size={16} /> },
     { id: 'notifications', label: 'Notifications',  icon: <Bell size={16} /> },
-    { id: 'scanning',      label: 'Scanning',       icon: <Sliders size={16} /> },
     { id: 'security',      label: 'Security',       icon: <Shield size={16} /> },
     { id: 'scanners',      label: 'Scanners',       icon: <Monitor size={16} /> },
     { id: 'database',      label: 'Database',       icon: <Database size={16} /> },
@@ -234,44 +232,7 @@ const Settings = ({ user, setUser }) => {
             </div>
           )}
 
-          {/* SCANNING TAB */}
-          {activeTab === 'scanning' && (
-            <div className="settings-panel">
-              <div className="panel-header">
-                <Sliders size={20} className="panel-icon green" />
-                <div>
-                  <h2 className="panel-title">Scanning Configuration</h2>
-                  <p className="panel-desc">Configure automated scanning schedules and behavior</p>
-                </div>
-              </div>
-              <div className="toggle-list">
-                {[
-                  { key: 'autoScan',  title: 'Auto-Scan Added Domains', desc: 'Automatically trigger analysis when a domain is added' },
-                  { key: 'nightScan', title: 'Nightly Deep Scan',       desc: 'Run comprehensive scans overnight (12 AM – 5 AM)' },
-                  { key: 'deepScan',  title: 'Enable Deep Port Scan',   desc: 'Scan all 65,535 ports instead of top 1,000' },
-                ].map(item => (
-                  <div key={item.key} className="toggle-row">
-                    <div className="toggle-info">
-                      <h3 className="toggle-title">{item.title}</h3>
-                      <p className="toggle-desc">{item.desc}</p>
-                    </div>
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        checked={scanning[item.key]}
-                        onChange={() => setScanning(s => ({ ...s, [item.key]: !s[item.key] }))}
-                      />
-                      <span className="slider round"></span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="info-box">
-                <Zap size={14} />
-                <span>Scanning schedules run in the background and won't affect your dashboard performance.</span>
-              </div>
-            </div>
-          )}
+
 
           {/* SECURITY TAB */}
           {activeTab === 'security' && (

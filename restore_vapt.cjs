@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+
+const fullJSX = `import React, { useState, useEffect, useRef } from 'react';
 import { Smartphone, CloudUpload, ShieldCheck, Activity, Trash2, X, AlertCircle, FileText, CheckCircle, RefreshCw, Layers } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import './MobileVAPT.css';
@@ -64,7 +66,7 @@ const MobileVAPT = () => {
     let intervalId;
     const checkStatus = async () => {
       try {
-        const data = await api.get(`/api/mobile-vapt/scan-status/${activePollScanId}/`);
+        const data = await api.get(\`/api/mobile-vapt/scan-status/\${activePollScanId}/\`);
         if (data.status === 'completed' || data.status === 'scan_failed' || data.status === 'report_failed') {
           setActivePollScanId(null);
           loadDashboardData();
@@ -126,7 +128,7 @@ const MobileVAPT = () => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this scan history?")) return;
     try {
-      await api.delete(`/api/mobile-vapt/delete-scan/${scanId}/`);
+      await api.delete(\`/api/mobile-vapt/delete-scan/\${scanId}/\`);
       loadDashboardData();
       loadHistoryData();
       if (selectedScan && selectedScan.id === scanId) {
@@ -151,7 +153,7 @@ const MobileVAPT = () => {
     setScanDetail(null);
     setActiveTab('Overview');
     try {
-      const data = await api.get(`/api/mobile-vapt/scan-detail/${scan.id}/`);
+      const data = await api.get(\`/api/mobile-vapt/scan-detail/\${scan.id}/\`);
       setScanDetail(data);
     } catch (err) {
       console.error("Failed to load scan details", err);
@@ -306,7 +308,7 @@ const MobileVAPT = () => {
                       <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '2rem 1rem', background: 'var(--bg-card)', textAlign: 'center' }}>
                         <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Security Score</span>
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '1rem' }}>
-                          <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: `8px solid ${scanDetail.scan.score >= 80 ? '#22C55E' : scanDetail.scan.score >= 50 ? '#F97316' : '#EF4444'}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: '100px', height: '100px', borderRadius: '50%', border: \`8px solid \${scanDetail.scan.score >= 80 ? '#22C55E' : scanDetail.scan.score >= 50 ? '#F97316' : '#EF4444'}\`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <span style={{ fontSize: '1.75rem', fontWeight: '800', color: scanDetail.scan.score >= 80 ? '#22C55E' : scanDetail.scan.score >= 50 ? '#F97316' : '#EF4444' }}>{scanDetail.scan.score}</span>
                           </div>
                         </div>
@@ -645,3 +647,6 @@ const MobileVAPT = () => {
 };
 
 export default MobileVAPT;
+`;
+
+fs.writeFileSync('/home/madhan/Desktop/ASM-New/frontend/src/components/MobileVAPT/MobileVAPT.jsx', fullJSX);

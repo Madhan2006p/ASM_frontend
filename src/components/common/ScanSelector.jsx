@@ -65,6 +65,42 @@ const ScanSelector = ({
           </select>
         </div>
       )}
+
+      {selectedDomain && (
+        <div style={{ marginLeft: 'auto' }}>
+          <button 
+            onClick={async () => {
+              try {
+                // We'll dispatch a custom event to show a notification, or just use a standard alert for now
+                alert(`Initializing comprehensive scan for ${selectedDomain}... This will run in the background.`);
+                const { api } = await import('../../utils/api');
+                await api.post('/api/attacksurface/scan/', { target: selectedDomain });
+                alert(`Scan successfully triggered for ${selectedDomain}! Refresh the page in a few minutes to see results.`);
+              } catch (e) {
+                alert(`Failed to start scan: ${e.message}`);
+              }
+            }}
+            style={{
+              height: '36px',
+              padding: '0 1rem',
+              borderRadius: '8px',
+              border: 'none',
+              background: '#3B82F6',
+              color: '#FFFFFF',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              boxShadow: '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+            }}>
+            Launch Target Scan
+          </button>
+        </div>
+      )}
     </div>
   );
 };
