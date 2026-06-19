@@ -5,6 +5,7 @@ import {
   ChevronDown, Shield, Mail, Smartphone, User, Store
 } from 'lucide-react';
 import './Sidebar.css';
+import { BASE_URL } from '../../utils/api';
 
 const menuGroups = [
   {
@@ -26,27 +27,19 @@ const menuGroups = [
       { name: 'Attack Path Analysis Dashboard', icon: <Activity size={16} /> },
     ]
   },
-  {
-    title: 'INTERNAL ASSET',
-    items: [
-      { name: 'Dashboard',           icon: <Activity size={16} /> },
-      { name: 'Network Discovery',   icon: <Globe size={16} /> },
-      { name: 'Service Discovery',   icon: <Search size={16} /> },
-      { name: 'Web Asset Discovery', icon: <FileText size={16} /> },
-      { name: 'SSL/TLS Discovery',   icon: <ShieldCheck size={16} /> },
-      { name: 'Active Directory',    icon: <User size={16} /> },
-    ]
-  },
+
   {
     title: 'EMAIL SECURITY',
     items: [
+      { name: 'Email Security Dashboard', icon: <Activity size={16} /> },
       { name: 'Email Security',      icon: <Mail size={16} /> },
     ]
   },
   {
-    title: 'MOBILE APP MONITORING',
+    title: 'MOBILE SECURITY',
     items: [
-      { name: 'Mobile VAPT', icon: <Smartphone size={16} /> },
+      { name: 'Mobile Security Dashboard', icon: <Activity size={16} /> },
+      { name: 'Mobile Security', icon: <Smartphone size={16} /> },
     ]
   },
   {
@@ -68,50 +61,107 @@ const menuGroups = [
   {
     title: 'MANAGE',
     items: [
+      { name: 'VAPT Report',  icon: <FileText size={16} /> },
       { name: 'Marketplace', icon: <Store size={16} /> },
       { name: 'Settings',    icon: <Settings size={16} /> },
     ]
   }
 ];
 
+const itemFeatureMap = {
+  // ASSET DISCOVERY
+  'Asset Discovery Dashboard': '1',
+  'Subdomain Discovery': '1',
+  'Endpoints': '1',
+  'Open Ports': '1',
+  'Directories': '1',
+  'Technologies': '1',
+  'Vulnerabilities': '1',
+  'SSL Certificates': '1',
+
+  // MOBILE SECURITY
+  'Mobile Security Dashboard': '2',
+  'Mobile Security': '2',
+
+  // EMAIL SECURITY
+  'Email Security Dashboard': '3',
+  'Email Security': '3',
+
+
+
+  // SURFACE WEB MONITORING
+  'Surface Web': '5',
+
+  // BRAND MONITORING
+  'Brand Monitoring Dashboard': '6',
+  'Suspicious Domain': '6',
+  'Phishing Domain': '6',
+  'Impersonating Account': '6',
+  'Anti Malware': '6',
+};
+
+const isItemVisible = (itemName, userFeatures, isSuperuser) => {
+  if (isSuperuser) return true;
+  
+  // If userFeatures is not set or is empty, default to true (all unlocked)
+  if (!userFeatures || userFeatures.length === 0) return true;
+
+  // General mapping check
+  const featureId = itemFeatureMap[itemName];
+  if (!featureId) {
+    // If not mapped to a feature ID, it's visible to everyone
+    return true;
+  }
+
+  return userFeatures.includes(featureId);
+};
+
 const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
   const [expandedGroups, setExpandedGroups] = useState({
     'ASSET DISCOVERY': true,
-    'INTERNAL ASSET': false,
+    'ATTACK PATH ANALYSIS': false,
     'EMAIL SECURITY': false,
     'SURFACE WEB MONITORING': false,
     'BRAND MONITORING': false,
     'MANAGE': false,
-    'MOBILE APP MONITORING': false,
+    'MOBILE SECURITY': false,
   });
 
+  const filteredMenuGroups = menuGroups.map(group => {
+    const visibleItems = group.items.filter(item => isItemVisible(item.name, user?.features, user?.is_superuser));
+    return {
+      ...group,
+      items: visibleItems
+    };
+  }).filter(group => group.items.length > 0);
+
   useEffect(() => {
-    const activeGroup = menuGroups.find(g => g.items.some(item => item.name === activePage));
+    const activeGroup = filteredMenuGroups.find(g => g.items.some(item => item.name === activePage));
     if (activeGroup) {
       setExpandedGroups({
         'ASSET DISCOVERY': false,
-        'INTERNAL ASSET': false,
+        'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
         'BRAND MONITORING': false,
         'MANAGE': false,
-        'MOBILE APP MONITORING': false,
+        'MOBILE SECURITY': false,
         [activeGroup.title]: true
       });
     }
-  }, [activePage]);
+  }, [activePage, user]);
 
   const toggleGroup = (groupTitle) => {
     setExpandedGroups(prev => {
       const isAlreadyExpanded = prev[groupTitle];
       const nextExpanded = {
         'ASSET DISCOVERY': false,
-        'INTERNAL ASSET': false,
+        'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
         'BRAND MONITORING': false,
         'MANAGE': false,
-        'MOBILE APP MONITORING': false,
+        'MOBILE SECURITY': false,
       };
       if (!isAlreadyExpanded) {
         nextExpanded[groupTitle] = true;
@@ -128,63 +178,82 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
       {/* Logo */}
       <div className="sidebar-header" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border-color)' }}>
         {orgLogo ? (
-          <img src={orgLogo} alt="Org Logo" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'contain' }} />
+          <img src={orgLogo.startsWith('http') ? orgLogo : `${BASE_URL}${orgLogo}`} alt="" style={{ width: '32px', height: '32px', borderRadius: '4px', objectFit: 'contain' }} />
         ) : (
           <Shield className="brand-logo" size={28} />
         )}
-        <span className="brand-name" style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', lineHeight: '1.2', color: 'var(--text-primary)' }}>
+        <span className="brand-name" style={{ fontSize: '1.25rem', fontWeight: '800', letterSpacing: '-0.02em', lineHeight: '1.2', color: '#F0F6FF' }}>
           {orgName}
         </span>
       </div>
 
       <div className="sidebar-scrollable">
-        {/* Executive Dashboard */}
-        <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
-          <div
-            className={`nav-item ${activePage === 'Executive Dashboard' ? 'active' : ''}`}
-            onClick={() => setActivePage('Executive Dashboard')}
-          >
-            <span className="nav-icon"><Home size={16} /></span>
-            <span>Executive Dashboard</span>
-          </div>
-        </div>
-
-        {/* Groups */}
-        {menuGroups.map((group, gi) => {
-          const isExpanded = expandedGroups[group.title];
-          return (
-            <div key={gi} className="nav-group">
+        {user?.is_superuser ? (
+          <>
+            <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
               <div
-                className="nav-group-title"
-                onClick={() => toggleGroup(group.title)}
+                className={`nav-item ${activePage === 'Super Admin Dashboard' ? 'active' : ''}`}
+                onClick={() => setActivePage('Super Admin Dashboard')}
               >
-                <span>{group.title}</span>
-                <ChevronDown
-                  size={12}
-                  style={{
+                <span className="nav-icon"><Shield size={16} /></span>
+                <span>Super Admin Dashboard</span>
+              </div>
+            </div>
+            <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
+              <div
+                className={`nav-item ${activePage === 'Settings' ? 'active' : ''}`}
+                onClick={() => setActivePage('Settings')}
+              >
+                <span className="nav-icon"><Settings size={16} /></span>
+                <span>Settings</span>
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Executive Dashboard */}
+            <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
+              <div
+                className={`nav-item ${activePage === 'Executive Dashboard' ? 'active' : ''}`}
+                onClick={() => setActivePage('Executive Dashboard')}
+              >
+                <span className="nav-icon"><Home size={16} /></span>
+                <span>Executive Dashboard</span>
+              </div>
+            </div>
+
+            {/* Menu Groups */}
+            {filteredMenuGroups.map((group, idx) => {
+              const isExpanded = expandedGroups[group.title];
+              return (
+                <div key={idx} className="nav-group">
+                  <div className="nav-group-title" onClick={() => toggleGroup(group.title)}>
+                    <span>{group.title}</span>
+                    <ChevronDown size={14} className={`nav-chevron ${isExpanded ? 'expanded' : ''}`} style={{
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: 'transform 0.2s ease',
                     flexShrink: 0,
-                  }}
-                />
-              </div>
-              {isExpanded && (
-                <div className="nav-menu">
-                  {group.items.map((item, ii) => (
-                    <div
-                      key={ii}
-                      className={`nav-item ${activePage === item.name ? 'active' : ''}`}
-                      onClick={() => item.action ? item.action() : setActivePage(item.name)}
-                    >
-                      <span className="nav-icon">{item.icon}</span>
-                      <span>{item.name}</span>
+                  }} />
+                  </div>
+                  {isExpanded && (
+                    <div className="nav-menu">
+                      {group.items.map((item, i) => (
+                        <div 
+                          key={i} 
+                          className={`nav-item ${activePage === item.name ? 'active' : ''}`}
+                          onClick={() => setActivePage(item.name)}
+                        >
+                          <span className="nav-icon">{item.icon}</span>
+                          <span>{item.name}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-            </div>
-          );
-        })}
+              );
+            })}
+          </>
+        )}
       </div>
     </div>
   );

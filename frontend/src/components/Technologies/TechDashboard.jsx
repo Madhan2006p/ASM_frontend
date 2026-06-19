@@ -29,11 +29,6 @@ const TechDashboard = ({ onExport, technologies = [], loading }) => {
         badgeText="INVENTORY"
         title="Technologies"
         subtitle="Track software versions, stack distribution, and End-of-Life projections."
-        actions={
-          <button className="tech-btn-primary" onClick={onExport}>
-            Export
-          </button>
-        }
       />
 
       {loading ? (

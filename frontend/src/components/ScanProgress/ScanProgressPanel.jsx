@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Terminal, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, Clock, Loader2, FileText } from 'lucide-react';
 import { api } from '../../utils/api';
+import ScanReport from './ScanReport';
 import './ScanProgressPanel.css';
 
 // Phase definitions mapped from AttackSurfaceScan model fields
@@ -39,7 +40,6 @@ function getPhaseStatus(phase, scanData) {
     if (scanData.vuln_scan_phase === phase.phaseValue) return 'running';
     if (phase.phaseValue === 'basic' && (scanData.vuln_scan_phase === 'basic' || scanData.vuln_scan_phase === 'complete')) return 'done';
     if (phase.phaseValue === 'complete' && scanData.vuln_scan_phase === 'complete') return 'running';
-    // If vuln_scan_phase is 'deep' or some other value, basic is done
     if (phase.phaseValue === 'basic' && scanData.vuln_scan_phase && scanData.vuln_scan_phase !== 'pending') return 'done';
     return 'pending';
   }
@@ -73,16 +73,35 @@ function formatTime(dateStr) {
   }
 }
 
+const TABS = ['Progress', 'Report'];
+
 const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const [scanData, setScanData] = useState(null);
   const [log, setLog] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [activeTab, setActiveTab] = useState('Progress');
   const logEndRef = useRef(null);
 
   // Find the active scan from scansList
   const activeScan = scansList.find(s => s.id === Number(activeScanId));
   const isRunning = activeScan?.status === 'running' || scanData?.status === 'running';
+
+  // Auto-switch to Report tab when vuln scan completes
+  const prevVulnPhaseRef = useRef(null);
+  useEffect(() => {
+    if (!scanData) return;
+    const phase = scanData.vuln_scan_phase;
+    const prev  = prevVulnPhaseRef.current;
+    if (prev && prev !== 'complete' && phase === 'complete') {
+      setActiveTab('Report');
+    }
+    // Also switch when full scan completes
+    if (prev !== 'completed' && scanData.status === 'completed') {
+      setActiveTab('Report');
+    }
+    prevVulnPhaseRef.current = phase;
+  }, [scanData?.vuln_scan_phase, scanData?.status]);
 
   // Fetch scan status periodically
   useEffect(() => {
@@ -109,12 +128,22 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             }
           }
 
+          // Vulnerability phase transitions — granular log
+          if (prev.vuln_scan_phase !== data.vuln_scan_phase) {
+            const phaseLabels = {
+              running_nuclei: '🔍 Nuclei fast scan started',
+              running_wapiti: '🕷️ Wapiti web fuzzing started',
+              complete:       '✓ Vulnerability scan complete',
+            };
+            const label = phaseLabels[data.vuln_scan_phase];
+            if (label) phasesChanged.push({ phase: label, status: data.vuln_scan_phase === 'complete' ? 'done' : 'running', time: new Date().toISOString() });
+          }
+
           // Detect when scan completes or fails
           const justCompleted = prev.status === 'running' && data.status === 'completed';
           const justFailed = prev.status === 'running' && data.status === 'failed';
           if (justCompleted) {
             phasesChanged.push({ phase: 'Scan completed successfully', status: 'done', time: data.updated_at || new Date().toISOString() });
-            // Notify parent to refresh scans list
             if (fetchScans) fetchScans(true);
           }
           if (justFailed) {
@@ -156,6 +185,13 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
     }
   }, [activeScan?.id, activeScan?.status]);
 
+  // Reset tab and log on scan change
+  useEffect(() => {
+    setLog([]);
+    setActiveTab('Progress');
+    prevVulnPhaseRef.current = null;
+  }, [activeScanId]);
+
   // Scroll log to bottom
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,6 +199,13 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
 
   const progress = scanData?.progress ?? activeScan?.progress ?? 0;
   const target = scanData?.target ?? activeScan?.target ?? '';
+
+  // Vuln scan status text for header badge
+  const vulnPhase = scanData?.vuln_scan_phase;
+  const vulnBadge =
+    vulnPhase === 'running_nuclei' ? '🔍 Nuclei' :
+    vulnPhase === 'running_wapiti' ? '🕷️ Wapiti' :
+    vulnPhase === 'complete' ? null : null;
 
   // Guard: must be after all hooks to comply with Rules of Hooks
   if (!activeScanId) return null;
@@ -179,6 +222,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               <>
                 <span className="spp-dot-pulse" />
                 Scan Progress — {target}
+                {vulnBadge && <span className="spp-vuln-badge">{vulnBadge}</span>}
               </>
             ) : scanData?.status === 'completed' ? (
               <>
@@ -224,71 +268,99 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
         </div>
       </div>
 
-      {/* Progress body */}
+      {/* Body with tabs */}
       {!collapsed && (
         <div className="spp-body">
-          {/* Progress bar */}
-          <div className="spp-progress-section">
-            <div className="spp-progress-top">
-              <span className="spp-current-phase">{getCurrentPhaseLabel(scanData || activeScan)}</span>
-              <span className="spp-progress-pct">{progress}%</span>
-            </div>
-            <div className="spp-progress-track">
-              <div
-                className={`spp-progress-fill ${scanData?.status === 'failed' ? 'spp-progress-failed' : ''}`}
-                style={{ width: `${progress}%` }}
-              />
-              {/* Phase markers on progress bar */}
-              {PHASES.filter(p => p.progressEnd < 100).map((phase, i) => (
-                <div
-                  key={phase.key}
-                  className={`spp-progress-marker ${getPhaseStatus(phase, scanData || activeScan) === 'done' ? 'spp-marker-done' : ''}`}
-                  style={{ left: `${phase.progressEnd}%` }}
-                  title={phase.label}
-                />
-              ))}
-            </div>
-            <div className="spp-progress-phases">
-              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vuln_basic').map(phase => {
-                const st = getPhaseStatus(phase, scanData || activeScan);
-                return (
-                  <span key={phase.key} className={`spp-phase-label ${st}`}>
-                    {STATUS_ICONS[st]}
-                    {phase.label.split('(')[0].trim()}
-                  </span>
-                );
-              })}
-            </div>
+          {/* Tab bar */}
+          <div className="spp-tabs" onClick={e => e.stopPropagation()}>
+            {TABS.map(tab => (
+              <button
+                key={tab}
+                className={`spp-tab-btn ${activeTab === tab ? 'spp-tab-active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === 'Report' && <FileText size={11} />}
+                {tab}
+                {tab === 'Report' && (scanData?.vuln_scan_phase === 'complete' || scanData?.status === 'completed') && (
+                  <span className="spp-tab-dot" />
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Terminal log */}
-          <div className="spp-terminal">
-            <div className="spp-terminal-header">
-              <span className="spp-terminal-dot spp-terminal-dot-red" />
-              <span className="spp-terminal-dot spp-terminal-dot-yellow" />
-              <span className="spp-terminal-dot spp-terminal-dot-green" />
-              <span className="spp-terminal-label">scan-log</span>
-            </div>
-            <div className="spp-terminal-body">
-              {log.map((entry, i) => (
-                <div key={i} className="spp-log-line">
-                  <span className="spp-log-time">[{entry.time ? formatTime(entry.time) : formatTime(new Date().toISOString())}]</span>
-                  <span className={`spp-log-status spp-log-${entry.status}`}>
-                    {entry.status === 'done' ? '✓' : entry.status === 'failed' ? '✗' : '●'}
-                  </span>
-                  <span className="spp-log-msg">{entry.phase}</span>
+          {activeTab === 'Progress' && (
+            <>
+              {/* Progress bar */}
+              <div className="spp-progress-section">
+                <div className="spp-progress-top">
+                  <span className="spp-current-phase">{getCurrentPhaseLabel(scanData || activeScan)}</span>
+                  <span className="spp-progress-pct">{progress}%</span>
                 </div>
-              ))}
-              {isRunning && (
-                <div className="spp-log-line spp-log-active">
-                  <span className="spp-log-time">[{formatTime(new Date().toISOString())}]</span>
-                  <Loader2 size={10} className="spp-log-spinner spin" />
-                  <span className="spp-log-msg">{getCurrentPhaseLabel(scanData || activeScan)}...</span>
+                <div className="spp-progress-track">
+                  <div
+                    className={`spp-progress-fill ${scanData?.status === 'failed' ? 'spp-progress-failed' : ''}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                  {/* Phase markers on progress bar */}
+                  {PHASES.filter(p => p.progressEnd < 100).map((phase, i) => (
+                    <div
+                      key={phase.key}
+                      className={`spp-progress-marker ${getPhaseStatus(phase, scanData || activeScan) === 'done' ? 'spp-marker-done' : ''}`}
+                      style={{ left: `${phase.progressEnd}%` }}
+                      title={phase.label}
+                    />
+                  ))}
                 </div>
-              )}
-              <div ref={logEndRef} />
-            </div>
-          </div>
+                <div className="spp-progress-phases">
+                  {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vuln_basic').map(phase => {
+                    const st = getPhaseStatus(phase, scanData || activeScan);
+                    return (
+                      <span key={phase.key} className={`spp-phase-label ${st}`}>
+                        {STATUS_ICONS[st]}
+                        {phase.label.split('(')[0].trim()}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Terminal log */}
+              <div className="spp-terminal">
+                <div className="spp-terminal-header">
+                  <span className="spp-terminal-dot spp-terminal-dot-red" />
+                  <span className="spp-terminal-dot spp-terminal-dot-yellow" />
+                  <span className="spp-terminal-dot spp-terminal-dot-green" />
+                  <span className="spp-terminal-label">scan-log</span>
+                </div>
+                <div className="spp-terminal-body">
+                  {log.map((entry, i) => (
+                    <div key={i} className="spp-log-line">
+                      <span className="spp-log-time">[{entry.time ? formatTime(entry.time) : formatTime(new Date().toISOString())}]</span>
+                      <span className={`spp-log-status spp-log-${entry.status}`}>
+                        {entry.status === 'done' ? '✓' : entry.status === 'failed' ? '✗' : '●'}
+                      </span>
+                      <span className="spp-log-msg">{entry.phase}</span>
+                    </div>
+                  ))}
+                  {isRunning && (
+                    <div className="spp-log-line spp-log-active">
+                      <span className="spp-log-time">[{formatTime(new Date().toISOString())}]</span>
+                      <Loader2 size={10} className="spp-log-spinner spin" />
+                      <span className="spp-log-msg">{getCurrentPhaseLabel(scanData || activeScan)}...</span>
+                    </div>
+                  )}
+                  <div ref={logEndRef} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {activeTab === 'Report' && (
+            <ScanReport
+              activeScanId={activeScanId}
+              scanData={scanData || activeScan}
+            />
+          )}
         </div>
       )}
     </div>

@@ -127,8 +127,7 @@
 
 /* Specific Card Borders & Colors */
 .card-score {
-  border-left: 3px solid #EAB308;
-  border-bottom: 4px solid #EAB308;
+  border-left: 4px solid #EAB308;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;

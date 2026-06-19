@@ -139,9 +139,6 @@ const ImpersonatingAccount = () => {
               Scan Status: <strong>{activeScan.status}</strong>
             </span>
           )}
-          <button onClick={() => loadScans()} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.45rem', cursor: 'pointer', display: 'flex' }}>
-            <RefreshCw size={14} className={loadingScans ? 'animate-spin' : ''} />
-          </button>
         </div>
       </div>
 

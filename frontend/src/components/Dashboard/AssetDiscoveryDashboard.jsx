@@ -129,7 +129,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                     {subdomains.slice(0, 8).map((sub, idx) => (
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                         <td style={{ padding: '0.75rem 0.5rem', color: '#3B82F6' }}>{sub.domain || sub.subdomain || 'Unknown'}</td>
-                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>{(sub.ip && sub.ip.length > 0) ? sub.ip.join(', ') : '—'}</td>
+                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>{(sub.ip && sub.ip.length > 0 && sub.ip.some(ip => ip && ip !== '—' && ip !== '-')) ? sub.ip.filter(ip => ip && ip !== '—' && ip !== '-').join(', ') : '-'}</td>
                         <td style={{ padding: '0.75rem 0.5rem' }}>
                           <span style={{ background: sub.status === 'Active' || sub.is_active ? 'rgba(34,197,94,0.1)' : 'rgba(100,116,139,0.1)', color: sub.status === 'Active' || sub.is_active ? '#22C55E' : '#64748B', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
                             {sub.status || (sub.is_active ? 'Active' : 'Inactive')}
@@ -163,9 +163,9 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                       <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                         <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-primary)' }}>{portData.domain || portData.host || '—'}</td>
                         <td style={{ padding: '0.75rem 0.5rem', fontWeight: 600, color: '#8B5CF6' }}>
-                          {Array.isArray(portData.ports) 
+                          {(Array.isArray(portData.ports) && portData.ports.length > 0) 
                             ? portData.ports.map(p => typeof p === 'object' ? `${p.port}${p.service ? ` (${p.service})` : ''}` : p).join(', ') 
-                            : (portData.port || '—')}
+                            : (portData.port && portData.port !== '—' ? portData.port : '-')}
                         </td>
                       </tr>
                     ))}

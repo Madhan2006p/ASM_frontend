@@ -120,11 +120,6 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           badgeText="SECURITY"
           title="Vulnerability Management"
           subtitle="Track, triage and remediate findings across your attack surface."
-          actions={
-            <button className="vuln-btn-primary" onClick={handleExport}>
-              Export
-            </button>
-          }
         />
 
         <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
