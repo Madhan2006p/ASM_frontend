@@ -72,8 +72,26 @@ const Login = ({ onLogin, onNavigate }) => {
     <div className="auth-page">
       <div className="auth-split-card">
 
-        {/* Left visual panel (background image styled in Auth.css) */}
-        <div className="auth-left-panel"></div>
+        {/* Left visual panel */}
+        <div className="auth-left-panel">
+          <div className="auth-left-content">
+            <div className="auth-left-badge">Enterprise Security</div>
+            <h2 className="auth-left-title">Protect Your Attack Surface</h2>
+            <p className="auth-left-sub">
+              Continuous discovery, monitoring, and protection against external threats. Get real-time visibility into your digital footprint.
+            </p>
+            <div className="auth-left-stats">
+              <div className="auth-stat">
+                <span className="auth-stat-num">24/7</span>
+                <span className="auth-stat-lbl">Monitoring</span>
+              </div>
+              <div className="auth-stat">
+                <span className="auth-stat-num">100%</span>
+                <span className="auth-stat-lbl">Visibility</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Right form panel */}
         <div className="auth-right-panel">
@@ -158,11 +176,6 @@ const Login = ({ onLogin, onNavigate }) => {
               )}
             </button>
           </form>
-
-          <div className="auth-footer">
-            Don't have an account?{' '}
-            <span onClick={() => onNavigate('signup')} className="auth-link">Sign up</span>
-          </div>
         </div>
 
       </div>

@@ -149,10 +149,10 @@ const CertificatesTable = ({ certs = [], loading }) => {
               <th>Issuer</th>
               <th>Cert Type</th>
               <th>TLS Version</th>
+              <th>Cipher Suite</th>
               <th>Expiration Date</th>
               <th>Days Left</th>
               <th>Health Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -166,19 +166,15 @@ const CertificatesTable = ({ certs = [], loading }) => {
                   </span>
                 </td>
                 <td className="text-slate-600">{row.tls}</td>
+                <td className="text-slate-500 font-mono" style={{ fontSize: '0.8rem' }}>{row.cipher}</td>
                 <td className="font-mono text-slate-600">{row.expires}</td>
-                <td className={`font-bold ${row.days === 0 ? 'text-red' : row.days < 30 ? 'text-orange' : ''}`}>
-                  {row.days}
+                <td className={`font-bold ${row.days === null ? 'text-slate-400' : row.days === 0 ? 'text-red' : row.days < 30 ? 'text-orange' : ''}`}>
+                  {row.days !== null ? row.days : '—'}
                 </td>
                 <td>
                   <span className={`cert-pill pill-${row.health.replace(' ', '').toLowerCase()}`}>
                     {row.health}
                   </span>
-                </td>
-                <td style={{ textAlign: 'right' }}>
-                  <button className="action-link" onClick={() => alert(`Cipher Suite: ${row.tls}`)}>
-                    Analyze <ArrowRight size={14} />
-                  </button>
                 </td>
               </tr>
             ))}

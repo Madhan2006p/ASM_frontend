@@ -83,7 +83,7 @@ const ImpersonatingAccount = () => {
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Impersonating Accounts"
-        subtitle="Discover real, live fake social media profiles targeting your brand using Maigret & Sherlock OSINT scanners. Scans are triggered automatically from the Dashboard Quick Scan."
+        subtitle="Discover real, live fake social media profiles targeting your brand using Maigret & Sherlock OSINT scanners."
         stats={[
           { label: 'Scans Run', value: totalScans.toString(), subtext: 'Total username checks' },
           { label: 'Profiles Found', value: totalFindings.toString(), subtext: 'Verified profiles' },
@@ -139,9 +139,6 @@ const ImpersonatingAccount = () => {
               Scan Status: <strong>{activeScan.status}</strong>
             </span>
           )}
-          <button onClick={() => loadScans()} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.45rem', cursor: 'pointer', display: 'flex' }}>
-            <RefreshCw size={14} className={loadingScans ? 'animate-spin' : ''} />
-          </button>
         </div>
       </div>
 
@@ -229,11 +226,7 @@ const ImpersonatingAccount = () => {
           <p className="ia-empty-subtext">
             {loadingResults ? 'Please wait while Maigret scan runs.' : 'There are no lookalike accounts recorded for this username check yet.'}
           </p>
-          {!loadingResults && (
-            <p className="ia-empty-subtext" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
-              Scans are automatically triggered from the Dashboard Quick Scan.
-            </p>
-          )}
+
         </div>
       )}
 

@@ -129,7 +129,9 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                 </tr>
               ) : currentData.map(item => {
                 const statusCfg = getScanStatus(item);
-                const hosted = Array.isArray(item.ip) ? item.ip[0] : (item.ip || '—');
+                const hosted = (Array.isArray(item.ip) && item.ip.length > 0) 
+                  ? item.ip[0] 
+                  : (item.ip && item.ip !== '—' ? item.ip : '-');
                 return (
                   <tr key={item.id}>
                     <td className="td-domain">

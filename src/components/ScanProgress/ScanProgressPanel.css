@@ -8,7 +8,7 @@
   bottom: 1rem;
   right: 1rem;
   left: auto;
-  width: 460px;
+  width: 500px;
   max-width: calc(100vw - 2rem - 260px);
   z-index: 1000;
   background: #0A0F1E;
@@ -160,7 +160,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  max-height: 260px;
+  max-height: 420px;
   overflow-y: auto;
 }
 
@@ -488,3 +488,351 @@
 .light-mode .spp-running-state {
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08), 0 0 60px rgba(6, 182, 212, 0.04);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tab Navigation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.spp-tabs {
+  display: flex;
+  gap: 0.15rem;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+  padding-bottom: 0;
+  margin-bottom: 0.6rem;
+  flex-shrink: 0;
+}
+
+.spp-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  color: #4A5E7A;
+  font-size: 0.68rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  position: relative;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.spp-tab-btn:hover {
+  color: #94A3B8;
+  background: none;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.spp-tab-active {
+  color: #22D3EE !important;
+  border-bottom-color: #22D3EE !important;
+}
+
+.spp-tab-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 6px #22C55E;
+  flex-shrink: 0;
+}
+
+.spp-vuln-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: rgba(34, 211, 238, 0.15);
+  color: #22D3EE;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  animation: spp-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes spp-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Scan Report Component
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.spr-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: 0.7rem;
+  overflow-y: auto;
+  max-height: 340px;
+}
+
+.spr-container::-webkit-scrollbar { width: 3px; }
+.spr-container::-webkit-scrollbar-track { background: transparent; }
+.spr-container::-webkit-scrollbar-thumb { background: rgba(59,130,246,.2); border-radius: 2px; }
+
+/* Banners */
+.spr-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+.spr-banner-warn  { background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); color: #F59E0B; }
+.spr-banner-ok    { background: rgba(34,197,94,.1);  border: 1px solid rgba(34,197,94,.25);  color: #22C55E; }
+.spr-banner-error { background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.25);  color: #EF4444; }
+
+/* Actions */
+.spr-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.spr-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+.spr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spr-btn-primary {
+  background: rgba(34, 211, 238, 0.12);
+  color: #22D3EE;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+}
+.spr-btn-primary:hover:not(:disabled) {
+  background: rgba(34, 211, 238, 0.2);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.15);
+}
+
+.spr-btn-export {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.spr-btn-export:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.15);
+}
+
+/* Loading */
+.spr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  color: #4A5E7A;
+  font-size: 0.7rem;
+}
+
+/* Empty state */
+.spr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  color: #4A5E7A;
+  font-size: 0.68rem;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+/* Summary grid */
+.spr-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.spr-sum-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  background: rgba(59, 130, 246, 0.07);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  border-radius: 8px;
+  padding: 0.5rem 0.4rem;
+}
+
+.spr-sum-icon  { flex-shrink: 0; }
+.spr-sum-num   { font-size: 1.1rem; font-weight: 800; font-family: ui-monospace, monospace; line-height: 1; }
+.spr-sum-label { font-size: 0.58rem; color: #4A5E7A; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Severity row */
+.spr-sev-row {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.spr-sev-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid;
+  min-width: 44px;
+}
+.spr-sev-chip span:first-child { font-size: 0.9rem; font-weight: 800; line-height: 1; }
+.spr-sev-chip span:last-child  { font-size: 0.55rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Sections */
+.spr-section { display: flex; flex-direction: column; gap: 0.4rem; flex-shrink: 0; }
+
+.spr-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #7094C0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Vulnerability list */
+.spr-vuln-list { display: flex; flex-direction: column; gap: 0.35rem; }
+
+.spr-vuln-item {
+  padding: 0.4rem 0.6rem;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-left-width: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.spr-vuln-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.spr-vuln-name {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #CBD5E1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.spr-sev-badge {
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.spr-vuln-meta {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.spr-vuln-cve  { font-size: 0.6rem; color: #F97316; background: rgba(249,115,22,.1); padding: 0.05rem 0.35rem; border-radius: 3px; font-weight: 600; }
+.spr-vuln-asset { font-size: 0.6rem; color: #64748B; }
+.spr-vuln-tool  { font-size: 0.58rem; color: #4A5E7A; background: rgba(59,130,246,.1); padding: 0.05rem 0.3rem; border-radius: 3px; }
+
+.spr-vuln-fix {
+  font-size: 0.6rem;
+  color: #64748B;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.spr-more {
+  text-align: center;
+  font-size: 0.62rem;
+  color: #4A5E7A;
+  padding: 0.3rem;
+  font-style: italic;
+}
+
+/* Email security */
+.spr-email-grid { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.spr-email-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid;
+  font-size: 0.65rem;
+}
+
+.spr-email-label { font-weight: 700; color: #CBD5E1; }
+.spr-email-detail { color: #64748B; font-size: 0.58rem; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* SSL list */
+.spr-ssl-list { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.spr-ssl-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.5rem;
+  background: rgba(59,130,246,.05);
+  border-radius: 5px;
+  border: 1px solid rgba(59,130,246,.1);
+}
+
+.spr-ssl-host   { font-size: 0.65rem; font-weight: 600; color: #CBD5E1; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spr-ssl-issuer { font-size: 0.6rem; color: #64748B; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spr-ssl-exp    { font-size: 0.6rem; font-weight: 600; flex-shrink: 0; }
+
+/* Light mode overrides for ScanReport */
+.light-mode .spr-banner-warn  { background: rgba(245,158,11,.08); color: #D97706; }
+.light-mode .spr-banner-ok    { background: rgba(34,197,94,.08);  color: #16A34A; }
+.light-mode .spr-banner-error { background: rgba(239,68,68,.08);  color: #DC2626; }
+.light-mode .spr-sum-card     { background: rgba(37,99,235,.05); border-color: rgba(37,99,235,.12); }
+.light-mode .spr-sum-label    { color: #94A3B8; }
+.light-mode .spr-vuln-item    { background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.1); }
+.light-mode .spr-vuln-name    { color: #1E293B; }
+.light-mode .spr-empty        { color: #94A3B8; }
+.light-mode .spr-loading      { color: #94A3B8; }
+.light-mode .spr-ssl-item     { background: rgba(37,99,235,.04); border-color: rgba(37,99,235,.1); }
+.light-mode .spr-ssl-host     { color: #1E293B; }
+.light-mode .spr-ssl-issuer   { color: #64748B; }
+.light-mode .spr-section-title { color: #94A3B8; }
+.light-mode .spr-tab-btn      { color: #94A3B8; }
+.light-mode .spr-tab-active   { color: #0891B2 !important; border-bottom-color: #0891B2 !important; }
+

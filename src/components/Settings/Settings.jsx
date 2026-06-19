@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import './Settings.css';
 import { api } from '../../utils/api';
+import UserManagement from './UserManagement';
 
 const Settings = ({ user, setUser }) => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -13,23 +14,21 @@ const Settings = ({ user, setUser }) => {
   const [clearing, setClearing] = useState(false);
   const [loadingTools, setLoadingTools] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [notifications, setNotifications] = useState({ emailScans: true, marketing: false, weeklyReport: true, criticalAlerts: true });
-  const [scanning, setScanning]   = useState({ autoScan: true, nightScan: false, deepScan: false });
 
   const currentUser = user || {
     name: 'Demo User',
     email: 'demo@infotechsentinel.com',
-    organization: 'Infotech Sentinel'
+    organization: 'Infotech Sentinel',
+    role: 'member'
   };
 
   const [localUser, setLocalUser] = useState({
     name: currentUser.name,
     email: currentUser.email,
     organization: currentUser.organization,
-    username: currentUser.email.split('@')[0]
+    username: currentUser.email.split('@')[0],
+    profile_photo_url: currentUser.profile_photo_url
   });
-
-  const [scanners, setScanners] = useState([]);
 
   // Sync profile edits with global App state
   useEffect(() => {
@@ -38,56 +37,55 @@ const Settings = ({ user, setUser }) => {
         name: user.name,
         email: user.email,
         organization: user.organization,
-        username: user.email.split('@')[0]
+        username: user.email.split('@')[0],
+        profile_photo_url: user.profile_photo_url
       });
     }
   }, [user]);
 
-  // Load diagnostics & backend health on mount
-  const runDiagnostics = async () => {
-    setLoadingTools(true);
-    try {
-      const data = await api.get('/api/attacksurface/tools-health/');
-      
-      // Map API scanner response format into visual cards format
-      const mappedTools = (data.tools || []).map(t => ({
-        name: t.name,
-        path: t.path || 'System Path',
-        cat: t.category || 'Reconnaissance',
-        time: t.estimate || '15s',
-        status: t.status === 'AVAILABLE' ? 'Active' : 'Missing'
-      }));
-      setScanners(mappedTools);
-    } catch (err) {
-      console.error("Failed to run diagnostics", err);
-    } finally {
-      setLoadingTools(false);
-    }
-  };
-
-  useEffect(() => {
-    runDiagnostics();
-  }, []);
-
   const tabs = [
     { id: 'profile',       label: 'Profile',        icon: <User size={16} /> },
-    { id: 'notifications', label: 'Notifications',  icon: <Bell size={16} /> },
-    { id: 'scanning',      label: 'Scanning',       icon: <Sliders size={16} /> },
-    { id: 'security',      label: 'Security',       icon: <Shield size={16} /> },
-    { id: 'scanners',      label: 'Scanners',       icon: <Monitor size={16} /> },
+    { id: 'users',         label: 'User Management', icon: <Shield size={16} /> },
     { id: 'database',      label: 'Database',       icon: <Database size={16} /> },
   ];
 
-  const handleSave = () => {
-    if (setUser) {
-      setUser({
-        name: localUser.name,
-        email: localUser.email,
-        organization: localUser.organization
+  const handleSave = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('name', localUser.name);
+      formData.append('email', localUser.email);
+      // Not updating organization from profile view usually, but we can send it if needed
+      
+      if (localUser.profile_photo_file) {
+        formData.append('profile_photo', localUser.profile_photo_file);
+      }
+
+      const response = await api.request('/api/auth/profile/', {
+        method: 'PUT',
+        body: formData
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      const updatedUser = await response.json();
+
+      if (setUser) {
+        setUser({
+          ...user,
+          name: updatedUser.name || localUser.name,
+          email: updatedUser.email || localUser.email,
+          profile_photo_url: updatedUser.profile_photo_url
+        });
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    } catch (err) {
+      console.error("Profile update error", err);
+      alert("Failed to save changes. Please try again.");
     }
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
   };
 
   const handleClearDatabase = async () => {
@@ -96,7 +94,6 @@ const Settings = ({ user, setUser }) => {
       try {
         const res = await api.delete('/api/attacksurface/clear-db/');
         alert(res.message || 'Database cleared successfully.');
-        runDiagnostics();
       } catch (err) {
         console.error("Failed to clear database", err);
         alert(err.message || 'Failed to clear database.');
@@ -106,9 +103,6 @@ const Settings = ({ user, setUser }) => {
     }
   };
 
-  const activeCount  = scanners.filter(s => s.status === 'Active').length;
-  const missingCount = scanners.filter(s => s.status === 'Missing').length;
-
   return (
     <div className="settings-container">
 
@@ -117,7 +111,7 @@ const Settings = ({ user, setUser }) => {
         <div>
           <div className="settings-page-badge"><Zap size={12} /> Configuration</div>
           <h1 className="settings-page-title">Settings</h1>
-          <p className="settings-page-subtitle">Manage your account, preferences and scanner integrations</p>
+          <p className="settings-page-subtitle">Manage your account, preferences and organization users</p>
         </div>
         <button className="btn-save-changes" onClick={handleSave}>
           {saveSuccess
@@ -146,6 +140,20 @@ const Settings = ({ user, setUser }) => {
         {/* ── Content Panel ── */}
         <div className="settings-content">
 
+          {/* USERS TAB */}
+          {activeTab === 'users' && (
+            <div className="settings-panel">
+              <div className="panel-header">
+                <Shield size={20} className="panel-icon blue" />
+                <div>
+                  <h2 className="panel-title">User Management</h2>
+                  <p className="panel-desc">View organization users and manage features</p>
+                </div>
+              </div>
+              <UserManagement currentUser={currentUser} />
+            </div>
+          )}
+
           {/* PROFILE TAB */}
           {activeTab === 'profile' && (
             <div className="settings-panel">
@@ -158,13 +166,41 @@ const Settings = ({ user, setUser }) => {
               </div>
 
               <div className="profile-top-card">
-                <div className="profile-avatar-large">{(localUser.name || 'D').charAt(0).toUpperCase()}</div>
+                <div className="profile-avatar-large">
+                  {localUser.profile_photo_url ? (
+                    <img src={localUser.profile_photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                  ) : (
+                    (localUser.name || 'D').charAt(0).toUpperCase()
+                  )}
+                </div>
                 <div className="profile-meta">
                   <h3 className="profile-display-name">{localUser.name}</h3>
                   <p className="profile-display-email">{localUser.email}</p>
-                  <span className="profile-role-badge"><Shield size={11} /> Administrator</span>
+                  <span className="profile-role-badge">
+                    <Shield size={11} /> {currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Member'}
+                  </span>
                 </div>
-                <button className="btn-outline-sm">Change Photo</button>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    id="profile-photo-upload"
+                    style={{ display: 'none' }}
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        const file = e.target.files[0];
+                        setLocalUser({
+                          ...localUser,
+                          profile_photo_file: file,
+                          profile_photo_url: URL.createObjectURL(file) // temporary preview
+                        });
+                      }
+                    }}
+                  />
+                  <label htmlFor="profile-photo-upload" className="btn-outline-sm" style={{ cursor: 'pointer', display: 'inline-block' }}>
+                    Change Photo
+                  </label>
+                </div>
               </div>
 
               <div className="form-grid">
@@ -174,211 +210,26 @@ const Settings = ({ user, setUser }) => {
                 </div>
                 <div className="form-group">
                   <label>Username</label>
-                  <input type="text" value={localUser.username} onChange={(e) => setLocalUser({ ...localUser, username: e.target.value })} placeholder="Username" />
+                  <input type="text" value={localUser.username} disabled className="input-disabled" placeholder="Username" />
                 </div>
                 <div className="form-group full-width">
                   <label>Email Address</label>
                   <div className="input-with-icon">
                     <Mail size={15} className="input-icon" />
-                    <input type="email" value={localUser.email} onChange={(e) => setLocalUser({ ...localUser, email: e.target.value })} placeholder="Email" />
+                    <input type="email" value={localUser.email} disabled className="input-disabled" placeholder="Email" />
                   </div>
                 </div>
                 <div className="form-group">
                   <label>Organization</label>
                   <div className="input-with-icon">
                     <Globe size={15} className="input-icon" />
-                    <input type="text" value={localUser.organization} onChange={(e) => setLocalUser({ ...localUser, organization: e.target.value })} placeholder="Organization" />
+                    <input type="text" value={localUser.organization} disabled className="input-disabled" placeholder="Organization" />
                   </div>
                 </div>
                 <div className="form-group">
                   <label>Role</label>
-                  <input type="text" defaultValue="Administrator" disabled className="input-disabled" />
+                  <input type="text" value={currentUser.role ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Member'} disabled className="input-disabled" />
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* NOTIFICATIONS TAB */}
-          {activeTab === 'notifications' && (
-            <div className="settings-panel">
-              <div className="panel-header">
-                <Bell size={20} className="panel-icon blue" />
-                <div>
-                  <h2 className="panel-title">Notification Preferences</h2>
-                  <p className="panel-desc">Control which alerts and emails you receive</p>
-                </div>
-              </div>
-              <div className="toggle-list">
-                {[
-                  { key: 'emailScans',     title: 'Email Scan Alerts',    desc: 'Notify me when subdomain scans complete' },
-                  { key: 'criticalAlerts', title: 'Critical Vulnerability Alerts', desc: 'Immediate alerts for critical findings' },
-                  { key: 'weeklyReport',   title: 'Weekly Report',        desc: 'Receive a weekly security summary email' },
-                  { key: 'marketing',      title: 'Marketing Emails',     desc: 'Product news, tips and feature updates' },
-                ].map(item => (
-                  <div key={item.key} className="toggle-row">
-                    <div className="toggle-info">
-                      <h3 className="toggle-title">{item.title}</h3>
-                      <p className="toggle-desc">{item.desc}</p>
-                    </div>
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        checked={notifications[item.key]}
-                        onChange={() => setNotifications(n => ({ ...n, [item.key]: !n[item.key] }))}
-                      />
-                      <span className="slider round"></span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* SCANNING TAB */}
-          {activeTab === 'scanning' && (
-            <div className="settings-panel">
-              <div className="panel-header">
-                <Sliders size={20} className="panel-icon green" />
-                <div>
-                  <h2 className="panel-title">Scanning Configuration</h2>
-                  <p className="panel-desc">Configure automated scanning schedules and behavior</p>
-                </div>
-              </div>
-              <div className="toggle-list">
-                {[
-                  { key: 'autoScan',  title: 'Auto-Scan Added Domains', desc: 'Automatically trigger analysis when a domain is added' },
-                  { key: 'nightScan', title: 'Nightly Deep Scan',       desc: 'Run comprehensive scans overnight (12 AM – 5 AM)' },
-                  { key: 'deepScan',  title: 'Enable Deep Port Scan',   desc: 'Scan all 65,535 ports instead of top 1,000' },
-                ].map(item => (
-                  <div key={item.key} className="toggle-row">
-                    <div className="toggle-info">
-                      <h3 className="toggle-title">{item.title}</h3>
-                      <p className="toggle-desc">{item.desc}</p>
-                    </div>
-                    <label className="switch">
-                      <input
-                        type="checkbox"
-                        checked={scanning[item.key]}
-                        onChange={() => setScanning(s => ({ ...s, [item.key]: !s[item.key] }))}
-                      />
-                      <span className="slider round"></span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="info-box">
-                <Zap size={14} />
-                <span>Scanning schedules run in the background and won't affect your dashboard performance.</span>
-              </div>
-            </div>
-          )}
-
-          {/* SECURITY TAB */}
-          {activeTab === 'security' && (
-            <div className="settings-panel">
-              <div className="panel-header">
-                <Shield size={20} className="panel-icon red" />
-                <div>
-                  <h2 className="panel-title">Security & Account</h2>
-                  <p className="panel-desc">Manage your password, sessions and account access</p>
-                </div>
-              </div>
-              <div className="form-section-title"><Key size={14} /> Change Password</div>
-              <div className="form-grid">
-                <div className="form-group full-width">
-                  <label>Current Password</label>
-                  <div className="input-with-icon">
-                    <Lock size={15} className="input-icon" />
-                    <input type={showPassword ? 'text' : 'password'} placeholder="Enter current password" />
-                    <button className="input-toggle" onClick={() => setShowPassword(p => !p)}>
-                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                    </button>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label>New Password</label>
-                  <input type="password" placeholder="New password" />
-                </div>
-                <div className="form-group">
-                  <label>Confirm Password</label>
-                  <input type="password" placeholder="Confirm new password" />
-                </div>
-              </div>
-              <div className="password-rules">
-                {['At least 8 characters', 'One uppercase letter', 'One number', 'One special character'].map(r => (
-                  <span key={r} className="password-rule"><Check size={11} /> {r}</span>
-                ))}
-              </div>
-              <div className="danger-zone">
-                <div className="danger-zone-header">
-                  <AlertCircle size={16} />
-                  <span>Danger Zone</span>
-                </div>
-                <p className="danger-zone-desc">Deleting your account is permanent and cannot be undone. All your data will be erased.</p>
-                <button className="btn-danger">Delete Account</button>
-              </div>
-            </div>
-          )}
-
-          {/* SCANNERS TAB */}
-          {activeTab === 'scanners' && (
-            <div className="settings-panel">
-              <div className="panel-header">
-                <Monitor size={20} className="panel-icon blue" />
-                <div>
-                  <h2 className="panel-title">Core Security Scanners</h2>
-                  <p className="panel-desc">Diagnostic health mapping of all backend scanning tools</p>
-                </div>
-                <button className="btn-diagnostics ml-auto" onClick={() => { setLoadingTools(true); setTimeout(() => setLoadingTools(false), 1500); }} disabled={loadingTools}>
-                  <RefreshCw size={14} className={loadingTools ? 'spin' : ''} />
-                  {loadingTools ? 'Checking...' : 'Run Diagnostics'}
-                </button>
-              </div>
-
-              <div className="scanner-summary-row">
-                <div className="scanner-summary-card green">
-                  <CheckCircle2 size={20} /> <span>{activeCount} Active</span>
-                </div>
-                <div className="scanner-summary-card red">
-                  <AlertCircle size={20} /> <span>{missingCount} Missing</span>
-                </div>
-                <div className="scanner-summary-card blue">
-                  <Monitor size={20} /> <span>{scanners.length} Total Tools</span>
-                </div>
-              </div>
-
-              <div className="scanners-table-wrap">
-                <table className="scanners-table">
-                  <thead>
-                    <tr>
-                      <th>SCANNER TOOL</th>
-                      <th>INTEL CATEGORY</th>
-                      <th className="center-col">EST. RUNTIME</th>
-                      <th className="center-col">STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {scanners.map((scanner, idx) => (
-                      <tr key={idx}>
-                        <td className="tool-cell">
-                          <div className="tool-name">{scanner.name}</div>
-                          <div className="tool-path">{scanner.path}</div>
-                        </td>
-                        <td className="cat-cell">{scanner.cat}</td>
-                        <td className="center-col">
-                          <span className="time-badge"><Clock size={12} /> {scanner.time}</span>
-                        </td>
-                        <td className="center-col">
-                          {scanner.status === 'Active' ? (
-                            <span className="status-badge active"><CheckCircle2 size={12} /> Active</span>
-                          ) : (
-                            <span className="status-badge missing"><AlertCircle size={12} /> Missing</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </div>
             </div>
           )}

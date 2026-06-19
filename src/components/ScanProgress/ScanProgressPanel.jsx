@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
 import { api } from '../../utils/api';
 import './ScanProgressPanel.css';
@@ -39,7 +39,6 @@ function getPhaseStatus(phase, scanData) {
     if (scanData.vuln_scan_phase === phase.phaseValue) return 'running';
     if (phase.phaseValue === 'basic' && (scanData.vuln_scan_phase === 'basic' || scanData.vuln_scan_phase === 'complete')) return 'done';
     if (phase.phaseValue === 'complete' && scanData.vuln_scan_phase === 'complete') return 'running';
-    // If vuln_scan_phase is 'deep' or some other value, basic is done
     if (phase.phaseValue === 'basic' && scanData.vuln_scan_phase && scanData.vuln_scan_phase !== 'pending') return 'done';
     return 'pending';
   }
@@ -73,6 +72,8 @@ function formatTime(dateStr) {
   }
 }
 
+
+
 const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const [scanData, setScanData] = useState(null);
   const [log, setLog] = useState([]);
@@ -83,6 +84,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   // Find the active scan from scansList
   const activeScan = scansList.find(s => s.id === Number(activeScanId));
   const isRunning = activeScan?.status === 'running' || scanData?.status === 'running';
+
+  const prevVulnPhaseRef = useRef(null);
+  useEffect(() => {
+    if (!scanData) return;
+    prevVulnPhaseRef.current = scanData.vuln_scan_phase;
+  }, [scanData?.vuln_scan_phase]);
 
   // Fetch scan status periodically
   useEffect(() => {
@@ -109,12 +116,22 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             }
           }
 
+          // Vulnerability phase transitions — granular log
+          if (prev.vuln_scan_phase !== data.vuln_scan_phase) {
+            const phaseLabels = {
+              running_nuclei: '🔍 Nuclei fast scan started',
+              running_wapiti: '🕷️ Wapiti web fuzzing started',
+              complete:       '✓ Vulnerability scan complete',
+            };
+            const label = phaseLabels[data.vuln_scan_phase];
+            if (label) phasesChanged.push({ phase: label, status: data.vuln_scan_phase === 'complete' ? 'done' : 'running', time: new Date().toISOString() });
+          }
+
           // Detect when scan completes or fails
           const justCompleted = prev.status === 'running' && data.status === 'completed';
           const justFailed = prev.status === 'running' && data.status === 'failed';
           if (justCompleted) {
             phasesChanged.push({ phase: 'Scan completed successfully', status: 'done', time: data.updated_at || new Date().toISOString() });
-            // Notify parent to refresh scans list
             if (fetchScans) fetchScans(true);
           }
           if (justFailed) {
@@ -156,6 +173,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
     }
   }, [activeScan?.id, activeScan?.status]);
 
+  // Reset log on scan change
+  useEffect(() => {
+    setLog([]);
+    prevVulnPhaseRef.current = null;
+  }, [activeScanId]);
+
   // Scroll log to bottom
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -163,6 +186,13 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
 
   const progress = scanData?.progress ?? activeScan?.progress ?? 0;
   const target = scanData?.target ?? activeScan?.target ?? '';
+
+  // Vuln scan status text for header badge
+  const vulnPhase = scanData?.vuln_scan_phase;
+  const vulnBadge =
+    vulnPhase === 'running_nuclei' ? '🔍 Nuclei' :
+    vulnPhase === 'running_wapiti' ? '🕷️ Wapiti' :
+    vulnPhase === 'complete' ? null : null;
 
   // Guard: must be after all hooks to comply with Rules of Hooks
   if (!activeScanId) return null;
@@ -179,6 +209,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               <>
                 <span className="spp-dot-pulse" />
                 Scan Progress — {target}
+                {vulnBadge && <span className="spp-vuln-badge">{vulnBadge}</span>}
               </>
             ) : scanData?.status === 'completed' ? (
               <>
@@ -224,7 +255,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
         </div>
       </div>
 
-      {/* Progress body */}
+      {/* Body — Progress only */}
       {!collapsed && (
         <div className="spp-body">
           {/* Progress bar */}

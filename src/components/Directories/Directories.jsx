@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Directories.css';
-import { Search, ArrowRight, Folder, Lock, Database, ShieldAlert, Globe, Filter, ChevronDown, Check, RefreshCw } from 'lucide-react';
+import { Search, Folder, Lock, Database, ShieldAlert, Globe, RefreshCw } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -10,27 +10,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   const [loading, setLoading] = useState(false);
   const [filterPill, setFilterPill] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [riskFilter, setRiskFilter] = useState('All Risks');
-  
-  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
-  const [showRiskMenu, setShowRiskMenu] = useState(false);
-  
-  const categoryRef = useRef(null);
-  const riskRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (categoryRef.current && !categoryRef.current.contains(event.target)) {
-        setShowCategoryMenu(false);
-      }
-      if (riskRef.current && !riskRef.current.contains(event.target)) {
-        setShowRiskMenu(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Fetch directories
   useEffect(() => {
@@ -91,16 +70,20 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   };
 
   const getAccess = (status) => {
-    if (status === 401 || status === 403) return 'Hidden';
-    if (status === 301 || status === 302) return 'Internal';
-    return 'Public';
+    if (status === 401 || status === 403) return 'Protected';
+    if (status === 301 || status === 302) return 'Redirect';
+    if (status === 404) return 'Not Found';
+    if (status === 200) return 'Public';
+    return 'Unknown';
   };
 
   const getStatus = (status) => {
-    if (status === 200) return 'Exposed';
-    if (status === 403) return 'Restricted';
-    if (status === 401) return 'Secured';
-    return 'Exposed';
+    if (status === 200) return 'Exposed';       // Publicly accessible — genuinely exposed
+    if (status === 403) return 'Restricted';    // Server says no — exists but blocked
+    if (status === 401) return 'Secured';       // Requires auth
+    if (status === 301 || status === 302) return 'Redirect'; // Redirect, not directly exposed
+    if (status === 404) return 'Not Found';     // Doesn't exist
+    return 'Unknown';                           // Any other status
   };
 
   const filteredData = directories.map(item => {
@@ -129,20 +112,19 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     // Search Box
     if (searchQuery && !item.path.toLowerCase().includes(searchQuery.toLowerCase())) return false;
 
-    // Category Dropdown
-    if (categoryFilter !== 'All Categories' && item.category !== categoryFilter) return false;
-
-    // Risk Dropdown
-    if (riskFilter !== 'All Risks' && item.risk !== riskFilter.toUpperCase()) return false;
-
     return true;
+  }).sort((a, b) => {
+    const riskWeight = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+    return (riskWeight[b.risk] || 0) - (riskWeight[a.risk] || 0);
   });
 
   const getStatusClass = (status) => {
-    if (status === 'Exposed') return 'st-out';
-    if (status === 'Secured' || status === 'Restricted') return 'st-hlt';
-    if (status === 'Indexable') return 'st-pat';
-    return 'st-upd';
+    if (status === 'Exposed')   return 'st-out';      // red — genuinely accessible
+    if (status === 'Restricted') return 'st-hlt';     // amber — blocked by server
+    if (status === 'Secured')    return 'st-hlt';     // amber — requires auth
+    if (status === 'Redirect')   return 'st-pat';     // blue — redirects away
+    if (status === 'Not Found')  return 'st-upd';     // grey — 404
+    return 'st-upd';                                  // grey — unknown
   };
 
   const getRiskClass = (risk) => {
@@ -151,9 +133,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (risk === 'MEDIUM') return 'risk-med';
     return 'risk-low';
   };
-
-  const categories = ['All Categories', 'Admin Panel', 'Backup File', 'Sensitive', 'Public', 'Hidden'];
-  const risks = ['All Risks', 'Critical', 'High', 'Medium', 'Low'];
 
   // Stats calculation
   const totalCount = directories.length;
@@ -169,11 +148,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
           badgeText="DISCOVERY"
           title="Directories"
           subtitle="Discover exposed directories, hidden paths, sensitive files, admin panels, and publicly accessible resources across monitored assets."
-          actions={
-            <button className="dir-btn-primary">
-              Export
-            </button>
-          }
           stats={[
             { label: 'Directories Found', value: totalCount.toString(), subtext: 'Active accessible paths' },
             { label: 'Sensitive Paths', value: sensitiveCount.toString(), subtext: 'Requires review' },
@@ -217,56 +191,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
               />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            
-            {/* Custom Category Dropdown */}
-            <div className="global-custom-select" ref={categoryRef}>
-              <button 
-                className="global-custom-select-btn" 
-                onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-              >
-                {categoryFilter} <ChevronDown size={16} color="#94A3B8" />
-              </button>
-              {showCategoryMenu && (
-                <div className="global-custom-dropdown-menu">
-                  {categories.map(cat => (
-                    <div 
-                      key={cat}
-                      className={`global-custom-dropdown-item ${categoryFilter === cat ? 'active' : ''}`}
-                      onClick={() => { setCategoryFilter(cat); setShowCategoryMenu(false); }}
-                    >
-                      {cat} {categoryFilter === cat && <Check size={14} />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Custom Risk Dropdown */}
-            <div className="global-custom-select" ref={riskRef}>
-              <button 
-                className="global-custom-select-btn" 
-                onClick={() => setShowRiskMenu(!showRiskMenu)}
-                style={{ minWidth: '130px', justifyContent: 'space-between' }}
-              >
-                {riskFilter} <ChevronDown size={16} color="#94A3B8" />
-              </button>
-              {showRiskMenu && (
-                <div className="global-custom-dropdown-menu">
-                  {risks.map(r => (
-                    <div 
-                      key={r}
-                      className={`global-custom-dropdown-item ${riskFilter === r ? 'active' : ''}`}
-                      onClick={() => { setRiskFilter(r); setShowRiskMenu(false); }}
-                    >
-                      {r} {riskFilter === r && <Check size={14} />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
         </div>
 
         {/* Table */}
@@ -279,7 +203,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                 <th>Access</th>
                 <th>Subdomain Scope</th>
                 <th>Risk Level</th>
-                <th>Findings</th>
                 <th>Status</th>
                 <th>Last Detected</th>
               </tr>
@@ -287,14 +210,13 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Loading directories from scan database...
                   </td>
                 </tr>
               ) : filteredData.map(item => {
                 const dateStr = item.created ? new Date(item.created).toLocaleDateString() : 'Recent';
-                const findingsCount = item.status === 'Exposed' && (item.category === 'Sensitive' || item.category === 'Backup File') ? 1 : 0;
                 return (
                   <tr key={item.id}>
                     <td className="dir-path">{item.path}</td>
@@ -314,17 +236,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#DC2626', fontWeight: 700, fontSize: '0.8125rem' }}>
-                        {findingsCount > 0 ? (
-                          <>
-                            <ShieldAlert size={14} /> {findingsCount}
-                          </>
-                        ) : (
-                          <span style={{ color: '#94A3B8' }}>0</span>
-                        )}
-                      </div>
-                    </td>
-                    <td>
                       <span className={`dir-status-pill ${getStatusClass(item.status)}`}>{item.status}</span>
                     </td>
                     <td className="dir-last-seen">{dateStr}</td>
@@ -333,7 +244,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
               })}
               {!loading && filteredData.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No directories found for this scan.
                   </td>
                 </tr>

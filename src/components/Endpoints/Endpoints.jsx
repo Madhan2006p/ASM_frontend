@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Endpoints.css';
-import { Settings, Search, Filter, Lock, ArrowRight, ChevronDown, Check, CheckCircle2, X, RefreshCw } from 'lucide-react';
+import { Search, Filter, Lock, ArrowRight, ChevronDown, Check, CheckCircle2, X, RefreshCw } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -30,6 +30,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         setLoading(true);
         const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
         const list = Array.isArray(data) ? data : (data.results || []);
+        list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
         setEndpoints(list);
       } catch (e) {
         console.error("Failed to load endpoints", e);
@@ -144,16 +145,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           badgeText="ENDPOINTS"
           title="Endpoints"
           subtitle="Discovered API endpoints and web routes across your assets."
-          actions={
-            <>
-              <button className="ep-btn-config" onClick={() => setShowConfigModal(true)}>
-                <Settings size={16} /> Scanner Config
-              </button>
-              <button className="ep-btn-export" onClick={exportToCSV}>
-                Export Endpoints
-              </button>
-            </>
-          }
           stats={[
             { label: 'Unauthenticated API', value: unauthHigh.toString(), subtext: 'Threat Detected' },
             { label: 'Exposed Files/Configs', value: exposedConfigs.toString(), subtext: 'Needs review' },
@@ -309,42 +300,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         </div>
       )}
 
-      {/* Scanner Config Modal */}
-      {showConfigModal && (
-        <div className="ep-modal-overlay">
-          <div className="ep-modal-content">
-            <div className="ep-modal-header">
-              <h2 className="ep-modal-title"><Settings size={20} /> Scanner Configuration</h2>
-              <button className="ep-modal-close" onClick={() => setShowConfigModal(false)}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="ep-modal-body">
-              <div className="ep-form-group">
-                <label className="ep-form-label">Scan Frequency</label>
-                <select className="ep-form-select">
-                  <option>Daily</option>
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                  <option>Manual Only</option>
-                </select>
-              </div>
-              <div className="ep-form-group">
-                <label className="ep-form-label">Target Domains</label>
-                <input type="text" className="ep-form-input" defaultValue={activeTarget || "acme.com"} />
-              </div>
-              <div className="ep-form-group">
-                <label className="ep-form-label">Max Crawl Depth</label>
-                <input type="number" className="ep-form-input" defaultValue={5} />
-              </div>
-            </div>
-            <div className="ep-modal-footer">
-              <button className="ep-btn-cancel" onClick={() => setShowConfigModal(false)}>Cancel</button>
-              <button className="ep-btn-save" onClick={() => { setShowConfigModal(false); triggerToast('Scanner configuration saved.'); }}>Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Investigate Modal */}
       {selectedEndpoint && (

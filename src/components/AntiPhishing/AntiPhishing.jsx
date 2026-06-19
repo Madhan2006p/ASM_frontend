@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Globe, Shield, RefreshCw, Plus, Search, HelpCircle, CheckCircle, AlertTriangle, Eye, ShieldAlert, Image } from 'lucide-react';
+import { Shield, RefreshCw, Plus, Search, HelpCircle, CheckCircle, AlertTriangle, Eye, ShieldAlert, Image } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import './AntiPhishing.css';
 import { api } from '../../utils/api';
@@ -10,10 +10,7 @@ const AntiPhishing = ({ activeTarget }) => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Audit Custom URL Modal State
-  const [showAuditModal, setShowAuditModal] = useState(false);
-  const [auditDomainInput, setAuditDomainInput] = useState('');
-  const [auditing, setAuditing] = useState(false);
+
 
   // Detail Modal
   const [selectedReport, setSelectedReport] = useState(null);
@@ -33,27 +30,6 @@ const AntiPhishing = ({ activeTarget }) => {
   useEffect(() => {
     loadReports();
   }, []);
-
-  const handleAuditSubmit = async (e) => {
-    e.preventDefault();
-    if (!auditDomainInput.trim()) return;
-
-    setAuditing(true);
-    try {
-      const res = await api.post('/api/brand-monitoring/phishing-domains/', {
-        domain: auditDomainInput.trim().toLowerCase()
-      });
-      alert(`Phishing analysis queued for target. Status: ${res.status || 'Queued'}`);
-      setAuditDomainInput('');
-      setShowAuditModal(false);
-      loadReports();
-    } catch (err) {
-      console.error("Failed to queue phishing check", err);
-      alert(err.message || "Failed to trigger phishing audit.");
-    } finally {
-      setAuditing(false);
-    }
-  };
 
   const handleExport = () => {
     if (reports.length === 0) return;
@@ -96,11 +72,6 @@ const AntiPhishing = ({ activeTarget }) => {
           { label: 'Live Resolution',  value: activeCount.toString(), subtext: 'A/MX records active' },
           { label: 'Clean / Inactive',  value: (totalCount - phishingCount).toString(), subtext: 'No risk detected' },
         ]}
-        actions={
-          <button className="ap-btn-outline" onClick={() => setShowAuditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Globe size={14}/> Audit Custom URL
-          </button>
-        }
       />
 
       {/* Controls */}
@@ -128,27 +99,6 @@ const AntiPhishing = ({ activeTarget }) => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button onClick={loadReports} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.45rem', cursor: 'pointer', display: 'flex' }}>
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          </button>
-          <button 
-            onClick={handleExport} 
-            disabled={reports.length === 0}
-            style={{
-              padding: '0.45rem 1rem',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '6px',
-              color: 'var(--text-primary)',
-              fontWeight: '600',
-              cursor: 'pointer',
-              fontSize: '0.85rem'
-            }}
-          >
-            Export CSV
-          </button>
         </div>
       </div>
 
@@ -237,109 +187,12 @@ const AntiPhishing = ({ activeTarget }) => {
           <Shield size={56} className="ap-empty-icon" strokeWidth={1.5} />
           <h2 className="ap-empty-title">{loading ? 'Loading phishing data...' : 'No Phishing Threats Found'}</h2>
           <p className="ap-empty-subtext">
-            {loading ? 'Please wait while we sync threat records.' : 'Start by auditing a custom domain/URL to verify lookalike registrations.'}
+            {loading ? 'Please wait while we sync threat records.' : 'No lookalike registrations verified.'}
           </p>
-          {!loading && (
-            <button className="ap-btn-solid" onClick={() => setShowAuditModal(true)}>
-              <Globe size={16} /> Audit Custom URL
-            </button>
-          )}
         </div>
       )}
 
-      {/* Audit Modal */}
-      {showAuditModal && createPortal(
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowAuditModal(false)}
-        >
-          <div 
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              padding: '2rem',
-              width: '100%',
-              maxWidth: '450px',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-              Audit Custom Phishing URL
-            </h3>
-            <form onSubmit={handleAuditSubmit}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Domain or URL
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. login-mybrand.net"
-                  value={auditDomainInput}
-                  onChange={(e) => setAuditDomainInput(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-main)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem'
-                  }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowAuditModal(false)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={auditing}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem'
-                  }}
-                >
-                  {auditing && <RefreshCw size={12} className="animate-spin" />}
-                  {auditing ? 'Queuing Check...' : 'Start Audit'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+
 
       {/* Details Dialog */}
       {selectedReport && createPortal(

@@ -1,30 +1,33 @@
 import React from 'react';
-import { Filter, Download, ArrowRight } from 'lucide-react';
+import { Filter, ArrowRight } from 'lucide-react';
 import './CertDashboard.css';
 import PageHeaderCard from '../common/PageHeaderCard';
 
 const CertDashboard = ({ certs = [], loading }) => {
   const activeCount = certs.length;
-  const expiringSoonCount = certs.filter(c => c.days > 0 && c.days <= 30).length;
+  const expiringSoonCount = certs.filter(c => c.days !== null && c.days > 0 && c.days <= 30).length;
   const expiredCount = certs.filter(c => c.days === 0).length;
   const weakCount = certs.filter(c => ['C', 'D', 'E', 'F'].includes(c.sslGrade)).length;
 
   // Calculate dynamic security health score
-  let score = 100;
+  let score = 0;
+  let healthLabel = 'N/A';
   if (certs.length > 0) {
+    score = 100;
     score -= expiredCount * 15;
     score -= expiringSoonCount * 5;
     score -= weakCount * 8;
     score -= certs.filter(c => !c.isTrusted).length * 20;
     score = Math.max(30, score);
-  }
 
-  let healthLabel = 'HEALTHY';
-  if (score < 50) healthLabel = 'CRITICAL';
-  else if (score < 80) healthLabel = 'WARNING';
+    healthLabel = 'HEALTHY';
+    if (score < 50) healthLabel = 'CRITICAL';
+    else if (score < 80) healthLabel = 'WARNING';
+  }
 
   // Expiring soon or critical list
   const expiringList = [...certs]
+    .filter(c => c.days !== null)
     .sort((a, b) => a.days - b.days)
     .slice(0, 3);
 
@@ -61,11 +64,6 @@ const CertDashboard = ({ certs = [], loading }) => {
         badgeText="SECURITY"
         title="SSL Certificates"
         subtitle="Monitor certificate health, expiration dates, issuers, encryption strength, and SSL security posture across your attack surface."
-        actions={
-          <button className="cert-btn-primary" onClick={handleExport} disabled={certs.length === 0}>
-            Export
-          </button>
-        }
         stats={[
           { label: 'Active Certificates', value: activeCount.toString(), subtext: 'Monitored hostnames' },
           { label: 'Expiring Soon', value: expiringSoonCount.toString(), subtext: 'Next 30 days' },

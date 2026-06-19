@@ -62,7 +62,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             flat.push({
               id: `${item.id}-${idx}`,
               host: item.domain,
-              ip: '—', // backend model does not explicitly store IP on PortResult, default to dash
+              ip: '-', // backend model does not explicitly store IP on PortResult, default to dash
               port: portNum,
               protocol: `/${(proto || 'tcp').toUpperCase()}`,
               service: service || 'unknown',
@@ -75,6 +75,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             });
           });
         });
+        flat.sort((a, b) => b.risk - a.risk);
         setPortsList(flat);
       } catch (e) {
         console.error("Failed to load open ports", e);
@@ -125,11 +126,6 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           badgeText="SECURITY"
           title="Open Ports"
           subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
-          actions={
-            <button className="op-btn-primary" onClick={exportToCSV}>
-              Export
-            </button>
-          }
           stats={[
             { label: 'Critical Ports', value: criticalCount.toString(), subtext: 'Requires immediate review' },
             { label: 'High Risk Services', value: highCount.toString(), subtext: 'Elevated exposure' },

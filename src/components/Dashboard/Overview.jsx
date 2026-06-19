@@ -125,50 +125,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
   useEffect(() => {
     if (activeTarget) setScanDomain(activeTarget);
   }, [activeTarget]);
-  const handleQuickScan = async (domainTarget) => {
-    const target = (typeof domainTarget === 'string' ? domainTarget : scanDomain).trim();
-    if (!target) return;
 
-    // Validate that the target is in the assigned monitored domains
-    const isAssigned = monitoredDomains.some(d => d.domain === target);
-    if (!isAssigned) {
-      alert("This domain is not assigned to your scope. Please contact the admin to scan unassigned domains.");
-      return;
-    }
-
-    try {
-      setScanning(true);
-      const res = await api.post('/api/attacksurface/scan/', { target });
-      if (res.scan_id) {
-        // Immediately set the active scan so the progress panel appears
-        handleSelectScan(res.scan_id, target);
-        pollScanStatus(res.scan_id);
-      } else {
-        setScanning(false);
-      }
-
-      // Also trigger brand monitoring scans in background
-      // Extract brand name from domain (e.g. "hackersinfotech.com" → "hackersinfotech")
-      const brandName = target.split('.')[0];
-      api.post('/api/brand-monitoring/suspicious-domains/', { domain: target })
-        .catch(e => console.warn('Suspicious domain scan trigger failed:', e));
-      api.post('/api/brand-monitoring/phishing-domains/', { domain: target })
-        .catch(e => console.warn('Phishing domain scan trigger failed:', e));
-      api.post('/api/brand-monitoring/impersonation-scans/', {
-        username: brandName,
-        brand_domain: target
-      }).catch(e => console.warn('Impersonation scan trigger failed:', e));
-      
-      // Auto-start Secrets/Surface Web scan
-      api.post('/api/surface-monitoring/repos/discover_by_org/')
-        .then(() => api.post('/api/surface-monitoring/repos/scan_all/'))
-        .catch(() => api.post('/api/surface-monitoring/repos/scan_all/').catch(() => {}));
-    } catch (e) {
-      console.error(e);
-      alert(e.message || "Failed to trigger scan");
-      setScanning(false);
-    }
-  };
   const pollScanStatus = (scanId) => {
     const interval = setInterval(async () => {
       try {
@@ -344,11 +301,13 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
   });
 
   const getGlobalScore = () => {
+    if (!activeScanId) return 0;
     if (vulns.length === 0) return 98;
     return Math.max(100 - (vulns.length * 5), 32);
   };
 
   const getGlobalRiskLabel = () => {
+    if (!activeScanId) return 'N/A';
     const score = getGlobalScore();
     if (score >= 85) return 'Low';
     if (score >= 60) return 'Medium';
@@ -476,17 +435,9 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
                     <div className="ov-dc-name" style={{ fontSize: '1.25rem' }}>{d.domain}</div>
                     
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
-                      <button 
-                        onClick={() => handleQuickScan(d.domain)} 
-                        disabled={scanning} 
-                        style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '6px', padding: '0.4rem', fontSize: '0.8rem', fontWeight: 600, cursor: scanning ? 'not-allowed' : 'pointer', opacity: scanning ? 0.8 : 1 }}
-                      >
-                        {scanning ? <RefreshCw className="spin" size={12} /> : <Play fill="white" size={12} />} 
-                        {scanning ? 'Scanning...' : 'Quick Scan'}
-                      </button>
-                      
+
                       <div style={{ position: 'relative', flex: 1 }}>
-                        <button 
+                        <button
                           onClick={() => {
                             setScanDomain(d.domain);
                             setShowScheduleMenu(showScheduleMenu === d.domain ? null : d.domain);
@@ -495,12 +446,12 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
                         >
                           <Clock size={12} /> Schedule
                         </button>
-                        
+
                         {showScheduleMenu === d.domain && (
                           <div style={{ position: 'absolute', bottom: 'calc(100% + 0.5rem)', right: 0, width: '220px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 100 }}>
                             <div style={{ fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}>Schedule {d.domain}</div>
-                            <input 
-                              type="datetime-local" 
+                            <input
+                              type="datetime-local"
                               value={scheduleTime}
                               onChange={(e) => setScheduleTime(e.target.value)}
                               min={new Date().toISOString().slice(0, 16)}

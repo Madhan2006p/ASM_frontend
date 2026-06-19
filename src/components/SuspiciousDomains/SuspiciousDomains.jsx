@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, RefreshCw, Terminal, Filter, Download, Search, CheckCircle, AlertTriangle, Eye, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Terminal, Filter, Search, CheckCircle, AlertTriangle, Eye, ShieldAlert } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import './SuspiciousDomains.css';
 import { api } from '../../utils/api';
@@ -9,12 +9,9 @@ const SuspiciousDomains = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchPart, setSearchPart] = useState('Domain');
 
-  // Audit Domain Modal State
-  const [showAuditModal, setShowAuditModal] = useState(false);
-  const [auditDomainInput, setAuditDomainInput] = useState('');
-  const [auditing, setAuditing] = useState(false);
+
+
 
   // Detail Modal
   const [selectedReport, setSelectedReport] = useState(null);
@@ -35,26 +32,7 @@ const SuspiciousDomains = () => {
     loadReports();
   }, []);
 
-  const handleAuditSubmit = async (e) => {
-    e.preventDefault();
-    if (!auditDomainInput.trim()) return;
 
-    setAuditing(true);
-    try {
-      const res = await api.post('/api/brand-monitoring/suspicious-domains/', {
-        domain: auditDomainInput.trim().toLowerCase()
-      });
-      alert(`Domain audit queued successfully (ID: ${res.report?.id || 'Pending'}).`);
-      setAuditDomainInput('');
-      setShowAuditModal(false);
-      loadReports();
-    } catch (err) {
-      console.error("Failed to audit domain", err);
-      alert(err.message || "Failed to trigger domain audit.");
-    } finally {
-      setAuditing(false);
-    }
-  };
 
   const handleExport = () => {
     if (reports.length === 0) return;
@@ -76,10 +54,9 @@ const SuspiciousDomains = () => {
   const filteredData = reports.filter(item => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    if (searchPart === 'Domain') return (item.domain || '').toLowerCase().includes(q);
-    if (searchPart === 'Registrar') return (item.registrar || '').toLowerCase().includes(q);
-    if (searchPart === 'Name Server') return (item.name_server || '').toLowerCase().includes(q);
-    return true;
+    return (item.domain || '').toLowerCase().includes(q) ||
+           (item.registrar || '').toLowerCase().includes(q) ||
+           (item.name_server || '').toLowerCase().includes(q);
   });
 
   // Stats calculation
@@ -113,11 +90,6 @@ const SuspiciousDomains = () => {
           { label: 'Newly Registered',value: reports.filter(r => r.whois_created).length.toString(), subtext: 'WHOIS verified' },
           { label: 'Confirmed Malicious', value: maliciousCount.toString(), subtext: 'Threat intelligence hit' },
         ]}
-        actions={
-          <button className="sd-btn-blue" onClick={() => setShowAuditModal(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
-            <Plus size={14}/> Audit Domain
-          </button>
-        }
       />
 
       {/* Tabs */}
@@ -129,12 +101,26 @@ const SuspiciousDomains = () => {
       <div className="sd-stats-grid">
         
         {/* Score Card */}
-        <div className="sd-stat-card card-score">
-          <div className="sd-stat-left">
+        <div 
+          className="sd-stat-card card-score" 
+          style={{ 
+            borderLeftColor: score < 70 ? '#EF4444' : score < 90 ? '#EAB308' : '#22C55E'
+          }}
+        >
+          <div className="sd-stat-left" style={{ display: 'flex', flexDirection: 'column' }}>
             <span className="sd-stat-label">Portfolio Health</span>
             <span className={`sd-stat-value ${score < 70 ? 'text-red' : score < 90 ? 'text-yellow' : 'text-green'}`}>{score}</span>
           </div>
-          <div className="sd-score-badge" style={{ background: score < 70 ? '#EF4444' : score < 90 ? '#EAB308' : '#22C55E' }}>{grade}</div>
+          <div 
+            className="sd-score-badge" 
+            style={{ 
+              background: score < 70 ? 'rgba(239, 68, 68, 0.15)' : score < 90 ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+              color: score < 70 ? '#EF4444' : score < 90 ? '#EAB308' : '#22C55E',
+              borderColor: score < 70 ? '#EF4444' : score < 90 ? '#EAB308' : '#22C55E'
+            }}
+          >
+            {grade}
+          </div>
         </div>
 
         {/* Overall Card */}
@@ -172,31 +158,13 @@ const SuspiciousDomains = () => {
       {/* Search and Filter Bar */}
       <div className="sd-search-bar">
         <div className="sd-search-left">
-          <span className="sd-search-label">CHOOSE SEARCH PART</span>
-          <select 
-            className="sd-search-select"
-            value={searchPart}
-            onChange={(e) => setSearchPart(e.target.value)}
-          >
-            <option value="Domain">Domain</option>
-            <option value="Registrar">Registrar</option>
-            <option value="Name Server">Name Server</option>
-          </select>
           <input 
             type="text" 
             className="sd-search-input" 
-            placeholder={`Search lookalikes by ${searchPart.toLowerCase()}...`}
+            placeholder="Search lookalikes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-        <div className="sd-search-right" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <button className="sd-btn-refresh" onClick={loadReports} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.45rem', cursor: 'pointer', display: 'flex' }}>
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          </button>
-          <button className="sd-export-btn" onClick={handleExport} disabled={reports.length === 0}>
-            <Download size={14} />
-          </button>
         </div>
       </div>
 
@@ -268,99 +236,7 @@ const SuspiciousDomains = () => {
         </div>
       )}
 
-      {/* Add Audit Domain Modal */}
-      {showAuditModal && createPortal(
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowAuditModal(false)}
-        >
-          <div 
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              padding: '2rem',
-              width: '100%',
-              maxWidth: '450px',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-              Audit Suspicious Lookalike Domain
-            </h3>
-            <form onSubmit={handleAuditSubmit}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Domain to Audit
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. goog1e.com"
-                  value={auditDomainInput}
-                  onChange={(e) => setAuditDomainInput(e.target.value)}
-                  required
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-main)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem'
-                  }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowAuditModal(false)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  disabled={auditing}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: '600',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.35rem'
-                  }}
-                >
-                  {auditing && <Loader size={12} className="animate-spin" />}
-                  {auditing ? 'Starting Audit...' : 'Audit Domain'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>,
-        document.body
-      )}
+
 
       {/* WHOIS Detail Modal */}
       {selectedReport && createPortal(

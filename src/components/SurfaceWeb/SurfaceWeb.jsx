@@ -2,790 +2,627 @@ import React, { useState, useEffect } from 'react';
 import { 
   Globe, 
   Search, 
-  GitBranch, 
-  Users, 
-  AlertTriangle, 
   Activity, 
   Clock, 
-  GitCommit, 
-  GitPullRequest, 
   RefreshCw, 
-  PlayCircle, 
   Eye, 
   Shield, 
-  Plus, 
-  Loader, 
   CheckCircle,
-  Database
+  Database,
+  Terminal,
+  ShieldAlert,
+  ArrowRight,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import './SurfaceWeb.css';
 import { api } from '../../utils/api';
 
-const SurfaceWeb = ({ activeTarget }) => {
-  const [activeTab, setActiveTab] = useState('Dashboard');
-  const [stats, setStats] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+// Parsers & Renderers for OSINT findings
+const RenderWhoisData = ({ rawText }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  if (!rawText) return null;
 
-  // Tab data states
-  const [repos, setRepos] = useState([]);
-  const [loadingRepos, setLoadingRepos] = useState(false);
-  
-  const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(false);
+  // Extremely robust regex lookahead for WHOIS field parsing
+  const whoisFieldsLookahead = '(?=\\s*(?:Domain Name|Registry Domain ID|Registrar WHOIS Server|Registrar URL|Updated Date|Creation Date|Registry Expiry Date|Registrar:|Registrar Abuse Contact Email|Registrar Abuse Contact Phone|Domain Status|Name Server|DNSSEC|>>>|NOTICE:|TERMS OF USE:|[\\r\\n]|$))';
+
+  const getField = (fieldName) => {
+    const regexStr = fieldName + ':\\s*([\\s\\S]+?)' + whoisFieldsLookahead;
+    const regex = new RegExp(regexStr, 'i');
+    const match = rawText.match(regex);
+    return match && match[1] ? match[1].trim() : '';
+  };
+
+  const domainName = getField('Domain Name');
+  const registrar = getField('Registrar') || getField('Domain Registrar');
+  const creationDate = getField('Creation Date');
+  const expiryDate = getField('Registry Expiry Date') || getField('Expiry Date') || getField('Expiration Date');
+  const abuseEmail = getField('Registrar Abuse Contact Email');
+
+  // Name servers (could be multiple matches, and single-line/multi-line robust)
+  const nsRegexStr = 'Name Server:\\s*([^\\r\\n\\t ]+?)' + whoisFieldsLookahead;
+  const nsRegex = new RegExp(nsRegexStr, 'gi');
+  const nsMatches = [...rawText.matchAll(nsRegex)];
+  const nameServers = Array.from(new Set(nsMatches.map(m => m[1].trim())));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '0.75rem',
+        background: 'rgba(255, 255, 255, 0.02)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '8px',
+        padding: '0.75rem'
+      }}>
+        {domainName && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Domain Name</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{domainName}</span>
+          </div>
+        )}
+        {registrar && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Registrar</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{registrar}</span>
+          </div>
+        )}
+        {creationDate && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Creation Date</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {new Date(creationDate).toLocaleString() !== 'Invalid Date' ? new Date(creationDate).toLocaleDateString() : creationDate}
+            </span>
+          </div>
+        )}
+        {expiryDate && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Expiry Date</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {new Date(expiryDate).toLocaleString() !== 'Invalid Date' ? new Date(expiryDate).toLocaleDateString() : expiryDate}
+            </span>
+          </div>
+        )}
+        {abuseEmail && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Abuse Contact Email</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f59e0b' }}>
+              <a href={`mailto:${abuseEmail}`} style={{ color: 'inherit', textDecoration: 'none' }}>{abuseEmail}</a>
+            </span>
+          </div>
+        )}
+        {nameServers.length > 0 && (
+          <div>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'block' }}>Name Servers</span>
+            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+              {nameServers.join(', ')}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          alignSelf: 'flex-start',
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          background: 'none',
+          border: 'none',
+          color: '#3b82f6',
+          cursor: 'pointer',
+          padding: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.25rem',
+          outline: 'none'
+        }}
+      >
+        {isOpen ? 'Hide Raw WHOIS Data' : 'Show Raw WHOIS Data'}
+      </button>
+
+      {isOpen && (
+        <pre style={{
+          maxHeight: '200px',
+          overflowY: 'auto',
+          background: '#0d1117',
+          color: '#c9d1d9',
+          padding: '0.75rem',
+          borderRadius: '6px',
+          fontSize: '0.7rem',
+          fontFamily: 'monospace',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
+          border: '1px solid var(--border-color)',
+          marginTop: '0.25rem'
+        }}>
+          {rawText}
+        </pre>
+      )}
+    </div>
+  );
+};
+
+const RenderGithubRepo = ({ rawText }) => {
+  if (!rawText) return null;
+
+  const nameMatch = rawText.match(/Name:\s*([^\n\r]+?)(?=\s*(URL:|Description:|$))/i);
+  const urlMatch = rawText.match(/URL:\s*([^\n\r]+?)(?=\s*(Name:|Description:|$))/i);
+  const descMatch = rawText.match(/Description:\s*([\s\S]+)$/i) || rawText.match(/Description:\s*([^\n\r]+)/i);
+
+  const name = nameMatch ? nameMatch[1].trim() : 'Unknown Repository';
+  const url = urlMatch ? urlMatch[1].trim() : '';
+  const description = descMatch ? descMatch[1].trim() : '';
+
+  return (
+    <div style={{
+      border: '1px solid var(--border-color)',
+      borderRadius: '8px',
+      background: 'var(--bg-main)',
+      padding: '1rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem',
+      maxWidth: '480px',
+      width: '100%'
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <span style={{
+          fontSize: '0.85rem',
+          fontWeight: 700,
+          color: '#3b82f6',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.25rem'
+        }}>
+          <Globe size={14} />
+          {name}
+        </span>
+        {url && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              background: '#3b82f6',
+              padding: '0.25rem 0.5rem',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem'
+            }}
+          >
+            Open Repo <ExternalLink size={12} />
+          </a>
+        )}
+      </div>
+      {description && (
+        <p style={{
+          fontSize: '0.775rem',
+          color: 'var(--text-secondary)',
+          margin: 0,
+          fontStyle: 'italic',
+          lineHeight: '1.4'
+        }}>
+          {description}
+        </p>
+      )}
+    </div>
+  );
+};
+
+const RenderRegistrar = ({ registrar }) => {
+  if (!registrar) return null;
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '0.4rem 0.75rem', borderRadius: '6px' }}>
+      <Shield size={14} color="#10b981" />
+      <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{registrar}</span>
+    </div>
+  );
+};
+
+const RenderIPAddress = ({ ip }) => {
+  const [copied, setCopied] = useState(false);
+  if (!ip) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(ip);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+      <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', color: 'var(--text-primary)', background: 'var(--bg-main)', padding: '0.2rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+        {ip}
+      </span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        style={{
+          background: 'none', border: 'none', color: copied ? '#10b981' : 'var(--text-secondary)',
+          cursor: 'pointer', padding: '0.25rem', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+          outline: 'none', fontWeight: 600
+        }}
+      >
+        <Copy size={12} />
+        {copied ? 'Copied!' : 'Copy'}
+      </button>
+    </div>
+  );
+};
+
+const RenderDomainName = ({ domain }) => {
+  if (!domain) return null;
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+      <Globe size={14} color="#3b82f6" />
+      <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+        {domain}
+      </span>
+    </div>
+  );
+};
+
+
+const SurfaceWeb = ({ activeTarget }) => {
+  const renderDiscoveredValue = (item) => {
+    const type = item.data_type ? item.data_type.toLowerCase() : '';
+    const val = item.data_value;
+
+    if (type.includes('whois')) {
+      return <RenderWhoisData rawText={val} />;
+    }
+    if (type.includes('code repository') || type.includes('github')) {
+      return <RenderGithubRepo rawText={val} />;
+    }
+    if (type.includes('registrar')) {
+      return <RenderRegistrar registrar={val} />;
+    }
+    if (type.includes('ip address') || type.includes('ipv6') || type.includes('ip_address')) {
+      return <RenderIPAddress ip={val} />;
+    }
+    if (type.includes('domain name') || type.includes('internet name')) {
+      return <RenderDomainName domain={val} />;
+    }
+
+    return <span>{val}</span>;
+  };
 
   const [scans, setScans] = useState([]);
-  const [loadingScans, setLoadingScans] = useState(false);
+  const [selectedScan, setSelectedScan] = useState(null);
+  const [results, setResults] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState('');
 
-  // Actions states
-  const [actionLoading, setActionLoading] = useState(false);
-  const [actionMsg, setActionMsg] = useState('');
-  const [actionStatus, setActionStatus] = useState(null); // 'success', 'error'
-
-  // Add Repo Form State
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newRepoName, setNewRepoName] = useState('');
-
-  // Load Dashboard Stats
-  const loadStats = async () => {
-    setLoadingStats(true);
+  // Load Scan History & Stats
+  const loadScansAndStats = async () => {
+    setLoading(true);
     try {
-      const data = await api.get('/api/surface-monitoring/repos/stats/');
-      setStats(data);
-    } catch (err) {
-      console.error("Failed to load Surface Monitoring stats", err);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
+      const [scansData, statsData] = await Promise.all([
+        api.get('/api/surface-monitoring/scans/'),
+        api.get('/api/surface-monitoring/stats/')
+      ]);
+      const list = Array.isArray(scansData) ? scansData : (scansData.results || []);
+      setScans(list);
+      setStats(statsData);
 
-  // Load Repositories
-  const loadRepos = async () => {
-    setLoadingRepos(true);
-    try {
-      const data = await api.get('/api/surface-monitoring/repos/');
-      setRepos(Array.isArray(data) ? data : (data.results || []));
+      // Auto-select latest scan if nothing is selected yet
+      if (list.length > 0 && !selectedScan) {
+        handleSelectScan(list[0]);
+      }
     } catch (err) {
-      console.error("Failed to load repos", err);
+      console.error("Failed to load Spiderfoot scans", err);
     } finally {
-      setLoadingRepos(false);
-    }
-  };
-
-  // Load Events
-  const loadEvents = async () => {
-    setLoadingEvents(true);
-    try {
-      const data = await api.get('/api/surface-monitoring/events/');
-      setEvents(Array.isArray(data) ? data : (data.results || []));
-    } catch (err) {
-      console.error("Failed to load events", err);
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
-
-  // Load Scans
-  const loadScans = async () => {
-    setLoadingScans(true);
-    try {
-      const data = await api.get('/api/surface-monitoring/scans/');
-      setScans(Array.isArray(data) ? data : (data.results || []));
-    } catch (err) {
-      console.error("Failed to load scans", err);
-    } finally {
-      setLoadingScans(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadStats();
-    if (activeTab === 'Repositories') loadRepos();
-    if (activeTab === 'Activity') loadEvents();
-    if (activeTab === 'Scan History') loadScans();
-  }, [activeTab]);
+    loadScansAndStats();
+  }, []);
 
-  // Discover repositories matching organization name
-  const handleDiscoverOrg = async () => {
-    setActionLoading(true);
-    setActionMsg('');
-    setActionStatus(null);
+  const handleSelectScan = async (scan) => {
+    setSelectedScan(scan);
+    setLoadingResults(true);
     try {
-      const res = await api.post('/api/surface-monitoring/repos/discover_by_org/');
-      setActionStatus('success');
-      setActionMsg(`Discovery run completed. Found/updated repos.`);
-      loadStats();
-      if (activeTab === 'Repositories') loadRepos();
+      const data = await api.get(`/api/surface-monitoring/scans/${scan.id}/results/`);
+      setResults(data);
+      setSelectedTypeFilter(''); // Reset filter on scan change
     } catch (err) {
-      console.error("Failed to run org discovery", err);
-      setActionStatus('error');
-      setActionMsg(err.message || 'Failed to discover organization repositories.');
+      console.error("Failed to load scan results", err);
+      setResults([]);
     } finally {
-      setActionLoading(false);
+      setLoadingResults(false);
     }
   };
 
-  // Scan all repositories for secrets
-  const handleScanAll = async () => {
-    setActionLoading(true);
-    setActionMsg('');
-    setActionStatus(null);
-    try {
-      const res = await api.post('/api/surface-monitoring/repos/scan_all/');
-      setActionStatus('success');
-      setActionMsg(`Successfully queued Gitleaks scan on ${res.count || 0} repositories!`);
-      loadStats();
-      if (activeTab === 'Scan History') loadScans();
-    } catch (err) {
-      console.error("Failed to queue batch scan", err);
-      setActionStatus('error');
-      setActionMsg(err.message || 'Failed to trigger batch repositories scan.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
-  // Scan a single repo
-  const handleScanRepo = async (repoId) => {
-    try {
-      const res = await api.post(`/api/surface-monitoring/repos/${repoId}/scan/`);
-      alert(`Gitleaks scan queued for repository.`);
-      loadStats();
-    } catch (err) {
-      console.error("Failed to scan repo", err);
-      alert(err.message || "Failed to queue scan.");
-    }
-  };
 
-  // Poll single repo events
-  const handlePollEvents = async (repoId) => {
-    try {
-      const res = await api.post(`/api/surface-monitoring/repos/${repoId}/poll_events/`);
-      alert(`Polled events from GitHub.`);
-      loadStats();
-      if (activeTab === 'Activity') loadEvents();
-    } catch (err) {
-      console.error("Failed to poll events", err);
-      alert(err.message || "Failed to poll events.");
-    }
-  };
+  // Poll running scans
+  useEffect(() => {
+    const hasRunning = scans.some(s => s.status === 'running' || s.status === 'pending');
+    if (!hasRunning) return;
 
-  // Add Repository
-  const handleAddRepoSubmit = async (e) => {
-    e.preventDefault();
-    if (!newRepoName.trim()) return;
-    try {
-      const res = await api.post('/api/surface-monitoring/repos/add_repo/', {
-        full_name: newRepoName.trim()
-      });
-      alert(res.message || "Repository added.");
-      setNewRepoName('');
-      setShowAddModal(false);
-      loadStats();
-      if (activeTab === 'Repositories') loadRepos();
-    } catch (err) {
-      console.error("Failed to add repo", err);
-      alert(err.message || "Failed to add repository.");
-    }
-  };
+    const interval = setInterval(async () => {
+      try {
+        const scansData = await api.get('/api/surface-monitoring/scans/');
+        const list = Array.isArray(scansData) ? scansData : (scansData.results || []);
+        setScans(list);
+        
+        // Update selected scan if it was running
+        if (selectedScan) {
+          const updated = list.find(s => s.id === selectedScan.id);
+          if (updated && updated.status !== selectedScan.status) {
+            setSelectedScan(updated);
+            if (updated.status === 'completed') {
+              // Reload results
+              const rData = await api.get(`/api/surface-monitoring/scans/${updated.id}/results/`);
+              setResults(rData);
+            }
+          }
+        }
+        
+        // Also refresh overall statistics
+        const statsData = await api.get('/api/surface-monitoring/stats/');
+        setStats(statsData);
+      } catch (err) {
+        console.error("Polling error", err);
+      }
+    }, 8000);
 
-  const orgName = stats?.org_name || 'kec';
+    return () => clearInterval(interval);
+  }, [scans, selectedScan]);
+
+  // Filtered Findings
+  const filteredFindings = results.filter(item => {
+    const matchesSearch = searchQuery 
+      ? (item.data_value?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+         item.data_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         item.module?.toLowerCase().includes(searchQuery.toLowerCase()))
+      : true;
+
+    const matchesType = selectedTypeFilter
+      ? item.data_type === selectedTypeFilter
+      : true;
+
+    return matchesSearch && matchesType;
+  });
+
+  // Extract unique data types from results for local filtering
+  const uniqueTypes = Array.from(new Set(results.map(r => r.data_type)));
 
   return (
-    <div className="surface-web-container">
-      
+    <div className="surface-web-container" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
-        title="Surface Web Monitoring"
-        subtitle="Discover and monitor GitHub repositories matching your organization name. Track secret leaks, pushes, creates, and workflow executions."
-        stats={[
-          { label: 'Repositories',  value: (stats?.total_repos ?? 0).toString(), subtext: 'Discovered' },
-          { label: 'Secrets Found', value: (stats?.total_secrets_found ?? 0).toString(), subtext: 'Exposed credentials' },
-          { label: 'Scans Run',     value: (stats?.total_scans ?? 0).toString(), subtext: 'Gitleaks analysis' },
-          { label: 'Activity (7d)', value: (stats?.recent_events ?? 0).toString(), subtext: 'Recent events' },
-        ]}
-        actions={
-          <>
-          </>
-        }
+        badgeText="SURFACE WEB OSINT"
+        title="Spiderfoot Passive Intelligence Scan"
+        subtitle="Leverage passive OSINT to map internet names, IP addresses, domains, and leak intelligence."
       />
 
-      {/* Monitoring Organization Banner */}
-      <div className="sw-org-banner">
-        <div className="sw-org-avatar">
-          <Users size={20} color="#6B21A8" />
-        </div>
-        <div className="sw-org-info">
-          <span className="sw-org-label">MONITORING ORGANIZATION</span>
-          <span className="sw-org-name" style={{ textTransform: 'uppercase' }}>{orgName}</span>
-        </div>
-      </div>
 
-      {/* Alert Msg Banner */}
-      {actionMsg && (
-        <div 
-          style={{
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1.5rem',
-            border: '1px solid',
-            fontSize: '0.85rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            background: actionStatus === 'success' ? 'rgba(34,197,94,0.06)' : 'rgba(239,68,68,0.06)',
-            borderColor: actionStatus === 'success' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)',
-            color: actionStatus === 'success' ? '#22C55E' : '#EF4444'
-          }}
-        >
-          {actionStatus === 'success' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-          <span>{actionMsg}</span>
+
+      {/* Stats Summary Panel */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+              <Globe size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.total_scans}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Total OSINT Targets</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+              <Database size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.total_results}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Discovered OSINT Values</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+              <Activity size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{Object.keys(stats.type_counts || {}).length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Unique OSINT Types</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>
+              <Terminal size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{Object.keys(stats.module_counts || {}).length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Spiderfoot Modules</div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Primary Stats Grid */}
-      <div className="sw-primary-stats">
+      {/* Main Layout Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(480px, 2fr)', gap: '1.5rem', alignItems: 'flex-start' }}>
         
-        <div className="sw-stat-card">
-          <div className="sw-stat-content">
-            <span className="sw-stat-label">REPOSITORIES</span>
-            <span className="sw-stat-value text-purple">{stats?.total_repos ?? 0}</span>
-          </div>
-          <Globe size={24} className="sw-stat-icon text-purple-light" />
-        </div>
-
-        <div className="sw-stat-card">
-          <div className="sw-stat-content">
-            <span className="sw-stat-label">SECRETS FOUND</span>
-            <span className="sw-stat-value text-red">{stats?.total_secrets_found ?? 0}</span>
-          </div>
-          <AlertTriangle size={24} className="sw-stat-icon text-red-light" />
-        </div>
-
-        <div className="sw-stat-card">
-          <div className="sw-stat-content">
-            <span className="sw-stat-label">SCANS</span>
-            <span className="sw-stat-value text-blue">{stats?.total_scans ?? 0}</span>
-          </div>
-          <Activity size={24} className="sw-stat-icon text-blue-light" />
-        </div>
-
-        <div className="sw-stat-card">
-          <div className="sw-stat-content">
-            <span className="sw-stat-label">ACTIVITY (7D)</span>
-            <span className="sw-stat-value text-green">{stats?.recent_events ?? 0}</span>
-          </div>
-          <Clock size={24} className="sw-stat-icon text-green-light" />
-        </div>
-
-      </div>
-
-      {/* Secondary Stats Grid */}
-      <div className="sw-secondary-stats">
-        
-        <div className="sw-small-stat">
-          <div className="sw-small-icon-bg bg-blue-light">
-            <GitCommit size={14} className="text-blue" />
-          </div>
-          <div className="sw-small-content">
-            <span className="sw-small-label">PUSHED</span>
-            <span className="sw-small-value text-blue">{stats?.recent_pushes ?? 0}</span>
-          </div>
-        </div>
-
-        <div className="sw-small-stat">
-          <div className="sw-small-icon-bg bg-green-light">
-            <GitPullRequest size={14} className="text-green" />
-          </div>
-          <div className="sw-small-content">
-            <span className="sw-small-label">CREATED</span>
-            <span className="sw-small-value text-green">{stats?.recent_creates ?? 0}</span>
-          </div>
-        </div>
-
-        <div className="sw-small-stat">
-          <div className="sw-small-icon-bg bg-purple-light">
-            <RefreshCw size={14} className="text-purple" />
-          </div>
-          <div className="sw-small-content">
-            <span className="sw-small-label">UPDATED</span>
-            <span className="sw-small-value text-purple">{stats?.recent_updates ?? 0}</span>
-          </div>
-        </div>
-
-        <div className="sw-small-stat sw-small-stat-actions">
-          <div className="sw-small-icon-bg bg-orange-light">
-            <PlayCircle size={14} className="text-orange" />
-          </div>
-          <div className="sw-small-content">
-            <span className="sw-small-label">ACTIONS</span>
-            <div className="sw-small-value-group">
-              <span className="text-green">{stats?.recent_action_success ?? 0} OK</span> / <span className="text-red">{stats?.recent_action_failed ?? 0} Fail</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="sw-small-stat">
-          <div className="sw-small-icon-bg bg-cyan-light">
-            <Eye size={14} className="text-cyan" />
-          </div>
-          <div className="sw-small-content">
-            <span className="sw-small-label">WATCHING</span>
-            <span className="sw-small-value text-cyan">{stats?.total_watching ?? 0}</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Tabs */}
-      <div className="sw-tabs">
-        {['Dashboard', 'Activity', 'Repositories', 'Scan History'].map(tab => (
-          <button 
-            key={tab}
-            className={`sw-tab-btn ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === 'Dashboard' && <Activity size={14} />}
-            {tab === 'Activity' && <Clock size={14} />}
-            {tab === 'Repositories' && <Globe size={14} />}
-            {tab === 'Scan History' && <Shield size={14} />}
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === 'Dashboard' && (
-        <div className="sw-dashboard-content">
-          
-          {/* Recent Activity */}
-          <div className="sw-panel">
-            <div className="sw-panel-header sw-flex-between" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-              <div className="sw-panel-title-group">
-                <Clock size={18} className="text-orange" />
-                <h2 className="sw-panel-title">Recent Activity</h2>
-              </div>
-              <button className="sw-btn-view-all" onClick={() => setActiveTab('Activity')}>View All &rarr;</button>
-            </div>
-            
-            {stats?.latest_events && stats.latest_events.length > 0 ? (
-              <div style={{ padding: '0.75rem 1.5rem' }}>
-                {stats.latest_events.map((ev, i) => (
-                  <div 
-                    key={i} 
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '1rem',
-                      padding: '0.75rem 0',
-                      borderBottom: i < stats.latest_events.length - 1 ? '1px solid var(--border-color)' : 'none'
-                    }}
-                  >
-                    <span 
-                      style={{
-                        padding: '0.2rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.65rem',
-                        fontWeight: '700',
-                        textTransform: 'uppercase',
-                        background: ev.event_type === 'push' ? 'rgba(59,130,246,0.1)' : 'rgba(34,197,94,0.1)',
-                        color: ev.event_type === 'push' ? '#3B82F6' : '#22C55E'
-                      }}
-                    >
-                      {ev.event_type}
-                    </span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{ev.repository_name}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{ev.details}</div>
-                    </div>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                      {new Date(ev.event_occurred_at).toLocaleString()}
+        {/* LEFT PANEL: SCAN LIST */}
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)', minHeight: '400px' }}>
+          <h3 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+            Scan History
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {scans.map((s, idx) => {
+              const isSelected = selectedScan?.id === s.id;
+              return (
+                <div
+                  key={s.id}
+                  onClick={() => handleSelectScan(s)}
+                  style={{
+                    padding: '1rem', borderRadius: '8px', border: `1px solid ${isSelected ? '#3b82f6' : 'var(--border-color)'}`,
+                    background: isSelected ? 'rgba(59,130,246,0.06)' : 'var(--bg-main)',
+                    cursor: 'pointer', transition: 'all 0.2s', position: 'relative'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{s.target}</span>
+                    <span style={{
+                      fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px',
+                      background: s.status === 'completed' ? 'rgba(16,185,129,0.1)' : (s.status === 'running' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)'),
+                      color: s.status === 'completed' ? '#10b981' : (s.status === 'running' ? '#3b82f6' : '#dc2626')
+                    }}>
+                      {s.status.toUpperCase()}
                     </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="sw-empty-state sw-py-large">
-                <Clock size={24} className="text-gray-light mb-2" />
-                <p className="text-gray" style={{ color: 'var(--text-secondary)' }}>
-                  No recent activity. Click <strong>"Discover Repos"</strong> to find matching resources.
-                </p>
-              </div>
-            )}
-          </div>
 
-          {/* Repository Charts */}
-          <div className="sw-charts-grid">
-            <div className="sw-panel">
-              <div className="sw-panel-header" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-                <h2 className="sw-panel-title">Repositories by Visibility</h2>
-              </div>
-              <div className="sw-empty-state sw-py-medium" style={{ padding: '1.5rem' }}>
-                {stats?.repos_by_visibility && Object.keys(stats.repos_by_visibility).length > 0 ? (
-                  Object.entries(stats.repos_by_visibility).map(([key, val]) => (
-                    <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', fontSize: '0.85rem' }}>
-                      <span style={{ textTransform: 'capitalize', fontWeight: '600' }}>{key}</span>
-                      <span className="font-mono">{val}</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Clock size={12} />
+                      <span>{new Date(s.created_at).toLocaleDateString()}</span>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray text-left w-full" style={{ color: 'var(--text-secondary)' }}>No data yet. Discover repositories to see stats.</p>
-                )}
-              </div>
-            </div>
-
-            <div className="sw-panel">
-              <div className="sw-panel-header" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-                <h2 className="sw-panel-title">Repositories by Language</h2>
-              </div>
-              <div className="sw-empty-state sw-py-medium" style={{ padding: '1.5rem' }}>
-                {stats?.repos_by_language && Object.keys(stats.repos_by_language).length > 0 ? (
-                  Object.entries(stats.repos_by_language).map(([key, val]) => (
-                    <div key={key} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', fontSize: '0.85rem' }}>
-                      <span style={{ fontWeight: '600' }}>{key}</span>
-                      <span className="font-mono">{val}</span>
+                    <div>
+                      <strong>{s.results_count}</strong> values found
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray text-left w-full" style={{ color: 'var(--text-secondary)' }}>No data yet. Discover repositories to see stats.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="sw-panel">
-            <div className="sw-panel-header" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-              <div className="sw-panel-title-group">
-                <Activity size={18} className="text-blue" />
-                <h2 className="sw-panel-title">Quick Actions</h2>
-              </div>
-            </div>
-            <div className="sw-quick-actions-grid" style={{ padding: '1.5rem' }}>
-              
-              <button className="sw-qa-btn blue" onClick={handleDiscoverOrg}>
-                <Search size={20} />
-                <span>Discover by "{orgName}"</span>
-              </button>
-
-              <button className="sw-qa-btn green" onClick={() => setActiveTab('Repositories')}>
-                <GitBranch size={20} />
-                <span>View Repositories</span>
-              </button>
-
-              <button className="sw-qa-btn yellow" onClick={() => setActiveTab('Activity')}>
-                <Clock size={20} />
-                <span>View Activity</span>
-              </button>
-
-              <button className="sw-qa-btn red" onClick={handleScanAll}>
-                <Shield size={20} />
-                <span>Scan All for Secrets</span>
-              </button>
-
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {activeTab === 'Repositories' && (
-        <div className="sw-panel">
-          <div className="sw-panel-header sw-flex-between" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-            <div className="sw-panel-title-group">
-              <Globe size={18} className="text-purple" />
-              <h2 className="sw-panel-title">Discovered Repositories</h2>
-            </div>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{repos.length} repositories total</span>
-          </div>
-
-          <div className="mv-table-container">
-            {repos.length > 0 ? (
-              <table className="mv-table">
-                <thead>
-                  <tr>
-                    <th>NAME</th>
-                    <th>VISIBILITY</th>
-                    <th>LANGUAGE</th>
-                    <th>STARS</th>
-                    <th>SECRETS EXPOSED</th>
-                    <th>BRANCH</th>
-                    <th>STATUS</th>
-                    <th style={{ textAlign: 'right', paddingRight: '2rem' }}>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {repos.map((r) => (
-                    <tr key={r.id}>
-                      <td style={{ padding: '1rem 1.5rem', fontWeight: 'bold' }}>
-                        <a href={r.repo_url} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'none' }}>
-                          {r.full_name}
-                        </a>
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '600' }}>
-                        {r.visibility}
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem' }}>{r.language || '—'}</td>
-                      <td style={{ padding: '1rem 1.5rem' }}>⭐ {r.stars || 0}</td>
-                      <td style={{ padding: '1rem 1.5rem' }}>
-                        <span 
-                          style={{
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            fontWeight: '700',
-                            background: r.hardcoded_credentials_count > 0 ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
-                            color: r.hardcoded_credentials_count > 0 ? '#EF4444' : '#22C55E'
-                          }}
-                        >
-                          {r.hardcoded_credentials_count} secrets
-                        </span>
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', fontFamily: 'monospace' }}>{r.default_branch || 'main'}</td>
-                      <td style={{ padding: '1rem 1.5rem', textTransform: 'uppercase', fontSize: '0.75rem', fontWeight: '700' }}>
-                        {r.status}
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', textAlign: 'right', paddingRight: '2rem' }}>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                          <button 
-                            className="sw-btn-outline-blue" 
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                            onClick={() => handleScanRepo(r.id)}
-                          >
-                            Scan secrets
-                          </button>
-                          <button 
-                            className="sw-btn-outline-green" 
-                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem' }}
-                            onClick={() => handlePollEvents(r.id)}
-                          >
-                            Poll Github
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="sw-empty-state sw-py-large">
-                <Globe size={24} className="text-gray-light mb-2" />
-                <p className="text-gray" style={{ color: 'var(--text-secondary)' }}>
-                  {loadingRepos ? 'Loading repositories...' : 'No repositories discovered. Trigger discovery to populate.'}
-                </p>
+                  </div>
+                </div>
+              );
+            })}
+            {scans.length === 0 && (
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                No OSINT targets scanned yet. Enter a domain above to start.
               </div>
             )}
           </div>
         </div>
-      )}
 
-      {activeTab === 'Activity' && (
-        <div className="sw-panel">
-          <div className="sw-panel-header sw-flex-between" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-            <div className="sw-panel-title-group">
-              <Clock size={18} className="text-green" />
-              <h2 className="sw-panel-title">Commit & Web Activity Feed</h2>
-            </div>
-          </div>
-          <div className="mv-table-container">
-            {events.length > 0 ? (
-              <table className="mv-table">
-                <thead>
-                  <tr>
-                    <th>TYPE</th>
-                    <th>REPOSITORY</th>
-                    <th>DETAILS</th>
-                    <th>DATE OCCURRED</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.map((e) => (
-                    <tr key={e.id}>
-                      <td style={{ padding: '1rem 1.5rem' }}>
-                        <span 
-                          style={{
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            fontSize: '0.7rem',
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            background: e.event_type === 'push' ? 'rgba(59,130,246,0.1)' : 'rgba(34,197,94,0.1)',
-                            color: e.event_type === 'push' ? '#3B82F6' : '#22C55E'
-                          }}
-                        >
-                          {e.event_type}
-                        </span>
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', fontWeight: '700' }}>{e.repository_name}</td>
-                      <td style={{ padding: '1rem 1.5rem' }}>{e.details}</td>
-                      <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                        {new Date(e.event_occurred_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="sw-empty-state sw-py-large">
-                <Clock size={24} className="text-gray-light mb-2" />
-                <p className="text-gray" style={{ color: 'var(--text-secondary)' }}>
-                  {loadingEvents ? 'Loading events feed...' : 'No activity recorded yet.'}
-                </p>
+        {/* RIGHT PANEL: SELECTED SCAN FINDINGS */}
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
+          
+          {selectedScan ? (
+            <>
+              {/* Scan Header Info */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Globe size={18} color="#3b82f6" /> {selectedScan.target}
+                  </h3>
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '0.25rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                    <span>Scan ID: #{selectedScan.id}</span>
+                    <span>Started: {new Date(selectedScan.created_at).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  {selectedScan.status === 'running' && (
+                    <span style={{ fontSize: '0.8rem', color: '#3b82f6', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600 }}>
+                      <RefreshCw className="spin" size={14} /> Passive scanning...
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {activeTab === 'Scan History' && (
-        <div className="sw-panel">
-          <div className="sw-panel-header sw-flex-between" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-            <div className="sw-panel-title-group">
-              <Shield size={18} className="text-red" />
-              <h2 className="sw-panel-title">Repository Scan History</h2>
-            </div>
-          </div>
-          <div className="mv-table-container">
-            {scans.length > 0 ? (
-              <table className="mv-table">
-                <thead>
-                  <tr>
-                    <th>SCAN ID</th>
-                    <th>REPOSITORY</th>
-                    <th>STATUS</th>
-                    <th>SECRETS EXPOSED</th>
-                    <th>DATE RUN</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scans.map((s) => (
-                    <tr key={s.id}>
-                      <td style={{ padding: '1rem 1.5rem', fontFamily: 'monospace' }}>#{s.id}</td>
-                      <td style={{ padding: '1rem 1.5rem', fontWeight: '700' }}>{s.repository_name}</td>
-                      <td style={{ padding: '1rem 1.5rem' }}>
-                        <span 
-                          style={{
-                            padding: '0.2rem 0.5rem',
-                            borderRadius: '4px',
-                            fontSize: '0.7rem',
-                            fontWeight: '700',
-                            textTransform: 'uppercase',
-                            background: s.status === 'completed' ? 'rgba(34,197,94,0.1)' : 'rgba(249,115,22,0.1)',
-                            color: s.status === 'completed' ? '#22C55E' : '#F97316'
-                          }}
-                        >
-                          {s.status}
-                        </span>
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', fontWeight: '700', color: s.findings_count > 0 ? '#EF4444' : '#22C55E' }}>
-                        {s.findings_count} secrets
-                      </td>
-                      <td style={{ padding: '1rem 1.5rem', color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                        {new Date(s.scanned_at).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <div className="sw-empty-state sw-py-large">
-                <Shield size={24} className="text-gray-light mb-2" />
-                <p className="text-gray" style={{ color: 'var(--text-secondary)' }}>
-                  {loadingScans ? 'Loading scans...' : 'No repository secret scans recorded.'}
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              {/* Filtering / Search Bar */}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                <div style={{ flex: 1, position: 'relative', minWidth: '180px' }}>
+                  <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                  <input
+                    type="text"
+                    placeholder="Search findings..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%', height: '36px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                      background: 'var(--bg-main)', color: 'var(--text-primary)', padding: '0 0.5rem 0 2rem',
+                      fontSize: '0.8rem', outline: 'none'
+                    }}
+                  />
+                </div>
 
-      {/* Add Repository Modal */}
-      {showAddModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}
-          onClick={() => setShowAddModal(false)}
-        >
-          <div 
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              padding: '2rem',
-              width: '100%',
-              maxWidth: '450px',
-              boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-              Add GitHub Repository
-            </h3>
-            <form onSubmit={handleAddRepoSubmit}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
-                  Repository Name or URL
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. owner/repository or full GitHub URL"
-                  value={newRepoName}
-                  onChange={(e) => setNewRepoName(e.target.value)}
-                  required
+                <select
+                  value={selectedTypeFilter}
+                  onChange={(e) => setSelectedTypeFilter(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-main)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem'
-                  }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowAddModal(false)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: '6px',
-                    background: 'transparent',
-                    color: 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem'
+                    height: '36px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                    background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '0 1rem',
+                    fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', outline: 'none'
                   }}
                 >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  style={{
-                    padding: '0.5rem 1rem',
-                    background: 'var(--primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.8rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  Add Repository
-                </button>
+                  <option value="">All Data Types</option>
+                  {uniqueTypes.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
 
+              {/* Findings Table */}
+              <div style={{ flex: 1, overflowX: 'auto' }}>
+                {loadingResults ? (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', color: 'var(--text-secondary)' }}>
+                    <RefreshCw className="spin" size={24} style={{ marginRight: '0.5rem' }} /> Loading scan results...
+                  </div>
+                ) : (
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase' }}>
+                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Data Type</th>
+                        <th style={{ textAlign: 'left', padding: '0.5rem' }}>Discovered Value</th>
+                        <th style={{ textAlign: 'right', padding: '0.5rem' }}>Module</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredFindings.map((item) => (
+                        <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                          <td style={{ padding: '0.75rem 0.5rem', whiteSpace: 'nowrap' }}>
+                            <span style={{
+                              padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700,
+                              background: 'rgba(59,130,246,0.1)', color: '#3b82f6'
+                            }}>
+                              {item.data_type}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.75rem 0.5rem', wordBreak: 'break-all', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            {renderDiscoveredValue(item)}
+                          </td>
+                          <td style={{ padding: '0.75rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                            {item.module}
+                          </td>
+                        </tr>
+                      ))}
+                      {filteredFindings.length === 0 && (
+                        <tr>
+                          <td colSpan={3} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
+                            No findings match your filters.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', flex: 1, color: 'var(--text-secondary)', gap: '0.5rem' }}>
+              <ShieldAlert size={36} style={{ opacity: 0.6 }} />
+              <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No Scan Selected</p>
+              <p style={{ fontSize: '0.8rem', textAlign: 'center', maxWidth: '300px' }}>Select an existing target scan from history or launch a new footprint scan above.</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

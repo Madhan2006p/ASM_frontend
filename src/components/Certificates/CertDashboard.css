@@ -385,3 +385,38 @@
   color: var(--text-muted);
 }
 
+/* Light mode overrides for the SSL Security Score Card */
+body.light-mode .card-dark {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+body.light-mode .score-title {
+  color: var(--text-primary);
+}
+
+body.light-mode .score-subtitle {
+  color: var(--text-secondary);
+}
+
+body.light-mode .gauge-text .score-num {
+  color: var(--text-primary);
+}
+
+body.light-mode .gauge-text .score-lbl {
+  color: var(--text-secondary);
+}
+
+body.light-mode .metric-row {
+  border-bottom-color: var(--border-color);
+}
+
+body.light-mode .metric-lbl {
+  color: var(--text-secondary);
+}
+
+body.light-mode .metric-val {
+  color: var(--text-primary);
+}
+
