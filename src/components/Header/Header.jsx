@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronRight, User, LogOut, Shield, CreditCard, Bell, AlertTriangle, Search, Building2, Sun, Moon } from 'lucide-react';
+import { BASE_URL } from '../../utils/api';
 import './Header.css';
 
 const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [], selectedDomain, setSelectedDomain, theme, toggleTheme }) => {
@@ -11,12 +12,11 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
 
   const getParentLabel = () => {
     if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'Vulnerabilities', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
-    if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';
     if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';
-    if (['Mobile VAPT Dashboard', 'Mobile VAPT'].includes(activePage)) return 'MOBILE APP MONITORING';
+    if (['Mobile Security Dashboard', 'Mobile Security'].includes(activePage)) return 'MOBILE SECURITY';
+    if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';
     if (['Surface Web'].includes(activePage)) return 'SURFACE WEB MONITORING';
     if (['Brand Monitoring Dashboard', 'Suspicious Domain', 'Phishing Domain', 'Impersonating Account', 'Anti Malware'].includes(activePage)) return 'BRAND MONITORING';
-    if (['Dashboard', 'Network Discovery', 'Service Discovery', 'Web Asset Discovery', 'SSL/TLS Discovery', 'Active Directory'].includes(activePage)) return 'INTERNAL ASSET';
     if (['Marketplace', 'Settings'].includes(activePage)) return 'MANAGE';
     return 'DASHBOARD';
   };
@@ -61,19 +61,19 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
 
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         {currentUser && currentUser.organization && (
-          <div className="header-org-badge" style={{ fontSize: '1.1rem', fontWeight: 700, padding: '0.4rem 1rem' }}>
-            <Building2 size={18} />
+          <div className="header-org-badge" style={{ fontSize: '1.1rem', fontWeight: 700, padding: '0.4rem 1rem', display: 'flex', alignItems: 'center' }}>
+            {currentUser.logo_url ? (
+              <img src={currentUser.logo_url.startsWith('http') ? currentUser.logo_url : `${BASE_URL}${currentUser.logo_url}`} alt="" style={{ height: '28px', marginRight: '10px', objectFit: 'contain' }} />
+            ) : (
+              <Building2 size={18} style={{ marginRight: '8px' }} />
+            )}
             {currentUser.organization}
           </div>
         )}
       </div>
 
       <div className="header-right">
-        {/* Subscription badge */}
-        <div className="header-subscription-badge">
-          <span className="badge-dot"></span>
-          Enterprise Plan
-        </div>
+
 
         {/* Theme toggle */}
         <button className="header-notification-btn" onClick={toggleTheme} style={{ cursor: 'pointer' }} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
@@ -123,14 +123,26 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
         {/* Profile with dropdown */}
         <div className="header-profile-wrapper" ref={profileRef}>
           <div className="header-profile" onClick={() => setShowProfile(v => !v)}>
-            <div className="header-avatar">{initialLetter}</div>
+            <div className="header-avatar">
+              {currentUser.profile_photo_url ? (
+                <img src={currentUser.profile_photo_url} alt="User" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+              ) : (
+                initialLetter
+              )}
+            </div>
           </div>
 
           {showProfile && (
             <div className="profile-dropdown">
               {/* User info */}
               <div className="profile-dropdown-top">
-                <div className="profile-dropdown-avatar">{initialLetter}</div>
+                <div className="profile-dropdown-avatar">
+                  {currentUser.profile_photo_url ? (
+                    <img src={currentUser.profile_photo_url} alt="User" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    initialLetter
+                  )}
+                </div>
                 <div className="profile-dropdown-info">
                   <div className="profile-dropdown-name">{currentUser.name}</div>
                   <div className="profile-dropdown-email">{currentUser.email}</div>
@@ -139,19 +151,7 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
 
               <div className="profile-dropdown-divider" />
 
-              {/* Subscription */}
-              <div className="profile-dropdown-section">
-                <div className="profile-dropdown-section-label">Subscription</div>
-                <div className="profile-dropdown-subscription">
-                  <div className="profile-sub-badge">
-                    <CreditCard size={13} />
-                    Enterprise Plan
-                  </div>
-                  <span className="profile-sub-status">Active</span>
-                </div>
-              </div>
 
-              <div className="profile-dropdown-divider" />
 
               {/* Actions */}
               <div className="profile-dropdown-actions">

@@ -148,23 +148,6 @@ const FaradayFindings = ({ activeScanId }) => {
               <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Syncing...' : 'Sync Current Scan'}
             </button>
-            <button 
-              className="faraday-btn-refresh" 
-              onClick={loadFaradayData} 
-              disabled={loading}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '0.5rem',
-                borderRadius: '8px',
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                color: 'var(--text-primary)',
-                cursor: 'pointer'
-              }}
-            >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            </button>
           </div>
         }
       />

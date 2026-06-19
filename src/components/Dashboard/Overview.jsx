@@ -301,11 +301,13 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
   });
 
   const getGlobalScore = () => {
+    if (!activeScanId) return 0;
     if (vulns.length === 0) return 98;
     return Math.max(100 - (vulns.length * 5), 32);
   };
 
   const getGlobalRiskLabel = () => {
+    if (!activeScanId) return 'N/A';
     const score = getGlobalScore();
     if (score >= 85) return 'Low';
     if (score >= 60) return 'Medium';
@@ -434,9 +436,8 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
                     
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--border-color)' }}>
 
-                      
                       <div style={{ position: 'relative', flex: 1 }}>
-                        <button 
+                        <button
                           onClick={() => {
                             setScanDomain(d.domain);
                             setShowScheduleMenu(showScheduleMenu === d.domain ? null : d.domain);
@@ -445,12 +446,12 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
                         >
                           <Clock size={12} /> Schedule
                         </button>
-                        
+
                         {showScheduleMenu === d.domain && (
                           <div style={{ position: 'absolute', bottom: 'calc(100% + 0.5rem)', right: 0, width: '220px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '1rem', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', zIndex: 100 }}>
                             <div style={{ fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-primary)', fontSize: '0.85rem' }}>Schedule {d.domain}</div>
-                            <input 
-                              type="datetime-local" 
+                            <input
+                              type="datetime-local"
                               value={scheduleTime}
                               onChange={(e) => setScheduleTime(e.target.value)}
                               min={new Date().toISOString().slice(0, 16)}

@@ -26,8 +26,8 @@ const MobileVAPTDashboard = () => {
   return (
     <div className="internal-dashboard-container">
       <PageHeaderCard
-        badgeText="MOBILE APP MONITORING"
-        title="Mobile VAPT Dashboard"
+        badgeText="MOBILE SECURITY"
+        title="Mobile Security Dashboard"
         subtitle="Vulnerability Assessment and Penetration Testing statistics for uploaded Android and iOS applications."
       />
 

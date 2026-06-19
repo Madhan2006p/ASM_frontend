@@ -13,13 +13,16 @@ import AntiPhishing from './components/AntiPhishing/AntiPhishing';
 import AntiMalware from './components/AntiMalware/AntiMalware';
 import SuspiciousDomains from './components/SuspiciousDomains/SuspiciousDomains';
 import EmailSecurity from './components/EmailSecurity/EmailSecurity';
+import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDashboard';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
+import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
 import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
 import Login from './components/Auth/Login';
 import Settings from './components/Settings/Settings';
 import Marketplace from './components/Marketplace/Marketplace';
+import SuperAdminDashboard from './components/AdminPanel/SuperAdminDashboard';
 import GlobalAlert from './components/common/GlobalAlert';
 import ScanProgressPanel from './components/ScanProgress/ScanProgressPanel';
 import InternalDashboard from './components/InternalDiscovery/InternalDashboard';
@@ -32,6 +35,7 @@ import AssetDiscoveryDashboard from './components/Dashboard/AssetDiscoveryDashbo
 import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
 import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
 import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
+import VaptReport from './components/VaptReport/VaptReport';
 import { api } from './utils/api';
 
 function App() {
@@ -48,13 +52,26 @@ function App() {
   const handleLogin = (userData) => {
     if (userData) {
       setUser({
+        id: userData.id,
         name: userData.name || userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
         email: userData.email,
-        organization: userData.organization || 'Infotech Sentinel'
+        organization: userData.organization || 'Infotech Sentinel',
+        organization_id: userData.organization_id || '1',
+        logo_url: userData.logo_url || null,
+        is_superuser: userData.is_superuser || false,
+        role: userData.role || 'member',
+        features: userData.features || [],
+        profile_photo_url: userData.profile_photo_url || null,
       });
       // Store admin-assigned domains from login payload
       if (Array.isArray(userData.assigned_domains)) {
         setAssignedDomains(userData.assigned_domains);
+      }
+      
+      if (userData.is_superuser) {
+        setActivePage('Super Admin Dashboard');
+      } else if (activePage === 'Super Admin Dashboard') {
+        setActivePage('Executive Dashboard');
       }
     }
     setIsAuthenticated(true);
@@ -63,6 +80,8 @@ function App() {
   const handleLogout = () => {
     api.setTokens(null, null);
     setIsAuthenticated(false);
+    setUser(null);
+    setActivePage('Executive Dashboard');
     setAuthRoute('landing');
     setActiveScanId(null);
     setActiveTarget('');
@@ -151,6 +170,12 @@ function App() {
         setActiveScanId(null);
         setActiveTarget(selectedDomain);
       }
+    } else {
+      // If no domain is selected, select the absolute latest scan in scansList
+      if (scansList.length > 0 && (!activeScanId || !scansList.some(s => s.id === activeScanId))) {
+        setActiveScanId(scansList[0].id);
+        setActiveTarget(scansList[0].target);
+      }
     }
   }, [selectedDomain, scansList]);
 
@@ -179,6 +204,9 @@ function App() {
           toggleTheme={toggleTheme}
         />
         <div key={activePage} className="page-animate">
+          {activePage === 'Super Admin Dashboard' && (
+            <SuperAdminDashboard currentUser={user} />
+          )}
           {activePage === 'Executive Dashboard' && (
             <ExecutiveDashboard 
               activeScanId={activeScanId} 
@@ -211,13 +239,15 @@ function App() {
           {activePage === 'Web Asset Discovery'   && <WebAssetDiscovery />}
           {activePage === 'SSL/TLS Discovery'     && <SSLTLSDiscovery />}
           {activePage === 'Active Directory'      && <ActiveDirectory />}
+          {activePage === 'Email Security Dashboard' && <EmailSecurityDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
           {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard />}
           {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysisDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
-          {activePage === 'Mobile VAPT'           && <MobileVAPT />}
+          {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
+          {activePage === 'Mobile Security'       && <MobileVAPT />}
           {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
@@ -225,6 +255,14 @@ function App() {
           {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} />}
           {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} />}
           {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
+          {activePage === 'VAPT Report'  && (
+            <VaptReport
+              activeScanId={activeScanId}
+              scansList={filteredScansList}
+              selectedDomain={selectedDomain}
+              handleSelectScan={handleSelectScan}
+            />
+          )}
           {activePage === 'Marketplace' && <Marketplace />}
           {activePage === 'Settings'    && <Settings user={user} setUser={setUser} />}
         </div>

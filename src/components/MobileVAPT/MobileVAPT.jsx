@@ -165,7 +165,7 @@ const MobileVAPT = () => {
       
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
-        title="Mobile VAPT"
+        title="Mobile Security"
         subtitle="Automated Static and Dynamic security analysis of iOS and Android binaries."
         stats={[
           { label: 'Apps Scanned', value: dashboard.total_scans.toString(), subtext: 'Total binaries' },
@@ -528,116 +528,6 @@ const MobileVAPT = () => {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Top Split Layout */}
-      <div className="mv-top-grid">
-        
-        {/* Left Card: Upload Zone */}
-        <div className="mv-panel">
-          <div className="mv-panel-header" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-            <CloudUpload size={18} className="text-blue" />
-            <h2 className="mv-panel-title">Scan Binary (APK / IPA / AAB)</h2>
-          </div>
-          <div className="mv-upload-zone-wrapper" style={{ paddingTop: '1.5rem' }}>
-            <div className="mv-upload-zone">
-              <Smartphone size={40} strokeWidth={1} className="mv-upload-icon" />
-              <h3 className="mv-upload-title">Drag & drop file here or click to browse</h3>
-              <p className="mv-upload-subtitle">Supports .apk, .aab, .ipa (Max 150MB)</p>
-              
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                style={{ display: 'none' }} 
-                accept=".apk,.aab,.ipa" 
-                onChange={handleFileUpload} 
-              />
-              
-              <button 
-                className="mv-upload-btn" 
-                onClick={triggerFileSelect}
-                disabled={uploading || !!activePollScanId}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-              >
-                {uploading ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Uploading Binary...
-                  </>
-                ) : activePollScanId ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Scan Processing...
-                  </>
-                ) : 'Choose File'}
-              </button>
-
-              {uploadError && (
-                <div style={{ color: '#EF4444', fontSize: '0.8rem', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                  <AlertCircle size={14} />
-                  <span>{uploadError}</span>
-                </div>
-              )}
-              
-              {activePollScanId && (
-                <div style={{ marginTop: '1.5rem', width: '100%', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', padding: '1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>Analyzing Binary...</span>
-                    <RefreshCw size={14} className="animate-spin text-blue" />
-                  </div>
-                  <div style={{ width: '100%', height: '4px', background: 'var(--bg-main)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ width: '60%', height: '100%', background: '#3B82F6', animation: 'pulse 2s infinite' }}></div>
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Static analysis in progress. This may take a few minutes.</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Card: Security Policies */}
-        <div className="mv-panel">
-          <div className="mv-panel-header" style={{ borderBottom: '1px solid var(--border-color)', margin: 0 }}>
-            <ShieldCheck size={18} className="text-green" />
-            <h2 className="mv-panel-title">Security Policies Checked</h2>
-          </div>
-          <div className="mv-policies-list" style={{ paddingTop: '1.5rem' }}>
-            
-            <div className="mv-policy-item">
-              <ShieldCheck size={18} className="text-green policy-check" />
-              <div className="mv-policy-text">
-                <h4 className="policy-name">OWASP Mobile Top 10</h4>
-                <p className="policy-desc">Checks for insecure data storage, communication, authentication.</p>
-              </div>
-            </div>
-
-            <div className="mv-policy-item">
-              <ShieldCheck size={18} className="text-green policy-check" />
-              <div className="mv-policy-text">
-                <h4 className="policy-name">Hardcoded Secrets & API Keys</h4>
-                <p className="policy-desc">Scans decompiled resource files for private keys and connection strings.</p>
-              </div>
-            </div>
-
-            <div className="mv-policy-item">
-              <ShieldCheck size={18} className="text-green policy-check" />
-              <div className="mv-policy-text">
-                <h4 className="policy-name">Insecure Permissions & Intents</h4>
-                <p className="policy-desc">Audits AndroidManifest.xml & Info.plist flags for access controls.</p>
-              </div>
-            </div>
-
-            <div className="mv-policy-item">
-              <ShieldCheck size={18} className="text-green policy-check" />
-              <div className="mv-policy-text">
-                <h4 className="policy-name">Network Security Config</h4>
-                <p className="policy-desc">Verifies SSL pinning and cleartext traffic policies.</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-        
       </div>
 
     </div>

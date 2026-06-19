@@ -1,0 +1,267 @@
+/* ExecutiveDashboard.css */
+
+.exec-dashboard-container {
+  padding: 1.5rem;
+  background: var(--bg-main, #f8fafc);
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary, #1e293b);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+body.light-mode .exec-dashboard-container {
+  background: #f8fafc;
+}
+
+body:not(.light-mode) .exec-dashboard-container {
+  background: #0f172a;
+}
+
+/* Metric card tiles row */
+.exec-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.exec-metric-tile {
+  border-radius: 8px;
+  padding: 1.25rem 1rem;
+  color: #ffffff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.exec-metric-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.exec-tile-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.exec-tile-label {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+/* Specific colors based on Qualys screenshot */
+.tile-red-surface {
+  background: linear-gradient(135deg, #e12d1b 0%, #b71c1c 100%);
+}
+
+.tile-orange-org {
+  background: linear-gradient(135deg, #de7d23 0%, #e65100 100%);
+}
+
+.tile-green-domains {
+  background: linear-gradient(135deg, #42a846 0%, #1b5e20 100%);
+}
+
+.tile-red-vulns {
+  background: linear-gradient(135deg, #d32f2f 0%, #9e1c1c 100%);
+}
+
+.tile-gray-expired {
+  background: linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%);
+  color: #1e293b;
+}
+
+body:not(.light-mode) .tile-gray-expired {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+  color: #f8fafc;
+}
+
+.tile-gray-expired .exec-tile-label {
+  color: #475569;
+}
+
+body:not(.light-mode) .tile-gray-expired .exec-tile-label {
+  color: #94a3b8;
+}
+
+.tile-blue-expiring {
+  background: linear-gradient(135deg, #4c8cd4 0%, #0d47a1 100%);
+}
+
+/* Grid layouts for main widgets */
+.exec-widgets-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.exec-widget-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  min-height: 380px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+body.light-mode .exec-widget-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+}
+
+body:not(.light-mode) .exec-widget-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.exec-widget-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+body:not(.light-mode) .exec-widget-title {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+/* Layout helpers */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Table styles */
+.exec-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.exec-table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+body:not(.light-mode) .exec-table th {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.exec-table td {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.825rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body:not(.light-mode) .exec-table td {
+  border-color: #334155;
+}
+
+/* World map containers */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 220px;
+  background: #f8fafc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+body:not(.light-mode) .map-container {
+  background: #0f172a;
+}
+
+/* Legend items custom layout */
+.exec-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.exec-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.exec-legend-dot-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exec-legend-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.exec-legend-value {
+  font-weight: 700;
+}
+
+/* Custom Dropdown Styling */
+.exec-dropdown-select {
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #1e293b);
+  padding: 0 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 220px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.exec-dropdown-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+body:not(.light-mode) .exec-dropdown-select {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
