@@ -1,326 +1,255 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ShieldAlert, AlertTriangle, ShieldCheck, PieChart, TrendingUp, Search, Layers, RefreshCw, BarChart2, Globe, Crosshair, FileWarning, ExternalLink, Users } from 'lucide-react';
-import { api } from '../../utils/api';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area, Legend
+} from 'recharts';
+import {
+  Shield, AlertTriangle, Globe, Eye, Users, TrendingUp, RefreshCw,
+  ExternalLink, Crosshair, FileWarning, Activity, Search
+} from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
-import '../InternalDiscovery/InternalDashboard.css';
+import { api } from '../../utils/api';
 
-// Reusable simple wave chart for trends
-const TrendChart = ({ color, points }) => (
-  <svg viewBox="0 0 300 80" preserveAspectRatio="none" style={{ width: '100%', height: '60px' }}>
-    <defs>
-      <linearGradient id={`wg${color.replace('#','')}`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor={color} stopOpacity="0.45" />
-        <stop offset="100%" stopColor={color} stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    <path d={points.fill} fill={`url(#wg${color.replace('#','')})`} />
-    <path d={points.line} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+const COLORS = { malicious:'#EF4444', suspicious:'#F97316', phishing:'#DC2626', impersonation:'#EAB308', harmless:'#22C55E' };
+
+const W = ({ title, children, style={} }) => (
+  <div style={{
+    background:'var(--bg-card)', border:'1px solid var(--border-color)',
+    borderRadius:12, padding:'1.1rem', ...style
+  }}>
+    {title && <div style={{fontSize:'0.68rem',fontWeight:800,textTransform:'uppercase',
+      letterSpacing:'0.08em',color:'var(--text-muted)',marginBottom:'0.9rem',
+      display:'flex',alignItems:'center',gap:'0.35rem'}}>{title}</div>}
+    {children}
+  </div>
 );
 
-const TREND_WAVE = {
-  line: 'M0,60 C30,55 60,30 90,35 C120,40 150,15 180,20 C210,25 240,45 270,40 C285,37 300,36 300,36',
-  fill: 'M0,60 C30,55 60,30 90,35 C120,40 150,15 180,20 C210,25 240,45 270,40 C285,37 300,36 300,36 L300,80 L0,80 Z'
-};
+const CT = ({ label, value, color }) => (
+  <div style={{
+    background:`${color}11`, border:`1px solid ${color}33`, borderRadius:10,
+    padding:'0.85rem 1rem', display:'flex', flexDirection:'column', gap:4
+  }}>
+    <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',
+      letterSpacing:'0.06em',color:'var(--text-muted)'}}>{label}</span>
+    <div style={{fontSize:'1.7rem',fontWeight:900,color,lineHeight:1}}>{value}</div>
+  </div>
+);
+
+const dark = { background:'#1a1f2e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 12px', color:'#e2e8f0', fontSize:'0.78rem' };
+const gridLine = { stroke:'rgba(255,255,255,0.05)' };
 
 const BrandMonitoringDashboard = () => {
-  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const [phishing, setPhishing] = useState([]);
+  const [suspicious, setSuspicious] = useState([]);
+  const [impersonations, setImpersonations] = useState([]);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const load = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const data = await api.get('/api/brand-monitoring/targets/stats/');
-        setStats(data);
-      } catch (err) {
-        console.error("Failed to fetch brand monitoring stats", err);
-      } finally {
-        setLoading(false);
-      }
+        const [s, p, su, im] = await Promise.all([
+          api.get('/api/brand-monitoring/targets/stats/').catch(()=>null),
+          api.get('/api/brand-monitoring/phishing-domains/?page_size=10').catch(()=>[]),
+          api.get('/api/brand-monitoring/suspicious-domains/?page_size=10').catch(()=>[]),
+          api.get('/api/brand-monitoring/impersonation-results/?page_size=10').catch(()=>[])
+        ]);
+        setStats(s);
+        setPhishing(Array.isArray(p) ? p : (p?.results||[]));
+        setSuspicious(Array.isArray(su) ? su : (su?.results||[]));
+        setImpersonations(Array.isArray(im) ? im : (im?.results||[]));
+      } finally { setLoading(false); }
     };
-    fetchStats();
+    load();
   }, []);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString();
-  };
-
-  // Derived Stats
+  const totalTargets = stats?.total_targets || 0;
   const mal = stats?.total_malicious || 0;
   const sus = stats?.total_suspicious || 0;
   const phish = stats?.total_phishing_domains || 0;
   const imp = stats?.total_impersonations || 0;
-  
-  const totalThreats = mal + sus + phish + imp;
-  const totalTargets = stats?.total_targets || 0;
-  const activeAlerts = stats?.active_alerts || 0;
-  const totalReports = stats?.total_reports || 0;
 
-  // Calculate Brand Risk Score
   const rawRiskScore = (mal * 15) + (phish * 10) + (imp * 5) + (sus * 2);
-  const riskScore = Math.min(100, rawRiskScore); 
-  
-  const getGrade = (score) => {
-    if (score >= 90) return { grade: 'A', color: '#22C55E' };
-    if (score >= 80) return { grade: 'B', color: '#3B82F6' };
-    if (score >= 70) return { grade: 'C', color: '#F59E0B' };
-    if (score >= 60) return { grade: 'D', color: '#F97316' };
-    return { grade: 'F', color: '#EF4444' };
-  };
-  
-  const healthScoreValue = Math.max(0, 100 - riskScore);
-  const healthInfo = getGrade(healthScoreValue);
+  const riskScore = Math.min(100, rawRiskScore);
+  const healthScore = Math.max(0, 100 - riskScore);
+  const hColor = healthScore >= 80 ? COLORS.harmless : healthScore >= 50 ? COLORS.suspicious : COLORS.malicious;
+
+  const distData = [
+    { name:'Malicious', value:mal, fill:COLORS.malicious },
+    { name:'Suspicious', value:sus, fill:COLORS.suspicious },
+    { name:'Phishing', value:phish, fill:COLORS.phishing },
+    { name:'Impersonations', value:imp, fill:COLORS.impersonation },
+  ].filter(d=>d.value>0);
+
+  const reports = stats?.recent_reports || [];
+  const vtData = reports.slice(0,5).map(r => ({
+    date: r.scan_date ? new Date(r.scan_date).toLocaleDateString() : 'N/A',
+    Malicious: r.malicious || 0,
+    Suspicious: r.suspicious || 0,
+    Harmless: r.harmless || 0
+  }));
 
   return (
-    <div className="internal-dashboard-container">
+    <div style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Brand Monitoring Overview"
-        subtitle="Comprehensive visibility into external threats, domain reputation, and brand impersonation."
+        subtitle="Track domain impersonation, typosquatting, and external brand threats."
+        stats={[
+          { label:'Monitored Targets', value: totalTargets.toString() },
+          { label:'Phishing Detected', value: phish.toString() },
+          { label:'Impersonations Found', value: imp.toString() },
+          { label:'Malicious Reports', value: mal.toString() },
+        ]}
+        actions={
+          <button onClick={()=>window.location.reload()} style={{background:'var(--bg-card-2)',border:'1px solid var(--border-color)',borderRadius:7,padding:'0.4rem 0.6rem',cursor:'pointer',color:'var(--text-muted)'}}>
+            <RefreshCw size={14} className={loading?'spin':''}/>
+          </button>
+        }
       />
 
-      {loading ? (
-        <div className="card" style={{ marginTop: '1.5rem', padding: '3rem', display: 'flex', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-          <RefreshCw className="spin" size={24} style={{ marginRight: '0.5rem' }} /> Compiling brand threat report...
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'0.75rem'}}>
+        <CT label="Malicious"      value={mal}   color={COLORS.malicious}/>
+        <CT label="Suspicious"     value={sus}   color={COLORS.suspicious}/>
+        <CT label="Phishing Domains" value={phish} color={COLORS.phishing}/>
+        <CT label="Impersonations" value={imp}   color={COLORS.impersonation}/>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
+        <W title={<><Activity size={12}/> Brand Health Score</>}>
+           <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:'100%',paddingBottom:'2rem'}}>
+             <div style={{width:140,height:140,borderRadius:'50%',border:`8px solid ${hColor}`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',boxShadow:'inset 0 0 20px rgba(0,0,0,0.2)'}}>
+               <span style={{fontSize:'2.5rem',fontWeight:900,color:hColor,lineHeight:1}}>{healthScore}</span>
+               <span style={{fontSize:'0.65rem',color:'var(--text-muted)',marginTop:4,fontWeight:700,letterSpacing:'0.05em',textTransform:'uppercase'}}>/ 100</span>
+             </div>
+           </div>
+        </W>
+
+        <W title={<><PieChart size={12}/> Threat Distribution</>}>
+          {distData.length===0 ? <div style={{color:'var(--text-muted)',textAlign:'center',padding:'2rem'}}>No threats detected</div> :
+          <ResponsiveContainer width="100%" height={220}>
+            <PieChart>
+              <Pie data={distData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
+                {distData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
+              </Pie>
+              <Tooltip contentStyle={dark}/>
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize:'11px'}}/>
+            </PieChart>
+          </ResponsiveContainer>}
+        </W>
+
+        <W title={<><Search size={12}/> VirusTotal Detection Ratio</>}>
+          {vtData.length===0 ? <div style={{color:'var(--text-muted)',textAlign:'center',padding:'2rem'}}>No VirusTotal reports</div> :
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={vtData} margin={{top:10,right:10,bottom:0,left:-20}}>
+              <CartesianGrid {...gridLine}/>
+              <XAxis dataKey="date" tick={{fill:'#64748b',fontSize:10}}/>
+              <YAxis tick={{fill:'#64748b',fontSize:11}}/>
+              <Tooltip contentStyle={dark}/>
+              <Legend wrapperStyle={{fontSize:'11px'}}/>
+              <Bar dataKey="Malicious" stackId="a" fill={COLORS.malicious}/>
+              <Bar dataKey="Suspicious" stackId="a" fill={COLORS.suspicious}/>
+              <Bar dataKey="Harmless" stackId="a" fill={COLORS.harmless}/>
+            </BarChart>
+          </ResponsiveContainer>}
+        </W>
+      </div>
+
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
+        <W title={<><AlertTriangle size={12}/> Suspicious Domains</>}>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.75rem'}}>
+              <thead>
+                <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Domain</th>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Risk</th>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Method</th>
+                </tr>
+              </thead>
+              <tbody>
+                {suspicious.slice(0,5).map((s,i) => (
+                  <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                    <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{s.domain_name}</td>
+                    <td style={{padding:'0.6rem 0.5rem'}}>
+                      <span style={{padding:'0.15rem 0.4rem',borderRadius:4,fontSize:'0.65rem',fontWeight:800,background:`${COLORS.suspicious}22`,color:COLORS.suspicious}}>{s.risk_score}</span>
+                    </td>
+                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{s.detection_method}</td>
+                  </tr>
+                ))}
+                {suspicious.length===0 && <tr><td colSpan={3} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No suspicious domains</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </W>
+
+        <W title={<><FileWarning size={12}/> Phishing Domains</>}>
+          <div style={{overflowX:'auto'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.75rem'}}>
+              <thead>
+                <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Domain</th>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Status</th>
+                  <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {phishing.slice(0,5).map((p,i) => (
+                  <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                    <td style={{padding:'0.6rem 0.5rem',fontWeight:600,color:COLORS.phishing}}>{p.domain}</td>
+                    <td style={{padding:'0.6rem 0.5rem'}}>
+                      {p.is_active ? <span style={{color:COLORS.malicious,fontWeight:800,fontSize:'0.65rem'}}>ACTIVE</span> : <span style={{color:'var(--text-muted)',fontSize:'0.65rem'}}>INACTIVE</span>}
+                    </td>
+                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{p.ip_address||'—'}</td>
+                  </tr>
+                ))}
+                {phishing.length===0 && <tr><td colSpan={3} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No phishing domains</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        </W>
+      </div>
+      
+      <W title={<><Users size={12}/> Impersonating Accounts</>}>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.75rem'}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Platform</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Account Name</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Confidence</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {impersonations.slice(0,8).map((imp,i) => {
+                const conf = imp.confidence_score || 0;
+                const cColor = conf > 80 ? COLORS.malicious : conf > 50 ? COLORS.suspicious : COLORS.impersonation;
+                return (
+                  <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                    <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{imp.platform}</td>
+                    <td style={{padding:'0.6rem 0.5rem'}}>{imp.account_name}</td>
+                    <td style={{padding:'0.6rem 0.5rem',width:'200px'}}>
+                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                        <div style={{flex:1,height:6,background:'var(--bg-main)',borderRadius:3,overflow:'hidden'}}>
+                          <div style={{height:'100%',background:cColor,width:`${conf}%`}}/>
+                        </div>
+                        <span style={{fontSize:'0.65rem',fontWeight:800,color:cColor}}>{conf}%</span>
+                      </div>
+                    </td>
+                    <td style={{padding:'0.6rem 0.5rem'}}>
+                      {imp.account_url && <a href={imp.account_url} target="_blank" rel="noreferrer" style={{color:'var(--brand-primary)'}}><ExternalLink size={14}/></a>}
+                    </td>
+                  </tr>
+                );
+              })}
+              {impersonations.length===0 && <tr><td colSpan={4} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No impersonating accounts</td></tr>}
+            </tbody>
+          </table>
         </div>
-      ) : (
-        <>
-          {/* Executive Summary Cards */}
-          <div className="metrics-grid" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <div className="metric-card-premium">
-              <div className="card-icon cyan"><Globe size={24} /></div>
-              <div className="card-info">
-                <h4>Monitored Domains</h4>
-                <div className="card-value">{totalTargets}</div>
-              </div>
-            </div>
-            <div className="metric-card-premium">
-              <div className="card-icon red"><ShieldAlert size={24} /></div>
-              <div className="card-info">
-                <h4>Total Threats Found</h4>
-                <div className="card-value">{totalThreats}</div>
-              </div>
-            </div>
-            <div className="metric-card-premium">
-              <div className="card-icon orange"><AlertTriangle size={24} /></div>
-              <div className="card-info">
-                <h4>Active Alerts</h4>
-                <div className="card-value">{activeAlerts}</div>
-              </div>
-            </div>
-            <div className="metric-card-premium">
-              <div className="card-icon green"><Activity size={24} /></div>
-              <div className="card-info">
-                <h4>Total Scans Passed</h4>
-                <div className="card-value">{totalReports}</div>
-              </div>
-            </div>
-          </div>
+      </W>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-            
-            {/* Brand Health Score */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShieldCheck size={18} color={healthInfo.color} /> Brand Health Score
-              </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', padding: '1rem 0' }}>
-                <div style={{ 
-                  width: '80px', height: '80px', borderRadius: '50%', 
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                  border: `4px solid ${healthInfo.color}`, color: healthInfo.color,
-                  fontSize: '2rem', fontWeight: 800, background: `${healthInfo.color}15`
-                }}>
-                  {healthInfo.grade}
-                </div>
-                <div>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{healthScoreValue}<span style={{fontSize: '1rem', color: 'var(--text-secondary)'}}>/100</span></div>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>Overall External Posture</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Risk Score Overview */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <BarChart2 size={18} color="#EF4444" /> Brand Risk Index
-              </h3>
-              <div style={{ marginTop: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  <span>Current Risk Level</span>
-                  <span style={{ fontWeight: 'bold', color: '#EF4444' }}>{riskScore} / 100</span>
-                </div>
-                <div style={{ width: '100%', height: '8px', background: 'var(--bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: `${Math.min(100, riskScore)}%`, height: '100%', background: 'linear-gradient(90deg, #F59E0B, #EF4444)' }}></div>
-                </div>
-              </div>
-              <div style={{ marginTop: '1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  <span>Monitoring Coverage</span>
-                  <span style={{ fontWeight: 'bold', color: '#3B82F6' }}>100%</span>
-                </div>
-                <div style={{ width: '100%', height: '8px', background: 'var(--bg-main)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: '100%', height: '100%', background: '#3B82F6' }}></div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-            
-            {/* Threat Distribution */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <PieChart size={18} color="#8B5CF6" /> Threat Distribution
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                {[
-                  { label: 'Malicious Domains', value: mal, color: '#EF4444' },
-                  { label: 'Phishing Campaigns', value: phish, color: '#F97316' },
-                  { label: 'Impersonating Accounts', value: imp, color: '#F59E0B' },
-                  { label: 'Suspicious Domains', value: sus, color: '#3B82F6' }
-                ].map((item, idx) => {
-                  const pct = totalThreats > 0 ? Math.round((item.value / totalThreats) * 100) : 0;
-                  return (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '140px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{item.label}</div>
-                      <div style={{ flex: 1, height: '6px', background: 'var(--bg-main)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', background: item.color }}></div>
-                      </div>
-                      <div style={{ width: '40px', textAlign: 'right', fontSize: '0.85rem', fontWeight: 'bold', color: item.color }}>{item.value}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Asset Distribution */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Layers size={18} color="#06B6D4" /> External Asset Overview
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                {[
-                  { label: 'Monitored Targets', value: totalTargets, color: '#10B981' },
-                  { label: 'Domain Reports', value: totalReports, color: '#8B5CF6' }
-                ].map((item, idx) => {
-                  const maxVal = Math.max(totalTargets, totalReports) || 1;
-                  const pct = Math.round((item.value / maxVal) * 100);
-                  return (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <div style={{ width: '120px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{item.label}</div>
-                      <div style={{ flex: 1, height: '6px', background: 'var(--bg-main)', borderRadius: '3px', overflow: 'hidden' }}>
-                        <div style={{ width: `${pct}%`, height: '100%', background: item.color }}></div>
-                      </div>
-                      <div style={{ width: '40px', textAlign: 'right', fontSize: '0.85rem', fontWeight: 'bold', color: item.color }}>{item.value}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '1.5rem', marginTop: '1.5rem' }}>
-            
-            {/* Recent Findings Table (Top Threats) */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <AlertTriangle size={18} color="#EF4444" /> Target Threat Status
-                </h3>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      <th style={{ padding: '0.75rem 0.5rem' }}>Domain Target</th>
-                      <th style={{ padding: '0.75rem 0.5rem' }}>Malicious Hits</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(stats?.latest_reports || []).slice(0, 6).map((report, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                        <td style={{ padding: '0.75rem 0.5rem', color: '#3B82F6' }}>{report.target_domain || report.domain}</td>
-                        <td style={{ padding: '0.75rem 0.5rem' }}>
-                          <span style={{ 
-                            background: report.malicious > 0 ? 'rgba(239,68,68,0.1)' : 'rgba(34,197,94,0.1)',
-                            color: report.malicious > 0 ? '#EF4444' : '#22C55E',
-                            padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 
-                          }}>
-                            {report.malicious > 0 ? `${report.malicious} Engines` : 'CLEAN'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {(!stats?.latest_reports || stats.latest_reports.length === 0) && (
-                      <tr><td colSpan="2" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No target scans available.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Scan Activity Table (Latest Reports) */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Activity size={18} color="#3B82F6" /> Recent Scan Activity
-                </h3>
-              </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      <th style={{ padding: '0.75rem 0.5rem' }}>Domain</th>
-                      <th style={{ padding: '0.75rem 0.5rem' }}>Date</th>
-                      <th style={{ padding: '0.75rem 0.5rem' }}>Reputation</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(stats?.latest_reports || []).slice(0, 6).map((report, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-primary)' }}>{report.target_domain || report.domain}</td>
-                        <td style={{ padding: '0.75rem 0.5rem', color: 'var(--text-secondary)' }}>{formatDate(report.checked_at)}</td>
-                        <td style={{ padding: '0.75rem 0.5rem' }}>
-                          <span style={{ 
-                            background: report.reputation_score >= 80 ? 'rgba(34,197,94,0.1)' : report.reputation_score >= 50 ? 'rgba(234,179,8,0.1)' : 'rgba(239,68,68,0.1)',
-                            color: report.reputation_score >= 80 ? '#22C55E' : report.reputation_score >= 50 ? '#EAB308' : '#EF4444',
-                            padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 
-                          }}>
-                            {report.reputation_score}/100
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                    {(!stats?.latest_reports || stats.latest_reports.length === 0) && (
-                      <tr><td colSpan="3" style={{ padding: '1.5rem', textAlign: 'center', color: 'var(--text-secondary)' }}>No recent scan activity.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-
-          <div style={{ marginTop: '1.5rem' }}>
-            {/* Security Trends */}
-            <div className="card" style={{ padding: '1.5rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <TrendingUp size={18} color="#10B981" /> Reputation Trends
-              </h3>
-              <div style={{ marginTop: '1rem', height: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Historical Threat Activity (Simulated Trend)</div>
-                <TrendChart color="#10B981" points={TREND_WAVE} />
-              </div>
-            </div>
-
-          </div>
-        </>
-      )}
     </div>
   );
 };
