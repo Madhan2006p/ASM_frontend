@@ -4,7 +4,7 @@ import './InternalDashboard.css';
 
 const SSLTLSDiscovery = () => {
   return (
-    <div className="internal-dashboard-container">
+    <div className="global-page-container page-animate">
       <div className="dashboard-header-modern">
         <div className="header-icon-wrapper">
           <ShieldCheck size={28} className="pulse-icon" />

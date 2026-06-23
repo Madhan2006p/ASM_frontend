@@ -23,7 +23,7 @@ const InternalDashboard = () => {
   }, []);
 
   return (
-    <div className="internal-dashboard-container">
+    <div className="global-page-container page-animate">
       <div className="dashboard-header-modern">
         <div className="header-icon-wrapper">
           <Network size={28} className="pulse-icon" />

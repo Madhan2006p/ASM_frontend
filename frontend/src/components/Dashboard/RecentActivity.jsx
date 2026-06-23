@@ -8,7 +8,7 @@ const RecentActivity = () => {
       <div className="table-header">
         <h3 className="section-title">Recent Activity</h3>
       </div>
-      <div className="activity-container">
+      <div className="global-page-container page-animate">
         <div className="activity-empty">
           <div className="activity-empty-icon">
             <Activity size={18} />

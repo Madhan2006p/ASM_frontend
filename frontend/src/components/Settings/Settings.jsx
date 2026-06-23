@@ -104,7 +104,7 @@ const Settings = ({ user, setUser }) => {
   };
 
   return (
-    <div className="settings-container">
+    <div className="global-page-container page-animate">
 
       {/* ── Header ── */}
       <div className="settings-page-header">
@@ -142,7 +142,7 @@ const Settings = ({ user, setUser }) => {
 
           {/* USERS TAB */}
           {activeTab === 'users' && (
-            <div className="settings-panel">
+            <div className="card settings-panel">
               <div className="panel-header">
                 <Shield size={20} className="panel-icon blue" />
                 <div>
@@ -156,7 +156,7 @@ const Settings = ({ user, setUser }) => {
 
           {/* PROFILE TAB */}
           {activeTab === 'profile' && (
-            <div className="settings-panel">
+            <div className="card settings-panel">
               <div className="panel-header">
                 <User size={20} className="panel-icon blue" />
                 <div>
@@ -165,7 +165,7 @@ const Settings = ({ user, setUser }) => {
                 </div>
               </div>
 
-              <div className="profile-top-card">
+              <div className="card profile-top-card">
                 <div className="profile-avatar-large">
                   {localUser.profile_photo_url ? (
                     <img src={localUser.profile_photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
@@ -236,7 +236,7 @@ const Settings = ({ user, setUser }) => {
 
           {/* DATABASE TAB */}
           {activeTab === 'database' && (
-            <div className="settings-panel">
+            <div className="card settings-panel">
               <div className="panel-header">
                 <Database size={20} className="panel-icon blue" />
                 <div>

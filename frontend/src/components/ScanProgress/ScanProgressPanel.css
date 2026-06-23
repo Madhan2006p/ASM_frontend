@@ -836,3 +836,101 @@
 .light-mode .spr-tab-btn      { color: #94A3B8; }
 .light-mode .spr-tab-active   { color: #0891B2 !important; border-bottom-color: #0891B2 !important; }
 
+
+/* ── Nuclei deep scan panel ───────────────────────── */
+.spp-nuclei-panel {
+  margin: 0.5rem 0;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 6px;
+  background: rgba(34, 211, 238, 0.04);
+  overflow: hidden;
+}
+
+.spp-nuclei-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(34, 211, 238, 0.08);
+  border-bottom: 1px solid rgba(34, 211, 238, 0.15);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #22D3EE;
+}
+
+.spp-nuclei-found {
+  margin-left: auto;
+  background: rgba(34, 211, 238, 0.15);
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  color: #22D3EE;
+}
+
+.spp-nuclei-eta {
+  background: rgba(251, 191, 36, 0.15);
+  color: #FBBF24;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+}
+
+.spp-nuclei-complete {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ADE80;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
+  font-size: 0.68rem;
+}
+
+.spp-nuclei-phases {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.35rem 0;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.spp-nuclei-phase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.7rem;
+  transition: background 0.2s;
+}
+
+.spp-nuclei-phase-running {
+  background: rgba(34, 211, 238, 0.1);
+  color: #22D3EE;
+  font-weight: 600;
+}
+
+.spp-nuclei-phase-done {
+  color: #6B7280;
+}
+
+.spp-nuclei-phase-pending {
+  color: #374151;
+}
+
+.spp-nuclei-phase-icon {
+  width: 14px;
+  text-align: center;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.spp-nuclei-phase-name {
+  flex: 1;
+}
+
+.spp-nuclei-phase-est {
+  font-size: 0.65rem;
+  color: #4B5563;
+}
+
+.spp-nuclei-phase-running .spp-nuclei-phase-est {
+  color: #FBBF24;
+}

@@ -45,6 +45,7 @@ const menuGroups = [
   {
     title: 'SURFACE WEB MONITORING',
     items: [
+      { name: 'Surface Web Dashboard', icon: <Activity size={16} /> },
       { name: 'Surface Web',           icon: <Globe size={16} /> },
     ]
   },
@@ -54,6 +55,7 @@ const menuGroups = [
       { name: 'Brand Monitoring Dashboard', icon: <Activity size={16} /> },
       { name: 'Suspicious Domain',     icon: <Search size={16} /> },
       { name: 'Phishing Domain',       icon: <Shield size={16} /> },
+      { name: 'Anti Phishing',         icon: <ShieldCheck size={16} /> },
       { name: 'Impersonating Account', icon: <User size={16} /> },
       { name: 'Anti Malware',          icon: <AlertCircle size={16} /> },
     ]
@@ -96,6 +98,7 @@ const itemFeatureMap = {
   'Brand Monitoring Dashboard': '6',
   'Suspicious Domain': '6',
   'Phishing Domain': '6',
+  'Anti Phishing': '6',
   'Impersonating Account': '6',
   'Anti Malware': '6',
 };

@@ -257,7 +257,7 @@ const Marketplace = () => {
             const isInstalled = installedIds.includes(plugin.id);
             const isInstalling = installing === plugin.id;
             return (
-              <div key={plugin.id} className="mp-card">
+              <div key={plugin.id} className="card mp-card">
                 {/* Icon + Rating/Tag Row */}
                 <div className="mp-card-top">
                   <div className="mp-icon" style={{ color: plugin.iconColor, background: plugin.iconBg }}>

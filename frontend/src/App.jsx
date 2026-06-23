@@ -10,13 +10,16 @@ import OpenPorts from './components/OpenPorts/OpenPorts';
 import Directories from './components/Directories/Directories';
 import Technologies from './components/Technologies/Technologies';
 import AntiPhishing from './components/AntiPhishing/AntiPhishing';
+import AntiPhishingScan from './components/AntiPhishingScan/AntiPhishingScan';
 import AntiMalware from './components/AntiMalware/AntiMalware';
+import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
+import SurfaceWebDashboard from './components/SurfaceWeb/SurfaceWebDashboard';
 import SuspiciousDomains from './components/SuspiciousDomains/SuspiciousDomains';
 import EmailSecurity from './components/EmailSecurity/EmailSecurity';
 import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDashboard';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
-import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
+
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
 import Login from './components/Auth/Login';
@@ -250,9 +253,11 @@ function App() {
           {activePage === 'Mobile Security'       && <MobileVAPT />}
           {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
           {activePage === 'Suspicious Domain'     && <SuspiciousDomains activeTarget={activeTarget} />}
           {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} />}
+          {activePage === 'Anti Phishing'         && <AntiPhishingScan />}
           {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} />}
           {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
           {activePage === 'VAPT Report'  && (

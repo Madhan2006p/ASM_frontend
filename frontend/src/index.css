@@ -544,6 +544,10 @@ body {
 .page-animate > *:nth-child(4) { animation: pageSlideIn 0.4s 0.20s both; }
 .page-animate > *:nth-child(5) { animation: pageSlideIn 0.4s 0.25s both; }
 
+.page-animate > * {
+  flex-shrink: 0;
+}
+
 /* ====================================================
    CARDS — visible with strong borders
    ==================================================== */
@@ -681,6 +685,7 @@ body {
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .phc-container::before,

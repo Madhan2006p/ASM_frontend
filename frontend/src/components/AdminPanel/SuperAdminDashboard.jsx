@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../../utils/api';
 import {
   Shield, User, Globe, Building, CheckCircle2, ChevronRight,
-  Check, Plus, Trash2, Zap, X, Users, BarChart2
+  Check, Plus, Trash2, Zap, X, Users, BarChart2, ShieldAlert
 } from 'lucide-react';
 
 const SuperAdminDashboard = ({ currentUser }) => {
@@ -121,12 +121,22 @@ const SuperAdminDashboard = ({ currentUser }) => {
     if (!scanTarget || !selectedUser) return;
     setScanning(true);
     try {
-      await api.post('/api/attacksurface/admin-scan/', {
+      const attackSurfacePromise = api.post('/api/attacksurface/admin-scan/', {
         target: scanTarget,
         org_id: selectedUser.organization_id || '1',
         user_id: selectedUser.id   // backend validates domain is assigned to this user
       });
-      showToast(`Scan started for ${scanTarget} under ${selectedUser.organization}`);
+      
+      const antiPhishingPromise = api.post('/api/brand-monitoring/anti-phishing/', {
+        url: `https://${scanTarget}`,
+        org_id: selectedUser.organization_id || '1'
+      }).catch(err => {
+        console.warn('Anti-Phishing scan failed to start:', err);
+      });
+
+      await Promise.all([attackSurfacePromise, antiPhishingPromise]);
+
+      showToast(`Scans started for ${scanTarget} under ${selectedUser.organization}`);
       setScanTarget('');
     } catch (err) {
       showToast(err.message || 'Failed to start scan', 'error');
@@ -445,6 +455,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
                 </div>
               )}
             </div>
+
 
             {/* Domain Assignment */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '1.5rem' }}>

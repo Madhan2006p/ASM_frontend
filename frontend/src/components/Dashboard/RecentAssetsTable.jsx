@@ -69,7 +69,7 @@ const RecentAssetsTable = () => {
         <span className="count-label">1,257</span>
       </div>
 
-      <div className="table-container">
+      <div className="global-page-container page-animate">
         <table className="assets-table">
           <thead>
             <tr>

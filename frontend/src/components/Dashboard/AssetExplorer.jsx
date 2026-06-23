@@ -27,7 +27,7 @@ const AssetExplorer = () => {
 
       <hr className="explorer-divider" />
 
-      <div className="explorer-table-container">
+      <div className="global-page-container page-animate">
         <table className="explorer-table">
           <thead>
             <tr>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Directories.css';
-import { Search, Folder, Lock, Database, ShieldAlert, Globe, RefreshCw } from 'lucide-react';
+import { Search, Folder, Lock, Database, ShieldAlert, Globe, RefreshCw, ExternalLink } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -62,7 +62,11 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return <Folder size={16} />;
   };
 
-  const getRisk = (cat) => {
+  const getRisk = (cat, status) => {
+    // If the file is not actually exposed (e.g. 403 Forbidden, 401 Unauthorized, 404 Not Found),
+    // or if the server is offline/erroring, the risk is significantly lower.
+    if (status === 403 || status === 401 || status === 404 || status === 0 || status >= 500) return 'LOW';
+
     if (cat === 'Sensitive' || cat === 'Backup File') return 'CRITICAL';
     if (cat === 'Admin Panel') return 'HIGH';
     if (cat === 'Hidden') return 'MEDIUM';
@@ -70,26 +74,30 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   };
 
   const getAccess = (status) => {
+    if (status === 0) return 'Offline';
     if (status === 401 || status === 403) return 'Protected';
-    if (status === 301 || status === 302) return 'Redirect';
+    if (status === 301 || status === 302 || status === 307 || status === 308) return 'Redirect';
     if (status === 404) return 'Not Found';
-    if (status === 200) return 'Public';
-    return 'Unknown';
+    if (status === 200 || status === 201 || status === 204) return 'Public';
+    if (status >= 500) return 'Server Error';
+    return `HTTP ${status}`;
   };
 
   const getStatus = (status) => {
-    if (status === 200) return 'Exposed';       // Publicly accessible — genuinely exposed
-    if (status === 403) return 'Restricted';    // Server says no — exists but blocked
-    if (status === 401) return 'Secured';       // Requires auth
-    if (status === 301 || status === 302) return 'Redirect'; // Redirect, not directly exposed
-    if (status === 404) return 'Not Found';     // Doesn't exist
-    return 'Unknown';                           // Any other status
+    if (status === 0) return 'Unreachable';
+    if (status === 200 || status === 201 || status === 204) return 'Exposed';
+    if (status === 403) return 'Restricted';
+    if (status === 401) return 'Secured';
+    if (status === 301 || status === 302 || status === 307 || status === 308) return 'Redirect';
+    if (status === 404) return 'Not Found';
+    if (status >= 500) return 'Error';
+    return `HTTP ${status}`;
   };
 
   const filteredData = directories.map(item => {
     const path = getPathFromUrl(item.url);
     const category = getCategory(path);
-    const risk = getRisk(category);
+    const risk = getRisk(category, item.status);
     const access = getAccess(item.status);
     const status = getStatus(item.status);
     return {
@@ -124,6 +132,8 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (status === 'Secured')    return 'st-hlt';     // amber — requires auth
     if (status === 'Redirect')   return 'st-pat';     // blue — redirects away
     if (status === 'Not Found')  return 'st-upd';     // grey — 404
+    if (status === 'Unreachable') return 'st-upd';    // grey - 0
+    if (status === 'Error')      return 'st-upd';     // grey - 5xx
     return 'st-upd';                                  // grey — unknown
   };
 
@@ -194,7 +204,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
         </div>
 
         {/* Table */}
-        <div className="global-table-wrapper">
+        <div className="card global-table-wrapper">
           <table className="dir-table">
             <thead>
               <tr>
@@ -219,7 +229,22 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                 const dateStr = item.created ? new Date(item.created).toLocaleDateString() : 'Recent';
                 return (
                   <tr key={item.id}>
-                    <td className="dir-path">{item.path}</td>
+                    <td className="dir-path">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>{item.path}</span>
+                        <a 
+                          href={item.url && item.url.includes('://') ? item.url : `http://${item.subdomain_name || selectedDomain || 'localhost'}${item.path.startsWith('/') ? '' : '/'}${item.path}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', opacity: 0.8, transition: 'opacity 0.2s' }}
+                          title="Open exposed file in new tab"
+                          onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                          onMouseLeave={(e) => e.currentTarget.style.opacity = 0.8}
+                        >
+                          <ExternalLink size={14} />
+                        </a>
+                      </div>
+                    </td>
                     <td>
                       <div className="dir-category">
                         {item.icon}

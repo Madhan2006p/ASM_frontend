@@ -104,7 +104,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   };
 
   return (
-    <div className="email-security-container">
+    <div className="global-page-container page-animate">
       <PageHeaderCard
         badgeText="DOMAIN SECURITY"
         title="Email Authentication & Compliance"

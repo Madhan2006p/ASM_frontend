@@ -5,7 +5,7 @@ const CertificateCards = () => {
   return (
     <div className="certificate-cards">
       {/* Purple Card - Total Certificates */}
-      <div className="cert-card purple-card">
+      <div className="card cert-card purple-card">
         <div className="cert-card-header">
           <div className="icon-wrapper">
             <ShieldCheck size={20} />
@@ -17,7 +17,7 @@ const CertificateCards = () => {
       </div>
 
       {/* Green Card - Valid Certificates */}
-      <div className="cert-card green-card">
+      <div className="card cert-card green-card">
         <div className="cert-card-header">
           <div className="icon-wrapper">
             <ShieldCheck size={20} />
@@ -29,7 +29,7 @@ const CertificateCards = () => {
       </div>
 
       {/* Orange Card - Expiring Soon */}
-      <div className="cert-card orange-card">
+      <div className="card cert-card orange-card">
         <div className="cert-card-header">
           <div className="icon-wrapper">
             <AlertCircle size={20} />

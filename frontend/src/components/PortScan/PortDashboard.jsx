@@ -47,7 +47,7 @@ const PortDashboard = () => {
       <div className="port-radar-grid">
         
         {/* Left: Top Riskiest Services */}
-        <div className="port-side-card">
+        <div className="card port-side-card">
            <h3 className="side-card-title">Riskiest Services</h3>
            <p className="side-card-subtitle">Top exposed vectors across all monitored hosts.</p>
            
@@ -84,7 +84,7 @@ const PortDashboard = () => {
         </div>
 
         {/* Right: Protocol Breakdown & New Ports */}
-        <div className="port-side-card" style={{ gap: '1.5rem' }}>
+        <div className="card port-side-card" style={{ gap: '1.5rem' }}>
           
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ flex: 1 }}>

@@ -26,7 +26,7 @@ const CertFindings = ({ certs = [], loading }) => {
   }
 
   return (
-    <div className="cert-table-card">
+    <div className="card cert-table-card">
       <div className="cert-table-header">
         <h2 className="cert-table-title">SSL Security Findings</h2>
         <p className="cert-table-subtitle">Identified misconfigurations or risks in SSL certificates.</p>

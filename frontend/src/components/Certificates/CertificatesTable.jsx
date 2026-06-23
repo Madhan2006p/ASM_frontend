@@ -47,7 +47,7 @@ const CertificatesTable = ({ certs = [], loading }) => {
   });
 
   return (
-    <div className="global-table-wrapper" style={{ marginTop: '1.5rem' }}>
+    <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
       
       {/* Top Controls */}
       <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', margin: 0 }}>

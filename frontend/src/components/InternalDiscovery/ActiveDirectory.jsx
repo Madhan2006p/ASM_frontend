@@ -4,7 +4,7 @@ import './InternalDashboard.css';
 
 const ActiveDirectory = () => {
   return (
-    <div className="internal-dashboard-container">
+    <div className="global-page-container page-animate">
       <div className="dashboard-header-modern">
         <div className="header-icon-wrapper">
           <User size={28} className="pulse-icon" />

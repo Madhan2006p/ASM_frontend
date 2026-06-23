@@ -71,7 +71,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
   if (loading) {
     return (
-      <div className="exec-dashboard-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div className="global-page-container page-animate" style={{ justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)' }}>
           <RefreshCw className="spin" size={32} />
           <p style={{ fontWeight: 600, fontSize: '0.95rem' }}>Compiling executive risk posture report...</p>
@@ -169,7 +169,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
   const emailGrade = getGrade(emailSecurity.score);
 
   return (
-    <div className="exec-dashboard-container">
+    <div className="global-page-container page-animate">
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
         <div>
@@ -230,7 +230,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
       {/* SECTION: ASSET DISCOVERY (ROW 2) */}
       <div className="exec-widgets-grid-3">
         {/* Externally Exposed Assets trend chart */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">EXTERNALLY EXPOSED ASSETS (TREND)</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '1.5rem' }}>
             <span style={{ fontSize: '2.25rem', fontWeight: 800, color: '#3b82f6', lineHeight: 1 }}>{metrics.total_assets}</span>
@@ -276,7 +276,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* External Attack Surface by Location Map */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">
             <span>ATTACK SURFACE BY LOCATION</span>
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
@@ -285,7 +285,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
-            <div className="map-container">
+            <div className="global-page-container page-animate">
               <WorldMapSilhouette />
               <style>{`
                 @keyframes pulseMapRipple {
@@ -331,7 +331,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Managed vs Unmanaged Donut */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">MANAGED VS UNMANAGED</div>
           
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -382,7 +382,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
       {/* SECTION: PORT DISCOVERY & SYSTEM RISK (ROW 3) */}
       <div className="exec-widgets-grid-3">
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">VULNERABILITIES BY RISK SCORE</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -430,7 +430,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           </div>
         </div>
 
-        <div className="exec-widget-card" style={{ justifyContent: 'flex-start' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'flex-start' }}>
           <div className="exec-widget-title">EXPOSED PORTS & SERVICES</div>
           
           <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -453,7 +453,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           </div>
         </div>
 
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">DOMAIN ASSETS DISTRIBUTION</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -511,7 +511,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
       <div className="exec-widgets-grid-3">
         {/* Email Security Compliance Card */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">
             <span>EMAIL SECURITY COMPLIANCE</span>
             <span style={{ fontSize: '0.75rem', color: '#64748b' }}>{emailSecurity.domain}</span>
@@ -554,7 +554,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Mobile Severity Breakdown Card */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">MOBILE FINDINGS BY SEVERITY</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -603,7 +603,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Scanned Mobile Packages Table */}
-        <div className="exec-widget-card" style={{ justifyContent: 'flex-start' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'flex-start' }}>
           <div className="exec-widget-title">
             <span>SCANNED MOBILE APPLICATIONS</span>
             <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Total: {mobileSecurity.scans_count}</span>
@@ -655,7 +655,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
       <div className="exec-widgets-grid-3" style={{ marginBottom: '2rem' }}>
         {/* Brand Reputation (VirusTotal) */}
-        <div className="exec-widget-card">
+        <div className="card exec-widget-card">
           <div className="exec-widget-title">VIRUSTOTAL REPUTATION SHIELD</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -704,7 +704,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Brand Threat Summary */}
-        <div className="exec-widget-card" style={{ justifyContent: 'space-between' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'space-between' }}>
           <div className="exec-widget-title">DOMAIN IMPERSONATION THREATS</div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '0.5rem 0', flex: 1, justifyContent: 'center' }}>
@@ -741,7 +741,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Impersontating accounts table */}
-        <div className="exec-widget-card" style={{ justifyContent: 'flex-start' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'flex-start' }}>
           <div className="exec-widget-title">RECENT SOCIAL IMPERSONATIONS</div>
 
           <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -795,7 +795,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
       <div className="exec-widgets-grid-3" style={{ marginBottom: '2rem' }}>
         {/* OSINT Targets */}
-        <div className="exec-widget-card" style={{ justifyContent: 'space-between' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'space-between' }}>
           <div className="exec-widget-title">OSINT TARGET MONITORS</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0', flex: 1, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -811,7 +811,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* OSINT Data Values */}
-        <div className="exec-widget-card" style={{ justifyContent: 'space-between' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'space-between' }}>
           <div className="exec-widget-title">PASSIVE OSINT DISCOVERIES</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '0.5rem 0', flex: 1, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -827,7 +827,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
 
         {/* Recent OSINT Findings */}
-        <div className="exec-widget-card" style={{ justifyContent: 'flex-start' }}>
+        <div className="card exec-widget-card" style={{ justifyContent: 'flex-start' }}>
           <div className="exec-widget-title">RECENT PASSIVE DISCOVERIES</div>
           <div style={{ overflowY: 'auto', flex: 1 }}>
             <table className="exec-table">
