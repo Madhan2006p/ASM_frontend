@@ -120,9 +120,9 @@ const UserManagement = ({ currentUser }) => {
     : availableFeatures.filter(f => currentUser.features.includes(String(f.id)));
 
   return (
-    <div className="user-management-container" style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
+    <div className="global-page-container page-animate" style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
       {/* Users List Panel */}
-      <div className="users-list-panel" style={{ flex: '1', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+      <div className="card users-list-panel" style={{ flex: '1', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.02)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <User size={18} /> Organization Users
@@ -196,7 +196,7 @@ const UserManagement = ({ currentUser }) => {
       </div>
 
       {/* User Details & Feature Control Panel */}
-      <div className="user-details-panel" style={{ flex: '2', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div className="card user-details-panel" style={{ flex: '2', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         
         {/* Removed Toast */}
 
@@ -340,7 +340,7 @@ const UserManagement = ({ currentUser }) => {
       {/* Create User Modal */}
       {showCreateUser && createPortal(
         <div className="um-modal-backdrop">
-          <div className="um-modal-card">
+          <div className="card um-modal-card">
             <div className="um-modal-header">
               <h3 className="um-modal-title">
                 <User size={20} color="#10B981" /> New Organization User
@@ -391,7 +391,7 @@ const UserManagement = ({ currentUser }) => {
       {/* Share Credentials Modal */}
       {createdCredentials && createPortal(
         <div className="um-modal-backdrop">
-          <div className="um-modal-card">
+          <div className="card um-modal-card">
             <div className="um-modal-header">
               <h3 className="um-modal-title" style={{ color: '#10B981' }}>
                 <CheckCircle2 size={20} /> Credentials Created

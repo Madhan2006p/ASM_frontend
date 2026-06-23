@@ -349,7 +349,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
           <div className="ov-row ov-row-4">
 
             {/* Total Assets */}
-            <div className="ov-metric-card ov-card-orange ov-clickable"
+            <div className="card ov-metric-card ov-card-orange ov-clickable"
               onClick={() => navigate('Subdomain Discovery')}
               title="Go to Subdomain Discovery">
               <div className="ov-metric-top">
@@ -366,7 +366,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Vulnerabilities */}
-            <div className="ov-metric-card ov-card-blue ov-clickable"
+            <div className="card ov-metric-card ov-card-blue ov-clickable"
               onClick={() => navigate('Vulnerabilities')}
               title="Go to Vulnerabilities">
               <div className="ov-metric-top">
@@ -383,7 +383,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Overall Risk */}
-            <div className="ov-metric-card ov-card-center ov-card-amber ov-clickable"
+            <div className="card ov-metric-card ov-card-center ov-card-amber ov-clickable"
               onClick={() => navigate('Vulnerabilities')}
               title="Go to Vulnerabilities">
               <div className="ov-status-icon ov-icon-amber"><AlertTriangle size={20} /></div>
@@ -393,7 +393,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Security Score */}
-            <div className="ov-metric-card ov-card-center ov-card-green ov-clickable"
+            <div className="card ov-metric-card ov-card-center ov-card-green ov-clickable"
               onClick={() => navigate('SSL Certificates')}
               title="Go to SSL Certificates">
               <div className="ov-status-icon ov-icon-green"><Shield size={20} /></div>
@@ -411,7 +411,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
 
           {/* ═══ ROW 1.5 — User Assigned Domains ══════ */}
           <div className="ov-row">
-            <div className="ov-panel ov-assigned-domains-panel">
+            <div className="card ov-panel ov-assigned-domains-panel">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title">
                   <Globe size={14} color="#3B82F6"/>
@@ -421,7 +421,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
               </div>
               <div className="ov-domains-grid">
                 {monitoredDomains.map(d => (
-                  <div key={d.id} className="ov-domain-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
+                  <div key={d.id} className="card ov-domain-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div className="ov-dc-header" style={{ marginBottom: 0 }}>
                         <span className="ov-dc-status-dot verified"></span>
@@ -482,7 +482,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
           {/* ═══ ROW 2 — Vulns + Risk chart ════════════ */}
           <div className="ov-row ov-row-split">
 
-            <div className="ov-panel">
+            <div className="card ov-panel">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><AlertTriangle size={14} color="#F97316"/>RECENT FINDINGS</div>
                 <button className="ov-icon-btn" onClick={() => navigate('Vulnerabilities')}><ExternalLink size={13}/></button>
@@ -511,7 +511,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Risks — vertical bar chart */}
-            <div className="ov-panel ov-panel-flex">
+            <div className="card ov-panel ov-panel-flex">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><AlertTriangle size={14} color="#EF4444"/>RISK SEVERITY BREAKDOWN</div>
                 <span className="ov-hbar-total">Total Findings: <strong>{vulns.length}</strong></span>
@@ -531,7 +531,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
           {/* ═══ ROW 3 — Techs + World Map ══════════════ */}
           <div className="ov-row ov-row-split">
 
-            <div className="ov-panel">
+            <div className="card ov-panel">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><Monitor size={14} color="#3B82F6"/>RECENT TECHNOLOGIES</div>
                 <button className="ov-icon-btn" onClick={() => navigate('Technologies')}><ExternalLink size={13}/></button>
@@ -558,7 +558,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Interactive World Map */}
-            <div className="ov-panel ov-panel-flex">
+            <div className="card ov-panel ov-panel-flex">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><Globe size={14} color="#3B82F6"/>ASSET LOCATION</div>
                 <div className="ov-map-legend-row">
@@ -603,7 +603,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
           <div className="ov-row ov-row-split">
 
             {/* Recent Activities */}
-            <div className="ov-panel">
+            <div className="card ov-panel">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><Activity size={14} color="#10B981"/>RECENT ACTIVITIES</div>
                 <span className="ov-panel-hint">Live log</span>
@@ -626,7 +626,7 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
             </div>
 
             {/* Recently Scanned Domains */}
-            <div className="ov-panel ov-panel-flex">
+            <div className="card ov-panel ov-panel-flex">
               <div className="ov-panel-hdr">
                 <div className="ov-panel-title"><Search size={14} color="#06B6D4"/>RECENTLY SCANNED DOMAINS</div>
                 <span className="ov-panel-hint">{SCANNED_DOMAINS.length} domains</span>

@@ -5,7 +5,7 @@ import './PortScan.css';
 
 const PortScan = () => {
   return (
-    <div className="port-page-container">
+    <div className="global-page-container page-animate">
       <div className="port-max-width">
         <PortDashboard />
         <PortTable />

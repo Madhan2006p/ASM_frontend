@@ -119,7 +119,7 @@ const FaradayFindings = ({ activeScanId }) => {
   }, [searchQuery, severityFilter]);
 
   return (
-    <div className="faraday-container">
+    <div className="global-page-container page-animate">
       
       <PageHeaderCard
         badgeText="VULNERABILITY INTEGRATION"
@@ -205,13 +205,13 @@ const FaradayFindings = ({ activeScanId }) => {
       )}
 
       {/* Significant Findings Panel */}
-      <div className="ff-panel">
+      <div className="card ff-panel">
         <div className="ff-panel-header">
           <h2 className="ff-panel-title">Significant Findings</h2>
           <p className="ff-panel-subtitle">Critical, high, and CVE-linked findings from Faraday.</p>
         </div>
 
-        <div className="ff-table-container">
+        <div className="global-page-container page-animate">
           <div style={{ overflowX: 'auto' }}>
             <table className="ff-table">
               <thead>
@@ -251,7 +251,7 @@ const FaradayFindings = ({ activeScanId }) => {
                 ) : (
                   <tr>
                     <td colSpan="6">
-                      <div className="ff-empty-state-container" style={{ padding: '3rem 0', background: 'transparent', border: 'none' }}>
+                      <div className="global-page-container page-animate" style={{ padding: '3rem 0', background: 'transparent', border: 'none' }}>
                         <div className="empty-state-content">
                           <SearchX size={32} strokeWidth={1} className="empty-state-icon" />
                           <span>No significant findings available.</span>
@@ -267,7 +267,7 @@ const FaradayFindings = ({ activeScanId }) => {
       </div>
 
       {/* Full Findings Panel */}
-      <div className="ff-panel" style={{ marginTop: '1.5rem' }}>
+      <div className="card ff-panel" style={{ marginTop: '1.5rem' }}>
         <div className="ff-panel-header with-controls">
           <div>
             <h2 className="ff-panel-title">Full Findings</h2>
@@ -296,7 +296,7 @@ const FaradayFindings = ({ activeScanId }) => {
           </div>
         </div>
 
-        <div className="ff-table-container">
+        <div className="global-page-container page-animate">
           <div style={{ overflowX: 'auto' }}>
             <table className="ff-table">
               <thead>
@@ -338,7 +338,7 @@ const FaradayFindings = ({ activeScanId }) => {
                 ) : (
                   <tr>
                     <td colSpan="8">
-                      <div className="ff-empty-state-container" style={{ padding: '3rem 0', background: 'transparent', border: 'none' }}>
+                      <div className="global-page-container page-animate" style={{ padding: '3rem 0', background: 'transparent', border: 'none' }}>
                         <div className="empty-state-content">
                           <SearchX size={32} strokeWidth={1} className="empty-state-icon" />
                           <span>No findings match the current filters.</span>

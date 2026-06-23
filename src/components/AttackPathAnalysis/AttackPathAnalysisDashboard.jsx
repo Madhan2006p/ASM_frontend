@@ -94,7 +94,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
   }, [activeScanId]);
 
   return (
-    <div className="internal-dashboard-container">
+    <div className="global-page-container page-animate">
       <PageHeaderCard
         badgeText="ATTACK PATH ANALYSIS"
         title="Attack Path Analysis Dashboard"

@@ -24,7 +24,7 @@ const Integrations = () => {
   ];
 
   return (
-    <div className="integrations-container">
+    <div className="global-page-container page-animate">
       
       {/* Header */}
       <div className="int-header">
@@ -38,7 +38,7 @@ const Integrations = () => {
       </div>
 
       {/* Table */}
-      <div className="int-table-container">
+      <div className="global-page-container page-animate">
         <table className="int-table">
           <thead>
             <tr>

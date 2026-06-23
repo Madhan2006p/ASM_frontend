@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Shield, Lock, Eye, EyeOff, CheckCircle, Mail, ArrowRight, Activity, X } from 'lucide-react';
 import './Auth.css';
 import { api } from '../../utils/api';
 
@@ -11,6 +11,11 @@ const Login = ({ onLogin, onNavigate }) => {
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validate = (name, value) => {
     if (name === 'email') {
@@ -53,131 +58,87 @@ const Login = ({ onLogin, onNavigate }) => {
         });
         if (res.tokens) {
           api.setTokens(res.tokens.access, res.tokens.refresh);
-          setSuccessMsg('Login successful! Redirecting to dashboard...');
+          setSuccessMsg('Authentication successful. Initializing workspace...');
           setTimeout(() => {
             onLogin(res.user);
           }, 1500);
         } else {
-          setApiError('Login failed: Token not found.');
+          setApiError('Authentication failed: Missing security token.');
           setLoading(false);
         }
       } catch (err) {
-        setApiError(err.message || 'Invalid email or password');
+        setApiError(err.message || 'Invalid credentials provided');
         setLoading(false);
       }
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-split-card">
+    <div className="auth-page-bg">
+      <div className={`auth-glass-card ${mounted ? 'fade-in-up' : ''}`}>
+        <div className="auth-glass-inner">
+          <h1 className="auth-title">Login</h1>
 
-        {/* Left visual panel */}
-        <div className="auth-left-panel">
-          <div className="auth-left-content">
-            <div className="auth-left-badge">Enterprise Security</div>
-            <h2 className="auth-left-title">Protect Your Attack Surface</h2>
-            <p className="auth-left-sub">
-              Continuous discovery, monitoring, and protection against external threats. Get real-time visibility into your digital footprint.
-            </p>
-            <div className="auth-left-stats">
-              <div className="auth-stat">
-                <span className="auth-stat-num">24/7</span>
-                <span className="auth-stat-lbl">Monitoring</span>
-              </div>
-              <div className="auth-stat">
-                <span className="auth-stat-num">100%</span>
-                <span className="auth-stat-lbl">Visibility</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right form panel */}
-        <div className="auth-right-panel">
-          <div className="auth-header-brand">
-            <Shield size={22} color="#10B981" />
-            Infotech Sentinel
-          </div>
-
-          <div className="auth-header">
-            <h1 className="auth-title">Welcome Back</h1>
-            <p className="auth-subtitle">Log in to access your security dashboard</p>
-          </div>
-
-          <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          <form className="auth-form-glass" onSubmit={handleSubmit} noValidate>
             {successMsg && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                marginBottom: '1rem', padding: '0.75rem 1rem',
-                background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.4)',
-                borderRadius: '8px', color: '#10B981', fontWeight: 600, fontSize: '0.9rem'
-              }}>
-                <CheckCircle size={16} /> {successMsg}
+              <div className="auth-alert success">
+                <CheckCircle size={14} /> <span>{successMsg}</span>
               </div>
             )}
             {apiError && (
-              <div className="error-text" style={{ marginBottom: '1rem', textAlign: 'center', fontWeight: 'bold', color: '#EF4444' }}>
-                {apiError}
+              <div className="auth-alert error">
+                <Shield size={14} /> <span>{apiError}</span>
               </div>
             )}
-            <div className="auth-input-group">
-              <label>Email Address</label>
+
+            <div className={`glass-input-group ${touched.email && errors.email ? 'has-error' : ''}`}>
               <input
                 type="email"
                 name="email"
-                placeholder="you@company.com"
+                id="email"
+                placeholder="Email"
                 value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                className={errors.email && touched.email ? 'input-error' : ''}
+                required
               />
-              {errors.email && touched.email && <span className="error-text">{errors.email}</span>}
+              <Mail className="input-icon-right" size={16} />
+              {touched.email && errors.email && <span className="error-text-glass">{errors.email}</span>}
             </div>
 
-            <div className="auth-input-group">
-              <div className="auth-label-row">
-                <label>Password</label>
-                <span className="auth-forgot">Forgot password?</span>
-              </div>
-              <div style={{ position: 'relative', width: '100%' }}>
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  name="password"
-                  placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  className={errors.password && touched.password ? 'input-error' : ''}
-                  style={{ paddingRight: '2.75rem' }}
-                />
-                <button type="button" onClick={() => setShowPass(p => !p)}
-                  style={{ position:'absolute', right:'0.75rem', top:'50%', transform:'translateY(-50%)',
-                    background:'none', border:'none', cursor:'pointer', color:'#64748B', display:'flex', zIndex: 10 }}>
-                  {showPass ? <Eye size={16}/> : <EyeOff size={16}/>}
-                </button>
-              </div>
-              {errors.password && touched.password && <span className="error-text">{errors.password}</span>}
+            <div className={`glass-input-group ${touched.password && errors.password ? 'has-error' : ''}`}>
+              <input
+                type={showPass ? 'text' : 'password'}
+                name="password"
+                id="password"
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              <Lock className="input-icon-right" size={16} onClick={() => setShowPass(!showPass)} style={{cursor: 'pointer'}} />
+              {touched.password && errors.password && <span className="error-text-glass">{errors.password}</span>}
             </div>
 
-            <button type="submit" className="auth-btn-submit" disabled={loading} style={{ opacity: loading ? 0.75 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}>
-              {loading ? (
-                <>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.5rem', verticalAlign: 'middle', animation: 'spin 1s linear infinite', display: 'inline-block' }}>
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                  </svg>
-                  Signing In...
-                </>
-              ) : (
-                <>
-                  <Lock size={15} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />
-                  Sign In
-                </>
-              )}
+            <div className="auth-actions-glass">
+              <label className="remember-me-glass">
+                <input type="checkbox" />
+                <span className="checkmark-glass"></span>
+                Remember me
+              </label>
+              <button type="button" className="forgot-pass-glass">Forgot Password?</button>
+            </div>
+
+            <button type="submit" className={`btn-login-glass ${loading ? 'loading' : ''}`} disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
+          
+          <div className="auth-footer-glass">
+            <p>Don't have an account? <button className="register-link-glass">Register</button></p>
+          </div>
         </div>
-
       </div>
     </div>
   );

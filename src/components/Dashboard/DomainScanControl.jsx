@@ -18,7 +18,7 @@ const DomainScanControl = () => {
       <div className="monitored-domains-wrapper">
         <h4 className="sub-section-title">Monitored Domains</h4>
         
-        <div className="scan-table-container">
+        <div className="global-page-container page-animate">
           <table className="scan-table">
             <thead>
               <tr>

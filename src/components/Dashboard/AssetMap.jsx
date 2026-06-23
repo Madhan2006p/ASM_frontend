@@ -32,7 +32,7 @@ const AssetMap = () => {
         <button className="icon-btn"><Maximize size={16}/></button>
       </div>
 
-      <div className="map-container">
+      <div className="global-page-container page-animate">
         {/* Map Controls */}
         <div className="map-controls">
           <button className="control-btn"><Plus size={16} /></button>

@@ -313,24 +313,7 @@ const ScanReport = ({ activeScanId, scanData: externalScanData }) => {
 
       {/* Actions */}
       <div className="spr-actions">
-        <button
-          className="spr-btn spr-btn-primary"
-          onClick={() => fetchReport(activeScanId)}
-          disabled={loading || !activeScanId}
-        >
-          {loading ? <RefreshCw size={13} className="spin" /> : <RefreshCw size={13} />}
-          {loading ? 'Loading…' : 'Refresh Report'}
-        </button>
-        {reportData && (
-          <button
-            className="spr-btn spr-btn-export"
-            onClick={() => exportToPDF(reportData, scan)}
-          >
-            <Download size={13} />
-            Export PDF
-          </button>
-        )}
-        {!reportData && canGenerate && !loading && (
+
           <button
             className="spr-btn spr-btn-primary"
             onClick={() => fetchReport(activeScanId)}

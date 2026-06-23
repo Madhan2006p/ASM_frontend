@@ -59,7 +59,7 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
         )}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center' }}>
         {currentUser && currentUser.organization && (
           <div className="header-org-badge" style={{ fontSize: '1.1rem', fontWeight: 700, padding: '0.4rem 1rem', display: 'flex', alignItems: 'center' }}>
             {currentUser.logo_url ? (

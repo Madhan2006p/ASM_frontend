@@ -78,7 +78,7 @@ const ImpersonatingAccount = () => {
   const activeScan = scans.find(s => s.id === Number(activeScanId));
 
   return (
-    <div className="ia-container">
+    <div className="global-page-container page-animate">
       
       <PageHeaderCard
         badgeText="BRAND MONITORING"
@@ -144,7 +144,7 @@ const ImpersonatingAccount = () => {
 
       {/* Main Table */}
       {results.length > 0 ? (
-        <div className="global-table-wrapper" style={{ overflowX: 'auto' }}>
+        <div className="card global-table-wrapper" style={{ overflowX: 'auto' }}>
           <table className="cert-table">
             <thead>
               <tr>
@@ -220,7 +220,7 @@ const ImpersonatingAccount = () => {
           </table>
         </div>
       ) : (
-        <div className="ia-empty-panel" style={{ padding: '4.5rem 1rem' }}>
+        <div className="card ia-empty-panel" style={{ padding: '4.5rem 1rem' }}>
           <Users size={56} className="ia-empty-icon" strokeWidth={1.5} />
           <h2 className="ia-empty-title">{loadingResults ? 'Loading imposter profiles...' : 'No Fake Profiles Found'}</h2>
           <p className="ia-empty-subtext">

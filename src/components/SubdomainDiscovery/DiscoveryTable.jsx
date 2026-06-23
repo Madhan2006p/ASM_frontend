@@ -155,7 +155,7 @@ const DiscoveryTable = () => {
       </div>
 
       {/* Table */}
-      <div className="table-container">
+      <div className="global-page-container page-animate">
         <table className="assets-table discovery-table">
           <thead>
             <tr>

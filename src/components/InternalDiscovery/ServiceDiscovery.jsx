@@ -4,7 +4,7 @@ import './InternalDashboard.css';
 
 const ServiceDiscovery = () => {
   return (
-    <div className="internal-dashboard-container">
+    <div className="global-page-container page-animate">
       <div className="dashboard-header-modern">
         <div className="header-icon-wrapper">
           <Search size={28} className="pulse-icon" />

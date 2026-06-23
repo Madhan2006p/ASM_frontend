@@ -8,7 +8,7 @@
   color: var(--text-primary, #1e293b);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2.5rem;
 }
 
 body.light-mode .exec-dashboard-container {
@@ -21,12 +21,13 @@ body:not(.light-mode) .exec-dashboard-container {
 
 /* Metric card tiles row */
 .exec-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .exec-metric-tile {
+  flex: 1 1 160px;
   border-radius: 8px;
   padding: 1.25rem 1rem;
   color: #ffffff;
@@ -37,6 +38,7 @@ body:not(.light-mode) .exec-dashboard-container {
   flex-direction: column;
   justify-content: space-between;
   min-height: 110px;
+  margin-bottom: 1.5rem;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -102,12 +104,13 @@ body:not(.light-mode) .tile-gray-expired .exec-tile-label {
 
 /* Grid layouts for main widgets */
 .exec-widgets-grid-3 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
 }
 
 .exec-widget-card {
+  flex: 1 1 320px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -116,6 +119,7 @@ body:not(.light-mode) .tile-gray-expired .exec-tile-label {
   flex-direction: column;
   padding: 1.25rem;
   min-height: 380px;
+  margin-bottom: 1.5rem;
   transition: border-color 0.2s, background-color 0.2s;
 }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExternalLink, Bug, RefreshCw, Shield, ChevronDown, ChevronRight } from 'lucide-react';
+import { ExternalLink, Bug, RefreshCw, Shield, ChevronDown, ChevronRight, FileText, Wrench, Link as LinkIcon } from 'lucide-react';
 
 const getSeverityClass = (severity) => (severity || 'low').toLowerCase();
 const getStatusClass = (status) => (status || 'open').toLowerCase();
@@ -20,7 +20,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
   };
 
   return (
-    <div className="vuln-view-container" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
+    <div className="global-page-container page-animate" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
       <div className="global-filter-row">
         <div 
           className={`global-filter-pill ${activeFilter === 'All' ? 'active' : ''}`}
@@ -54,7 +54,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
         </div>
       </div>
 
-      <div className="global-table-wrapper">
+      <div className="card global-table-wrapper">
         <table className="vuln-table">
           <thead>
             <tr>
@@ -134,36 +134,58 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
                   
                   {expandedRows[row.id] && (
                     <tr className="vuln-expanded-row">
-                      <td colSpan="9" style={{ padding: 0, borderTop: 'none', background: '#f8fafc' }}>
-                        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderBottom: '1px solid #e2e8f0' }}>
-                          <div>
-                            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', textTransform: 'uppercase', color: '#64748B', fontWeight: '600' }}>Description</h4>
-                            <p style={{ margin: 0, fontSize: '0.95rem', color: '#334155', lineHeight: '1.5' }}>
+                      <td colSpan="9" style={{ padding: 0, borderTop: 'none', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
+                        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: 'inset 0 4px 6px -4px rgba(0,0,0,0.1)' }}>
+                          
+                          {/* Description Block */}
+                          <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', borderLeft: '4px solid var(--accent)' }}>
+                            <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <FileText size={16} /> Description
+                            </h4>
+                            <p style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
                               {row.description || row.title}
                             </p>
                           </div>
                           
+                          {/* Remediation Block */}
                           {(row.remediation && row.remediation !== '-' && row.remediation !== 'No remediation provided.') && (
-                            <div style={{ background: '#ecfdf5', padding: '1rem', borderRadius: '8px', border: '1px solid #d1fae5' }}>
-                              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', textTransform: 'uppercase', color: '#059669', fontWeight: '600' }}>Remediation</h4>
-                              <p style={{ margin: 0, fontSize: '0.95rem', color: '#064e3b', lineHeight: '1.5' }}>
+                            <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)', borderLeft: '4px solid #10b981' }}>
+                              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Wrench size={16} /> Remediation
+                              </h4>
+                              <p style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)', lineHeight: '1.6' }}>
                                 {row.remediation}
                               </p>
                             </div>
                           )}
 
+                          {/* References Block */}
                           {(row.reference && row.reference !== '-' && row.reference !== '—') && (
-                            <div>
-                              <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', textTransform: 'uppercase', color: '#64748B', fontWeight: '600' }}>References</h4>
-                              <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.9rem', color: '#3b82f6', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                {row.reference.split(',').map((ref, idx) => (
-                                  <li key={idx}>
-                                    <a href={ref.trim()} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'none' }}>
-                                      {ref.trim()}
+                            <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <LinkIcon size={16} /> References
+                              </h4>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                {row.reference.split(',').map((ref, idx) => {
+                                  const rawLink = ref.trim();
+                                  if(!rawLink) return null;
+                                  let linkText = rawLink;
+                                  try {
+                                    linkText = new URL(rawLink).hostname;
+                                  } catch (e) {
+                                    linkText = rawLink.length > 40 ? rawLink.substring(0,40) + '...' : rawLink;
+                                  }
+                                  
+                                  return (
+                                    <a key={idx} href={rawLink.startsWith('http') ? rawLink : `https://${rawLink}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-main)', color: 'var(--accent)', textDecoration: 'none', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600', border: '1px solid var(--border-color)', transition: 'all 0.2s' }}
+                                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'; }}
+                                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.background = 'var(--bg-main)'; }}
+                                    >
+                                      <ExternalLink size={14} /> {linkText}
                                     </a>
-                                  </li>
-                                ))}
-                              </ul>
+                                  );
+                                })}
+                              </div>
                             </div>
                           )}
                         </div>
