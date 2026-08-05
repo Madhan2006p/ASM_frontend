@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, Lock, Eye, EyeOff, CheckCircle, Mail, ArrowRight, Activity, X } from 'lucide-react';
+import { Shield, CheckCircle, Infinity } from 'lucide-react';
 import './Auth.css';
 import { api } from '../../utils/api';
 
 const Login = ({ onLogin, onNavigate }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
-  const [showPass, setShowPass] = useState(false);
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const validate = (name, value) => {
     if (name === 'email') {
@@ -29,12 +22,6 @@ const Login = ({ onLogin, onNavigate }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
-    if (touched[name]) setErrors({ ...errors, [name]: validate(name, value) });
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    setTouched({ ...touched, [name]: true });
     setErrors({ ...errors, [name]: validate(name, value) });
   };
 
@@ -47,7 +34,6 @@ const Login = ({ onLogin, onNavigate }) => {
       if (error) { newErrors[key] = error; isValid = false; }
     });
     setErrors(newErrors);
-    setTouched({ email: true, password: true });
     if (isValid) {
       try {
         setApiError('');
@@ -74,71 +60,74 @@ const Login = ({ onLogin, onNavigate }) => {
   };
 
   return (
-    <div className="auth-page-bg">
-      <div className={`auth-glass-card ${mounted ? 'fade-in-up' : ''}`}>
-        <div className="auth-glass-inner">
-          <h1 className="auth-title">Login</h1>
-
-          <form className="auth-form-glass" onSubmit={handleSubmit} noValidate>
+    <div className="login-wrapper">
+      <div className="login-left">
+        <div className="login-left-content fade-in-up">
+          <div className="login-logo">
+            <Infinity color="#0EA5E9" size={32} strokeWidth={2.5} />
+            <span>ASM Dashboard</span>
+          </div>
+          
+          <h1 className="login-heading">Login Member Area</h1>
+          
+          <form className="login-form" onSubmit={handleSubmit} noValidate>
             {successMsg && (
               <div className="auth-alert success">
-                <CheckCircle size={14} /> <span>{successMsg}</span>
+                <CheckCircle size={16} /> <span>{successMsg}</span>
               </div>
             )}
             {apiError && (
               <div className="auth-alert error">
-                <Shield size={14} /> <span>{apiError}</span>
+                <Shield size={16} /> <span>{apiError}</span>
               </div>
             )}
 
-            <div className={`glass-input-group ${touched.email && errors.email ? 'has-error' : ''}`}>
+            <div className="form-group">
+              <label>E-mail:</label>
               <input
                 type="email"
                 name="email"
-                id="email"
-                placeholder="Email"
+                placeholder="e.g. John doe@gmail.com"
                 value={formData.email}
                 onChange={handleChange}
-                onBlur={handleBlur}
                 required
               />
-              <Mail className="input-icon-right" size={16} />
-              {touched.email && errors.email && <span className="error-text-glass">{errors.email}</span>}
+              {errors.email && <span className="error-msg">{errors.email}</span>}
             </div>
 
-            <div className={`glass-input-group ${touched.password && errors.password ? 'has-error' : ''}`}>
+            <div className="form-group">
+              <label>Password:</label>
               <input
-                type={showPass ? 'text' : 'password'}
+                type="password"
                 name="password"
-                id="password"
-                placeholder="Password"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
-                onBlur={handleBlur}
                 required
               />
-              <Lock className="input-icon-right" size={16} onClick={() => setShowPass(!showPass)} style={{cursor: 'pointer'}} />
-              {touched.password && errors.password && <span className="error-text-glass">{errors.password}</span>}
+              {errors.password && <span className="error-msg">{errors.password}</span>}
+              <div className="forgot-password">
+                <button type="button">Forgot Password?</button>
+              </div>
             </div>
 
-            <div className="auth-actions-glass">
-              <label className="remember-me-glass">
-                <input type="checkbox" />
-                <span className="checkmark-glass"></span>
-                Remember me
-              </label>
-              <button type="button" className="forgot-pass-glass">Forgot Password?</button>
-            </div>
-
-            <button type="submit" className={`btn-login-glass ${loading ? 'loading' : ''}`} disabled={loading}>
+            <button type="submit" className="login-btn" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
           
-          <div className="auth-footer-glass">
-            <p>Don't have an account? <button className="register-link-glass">Register</button></p>
+          <div className="login-footer">
+            <p>Don't have an Account? <button>Sign Up</button></p>
           </div>
         </div>
+      </div>
+      
+      <div className="login-right">
+        {/* Organic wavy divider curve */}
+        <svg className="login-wave" viewBox="0 0 100 800" preserveAspectRatio="none">
+          <path fill="#020816" d="M100,0 L100,800 L0,800 C60,600 -30,400 80,200 C110,100 40,40 100,0 Z" />
+        </svg>
+        <img className="login-illustration" src="/login-illustration.jpg" alt="Login Illustration" />
       </div>
     </div>
   );

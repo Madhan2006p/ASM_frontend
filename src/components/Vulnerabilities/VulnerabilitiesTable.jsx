@@ -70,7 +70,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {(loading && (!data || data.length === 0)) ? (
               <tr>
                 <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />

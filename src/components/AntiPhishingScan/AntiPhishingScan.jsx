@@ -5,12 +5,19 @@ import { api } from '../../utils/api';
 import './AntiPhishingScan.css';
 import AntiPhishingDetail from './AntiPhishingDetail';
 
-const AntiPhishingScan = () => {
+const AntiPhishingScan = ({ activeTarget }) => {
   const [reports, setReports] = useState([]);
   const loadReports = async () => {
     try {
       const data = await api.get('/api/brand-monitoring/anti-phishing/');
-      setReports(Array.isArray(data) ? data : (data.results || []));
+      let results = Array.isArray(data) ? data : (data.results || []);
+      
+      if (activeTarget) {
+        results = results.filter(r => r.url && r.url.toLowerCase().includes(activeTarget.toLowerCase()));
+      }
+      
+      // Only keep the most recent scan for the active target
+      setReports(results.length > 0 ? [results[0]] : []);
     } catch (err) {
       console.error("Failed to load anti-phishing scans", err);
     }
@@ -18,9 +25,7 @@ const AntiPhishingScan = () => {
 
   useEffect(() => {
     loadReports();
-  }, []);
-
-
+  }, [activeTarget]);
 
   return (
     <div className="global-page-container page-animate">
@@ -30,8 +35,8 @@ const AntiPhishingScan = () => {
         subtitle="Analyze URLs using AlienVault OTX Threat Intelligence, MISP IoC Validation, and Phishing heuristics."
         stats={[
           { label: 'Total Scans', value: reports.length.toString() },
-          { label: 'Malicious', value: reports.filter(r => r.classification === 'Malicious').length.toString() },
-          { label: 'Suspicious', value: reports.filter(r => r.classification === 'Suspicious').length.toString() },
+          { label: 'Malicious', value: reports.filter(r => r.classification?.toLowerCase() === 'malicious' || r.ecosystem_classification?.toLowerCase().includes('malicious')).length.toString() },
+          { label: 'Suspicious', value: reports.filter(r => r.classification?.toLowerCase() === 'suspicious' || r.ecosystem_classification?.toLowerCase().includes('suspicious')).length.toString() },
         ]}
       />
 

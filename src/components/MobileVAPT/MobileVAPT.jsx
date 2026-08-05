@@ -31,6 +31,7 @@ const SevBadge = ({ severity }) => {
       padding:'0.15rem 0.55rem', borderRadius:'5px',
       fontSize:'0.65rem', fontWeight:800, letterSpacing:'0.06em', textTransform:'uppercase',
       background:c.bg, color:c.fg, border:`1px solid ${c.border}`, whiteSpace:'nowrap',
+      flexShrink: 0
     }}>
       {severity || 'INFO'}
     </span>
@@ -74,6 +75,7 @@ const MobileVAPT = () => {
   const [permSearch,     setPermSearch]     = useState('');
   const [permFilter,     setPermFilter]     = useState('ALL');
   const [expandedFindings, setExpandedFindings] = useState({});
+  const [activeCategory, setActiveCategory] = useState(null);
 
   const fileRef = useRef(null);
 
@@ -130,6 +132,7 @@ const MobileVAPT = () => {
     setFindingSearch(''); setSevFilter('ALL'); setCatFilter('ALL');
     setPermSearch(''); setPermFilter('ALL');
     setExpandedFindings({});
+    setActiveCategory(null);
     try {
       const d = await api.get(`/api/mobile-vapt/scan-detail/${scan.id}/`);
       setDetail(d);
@@ -210,11 +213,28 @@ const MobileVAPT = () => {
 
   const tabs = [
     { id:'overview',    label:'Overview',    icon:<BarChart2 size={14}/> },
-    { id:'findings',    label:`Findings (${allFindings.length})`, icon:<AlertCircle size={14}/> },
     { id:'permissions', label:`Permissions (${allPerms.length})`, icon:<Lock size={14}/> },
     { id:'manifest',    label:'Manifest',    icon:<FileText size={14}/> },
     { id:'virustotal',  label:'VirusTotal',  icon:<Shield size={14}/> },
   ];
+
+  // Group findings of the selected app by category
+  const categoriesMap = allFindings.reduce((acc, f) => {
+    const cat = f.category || 'General Security';
+    if (!acc[cat]) {
+      acc[cat] = { name: cat, findings: [], critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+    }
+    acc[cat].findings.push(f);
+    const sev = (f.severity || '').toLowerCase();
+    if (sev === 'critical') acc[cat].critical++;
+    else if (sev === 'high') acc[cat].high++;
+    else if (sev === 'medium') acc[cat].medium++;
+    else if (sev === 'low') acc[cat].low++;
+    else acc[cat].info++;
+    return acc;
+  }, {});
+
+  const categoriesList = Object.values(categoriesMap);
 
   /* ════════════════════════════════════════════════════════
      RENDER
@@ -227,16 +247,185 @@ const MobileVAPT = () => {
         badgeText="MOBILE SECURITY"
         title="Mobile Security"
         subtitle="Automated Static & Dynamic security analysis of iOS and Android binaries via MobSF."
-        stats={[
-          { label:'Apps Scanned',   value: dashboard.total_scans.toString(),    subtext:'total binaries' },
-          { label:'Critical/High',  value: ((dashboard.critical||0)+(dashboard.high||0)).toString(), subtext:'vulnerabilities' },
-          { label:'Medium/Low',     value: ((dashboard.medium||0)+(dashboard.low||0)).toString(),   subtext:'warnings' },
-          { label:'Avg Score',      value: history.length > 0
-              ? (history.reduce((s,h)=>s+parseInt(h.score||50),0)/history.length).toFixed(0)
-              : '—',
-            subtext:'/ 100 overall' },
-        ]}
       />
+
+      {/* ── Findings Grouped by Category (Replaces old Stats) ── */}
+      {selectedApp && allFindings.length > 0 ? (
+        <div className="mv-cat-stats-container">
+          <div className="mv-cat-stats-grid">
+            {[...categoriesList].sort((a, b) => {
+              const orderMap = {
+                'Certificate Analysis': 1,
+                'Code Analysis': 2,
+                'Manifest Analysis': 3,
+                'Security Analysis': 4,
+                'Network Security': 5,
+                'Binary Analysis': 6,
+                'File Analysis': 7,
+              };
+              return (orderMap[a.name] || 99) - (orderMap[b.name] || 99);
+            }).map((cat) => {
+              const borderColors = {
+                'Security Analysis':  { border: 'rgba(59, 130, 246, 0.75)', glow: 'rgba(59, 130, 246, 0.1)', bg: 'rgba(59, 130, 246, 0.03)' },
+                'Code Analysis':      { border: 'rgba(239, 68, 68, 0.75)', glow: 'rgba(239, 68, 68, 0.1)', bg: 'rgba(239, 68, 68, 0.03)' },
+                'Manifest Analysis':  { border: 'rgba(239, 68, 68, 0.75)', glow: 'rgba(239, 68, 68, 0.1)', bg: 'rgba(239, 68, 68, 0.03)' },
+                'Certificate Analysis': { border: 'rgba(245, 158, 11, 0.75)', glow: 'rgba(245, 158, 11, 0.1)', bg: 'rgba(245, 158, 11, 0.03)' },
+                'Network Security':   { border: 'rgba(59, 130, 246, 0.75)', glow: 'rgba(59, 130, 246, 0.1)', bg: 'rgba(59, 130, 246, 0.03)' },
+                'Binary Analysis':    { border: 'rgba(168, 85, 247, 0.75)', glow: 'rgba(168, 85, 247, 0.1)', bg: 'rgba(168, 85, 247, 0.03)' },
+                'File Analysis':      { border: 'rgba(6, 182, 212, 0.75)', glow: 'rgba(6, 182, 212, 0.1)', bg: 'rgba(6, 182, 212, 0.03)' },
+              };
+              const colorInfo = borderColors[cat.name] || { border: 'rgba(59, 130, 246, 0.75)', glow: 'rgba(59, 130, 246, 0.1)', bg: 'rgba(59, 130, 246, 0.03)' };
+              
+              const badgeColor = cat.critical > 0 || cat.high > 0
+                ? '#EF4444'
+                : cat.medium > 0
+                ? '#EAB308'
+                : cat.low > 0
+                ? '#22C55E'
+                : '#3B82F6';
+
+              const iconProps = { size: 18, style: { color: '#60A5FA', flexShrink: 0 } };
+              const categoryIcon = cat.name === 'Security Analysis' ? <Shield {...iconProps} />
+                : cat.name === 'Code Analysis' ? <Code {...iconProps} />
+                : cat.name === 'Manifest Analysis' ? <FileText {...iconProps} />
+                : cat.name === 'Certificate Analysis' ? <Key {...iconProps} />
+                : cat.name === 'Network Security' ? <Wifi {...iconProps} />
+                : cat.name === 'Binary Analysis' ? <Binary {...iconProps} />
+                : cat.name === 'File Analysis' ? <Package {...iconProps} />
+                : <Shield {...iconProps} />;
+
+              const isClickable = cat.name !== 'Security Analysis';
+              const isActive = activeCategory === cat.name;
+
+              return (
+                <div
+                  key={cat.name}
+                  className={`card mv-cat-stat-card ${isActive ? 'active' : ''}`}
+                  onClick={() => {
+                    if (isClickable) {
+                      setActiveCategory(isActive ? null : cat.name);
+                    }
+                  }}
+                  style={{
+                    '--card-border': isActive ? 'var(--brand-primary)' : colorInfo.border,
+                    '--card-glow': colorInfo.glow,
+                    '--card-bg': colorInfo.bg,
+                    position: 'relative',
+                    cursor: isClickable ? 'pointer' : 'default'
+                  }}
+                >
+                  <div className="mv-cat-stat-header">
+                    <span className="mv-cat-stat-icon">{categoryIcon}</span>
+                    <span
+                      className="mv-cat-stat-badge"
+                      style={{
+                        background: badgeColor,
+                        color: badgeColor === '#EAB308' ? '#0d0f17' : '#fff'
+                      }}
+                    >
+                      {cat.findings.length}
+                    </span>
+                  </div>
+                  <div className="mv-cat-stat-label">{cat.name}</div>
+                  <div className="mv-cat-stat-summary-row">
+                    {cat.critical > 0 && <span className="cat-sev-pill critical">{cat.critical} CRIT</span>}
+                    {cat.high > 0 && <span className="cat-sev-pill high">{cat.high} HIGH</span>}
+                    {cat.medium > 0 && <span className="cat-sev-pill medium">{cat.medium} MED</span>}
+                    {cat.low > 0 && <span className="cat-sev-pill low">{cat.low} LOW</span>}
+                    {cat.info > 0 && <span className="cat-sev-pill info">{cat.info} INFO</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Drawer for expanded category findings */}
+          {activeCategory && activeCategory !== 'Security Analysis' && categoriesMap[activeCategory] && (
+            <div className="mv-cat-drawer page-animate">
+              <div className="mv-cat-drawer-header">
+                <span className="mv-cat-drawer-title">
+                  {CAT_ICON[activeCategory] || <Shield size={14} />} {activeCategory} Findings
+                </span>
+                <button className="mv-cat-drawer-close" onClick={() => setActiveCategory(null)}>
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="mv-cat-drawer-list">
+                {categoriesMap[activeCategory].findings.map((f) => {
+                  const isExp = !!expandedFindings[f.id];
+                  const c = getSev(f.severity);
+                  return (
+                    <div key={f.id} className="mv-cat-finding-item" style={{ borderLeft: `3px solid ${c.fg}` }}>
+                      <div
+                        className="mv-cat-finding-header"
+                        onClick={() => setExpandedFindings(prev => ({ ...prev, [f.id]: !prev[f.id] }))}
+                      >
+                        <SevBadge severity={f.severity} />
+                        <span className="mv-cat-finding-title">{f.vulnerability}</span>
+                        {f.file_path && <code className="mv-cat-finding-file">{f.file_path.split('/').pop()}</code>}
+                        <span className="mv-cat-finding-arrow" style={{ flexShrink: 0 }}>{isExp ? '▲' : '▼'}</span>
+                      </div>
+                      
+                      {isExp && (
+                        <div className="mv-cat-finding-body page-animate">
+                          {f.description && (
+                            <div className="mv-cat-finding-section">
+                              <div className="mv-cat-finding-section-lbl">📋 Description</div>
+                              <p>{f.description}</p>
+                            </div>
+                          )}
+                          {f.recommendation && (
+                            <div className="mv-cat-finding-section mv-cat-finding-section-fix">
+                              <div className="mv-cat-finding-section-lbl">✅ Recommendation</div>
+                              <p>{f.recommendation}</p>
+                            </div>
+                          )}
+                          {f.file_path && (
+                            <div className="mv-cat-finding-section">
+                              <div className="mv-cat-finding-section-lbl">📁 File Path</div>
+                              <code>{f.file_path}</code>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Fallback stats cards if no scan / findings */
+        <div className="phc-stats-grid" style={{ marginBottom: '1.5rem' }}>
+          <div className="card phc-stat-card">
+            <div className="phc-stat-label">Apps Scanned</div>
+            <div className="phc-stat-val">{dashboard.total_scans}</div>
+            <div className="phc-stat-sub">total binaries</div>
+          </div>
+          <div className="card phc-stat-card" style={{ '--card-border': 'rgba(239, 68, 68, 0.45)', '--card-glow': 'rgba(239, 68, 68, 0.08)', '--card-bg': 'rgba(239, 68, 68, 0.03)' }}>
+            <div className="phc-stat-label">Critical/High</div>
+            <div className="phc-stat-val">{(dashboard.critical || 0) + (dashboard.high || 0)}</div>
+            <div className="phc-stat-sub">vulnerabilities</div>
+          </div>
+          <div className="card phc-stat-card" style={{ '--card-border': 'rgba(245, 158, 11, 0.45)', '--card-glow': 'rgba(245, 158, 11, 0.08)', '--card-bg': 'rgba(245, 158, 11, 0.03)' }}>
+            <div className="phc-stat-label">Medium/Low</div>
+            <div className="phc-stat-val">{(dashboard.medium || 0) + (dashboard.low || 0)}</div>
+            <div className="phc-stat-sub">warnings</div>
+          </div>
+          <div className="card phc-stat-card">
+            <div className="phc-stat-label">Avg Score</div>
+            <div className="phc-stat-val">
+              {history.length > 0
+                ? (history.reduce((s, h) => s + parseInt(h.score || 50), 0) / history.length).toFixed(0)
+                : '—'}
+            </div>
+            <div className="phc-stat-sub">/ 100 overall</div>
+          </div>
+        </div>
+      )}
+
 
       {uploadError && (
         <div className="mv-error-banner"><AlertCircle size={14}/> {uploadError}
@@ -416,28 +605,8 @@ const MobileVAPT = () => {
                         </div>
                       </div>
 
-                      {/* Category breakdown */}
+                      {/* Category breakdown removed */}
                       <div className="mv-overview-grid">
-                        <div className="mv-overview-card">
-                          <h4 className="mv-card-title"><BarChart2 size={14}/> Findings by Category</h4>
-                          {categories.length === 0
-                            ? <div className="mv-empty-small">No findings</div>
-                            : categories.map(cat => {
-                              const cnt  = allFindings.filter(f=>f.category===cat).length;
-                              const pct  = allFindings.length > 0 ? (cnt/allFindings.length)*100 : 0;
-                              const icon = CAT_ICON[cat] || <Shield size={13}/>;
-                              return (
-                                <div key={cat} className="mv-cat-row">
-                                  <span className="mv-cat-icon">{icon}</span>
-                                  <span className="mv-cat-name">{cat}</span>
-                                  <div className="mv-cat-bar">
-                                    <div className="mv-cat-fill" style={{width:`${pct}%`}}/>
-                                  </div>
-                                  <span className="mv-cat-count">{cnt}</span>
-                                </div>
-                              );
-                            })}
-                        </div>
 
                         {/* Security scores */}
                         <div className="mv-overview-card">
@@ -490,92 +659,7 @@ const MobileVAPT = () => {
                     </div>
                   )}
 
-                  {/* ═══ FINDINGS TAB ═══ */}
-                  {activeTab === 'findings' && (
-                    <div className="mv-findings">
-                      {/* Filters */}
-                      <div className="mv-findings-toolbar">
-                        <div className="mv-search-wrap">
-                          <Search size={13}/>
-                          <input
-                            placeholder="Search findings…"
-                            value={findingSearch}
-                            onChange={e=>setFindingSearch(e.target.value)}
-                          />
-                          {findingSearch && <button onClick={()=>setFindingSearch('')}><X size={12}/></button>}
-                        </div>
-                        <div className="mv-filter-pills">
-                          {['ALL',...sevKeys].map(s => (
-                            <button
-                              key={s}
-                              className={`mv-pill ${sevFilter===s?'active':''}`}
-                              style={sevFilter===s&&s!=='ALL'?{background:getSev(s).bg,color:getSev(s).fg,borderColor:getSev(s).border}:{}}
-                              onClick={()=>setSevFilter(s)}
-                            >
-                              {s}{s!=='ALL'&&sevCounts[s]?` (${sevCounts[s]})`:s==='ALL'?` (${allFindings.length})`:''}
-                            </button>
-                          ))}
-                        </div>
-                        {categories.length > 0 && (
-                          <select className="mv-select" value={catFilter} onChange={e=>setCatFilter(e.target.value)}>
-                            <option value="ALL">All Categories</option>
-                            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                          </select>
-                        )}
-                        <span className="mv-filter-count">{visibleFindings.length} findings</span>
-                      </div>
 
-                      {/* Findings cards */}
-                      <div className="mv-findings-list">
-                        {visibleFindings.length === 0 && (
-                          <div className="mv-empty"><CheckCircle size={40} style={{color:'#22C55E',opacity:.4}}/><p>No findings match filters</p></div>
-                        )}
-                        {visibleFindings.map((f, idx) => {
-                          const c = getSev(f.severity);
-                          const exp = expandedFindings[f.id];
-                          return (
-                            <div key={f.id} className="mv-finding-card" style={{borderLeft:`4px solid ${c.fg}`}}>
-                              <div className="mv-finding-header" onClick={()=>setExpandedFindings(prev=>({...prev,[f.id]:!prev[f.id]}))}>
-                                <SevBadge severity={f.severity}/>
-                                <div className="mv-finding-title">{f.vulnerability}</div>
-                                <div className="mv-finding-meta-chips">
-                                  {f.category && (
-                                    <span className="mv-chip">
-                                      {CAT_ICON[f.category]||<Shield size={10}/>} {f.category}
-                                    </span>
-                                  )}
-                                  {f.file_path && <code className="mv-chip-code">{f.file_path.split('/').pop()}</code>}
-                                </div>
-                                <span className="mv-expand-btn">{exp ? '▲' : '▼'}</span>
-                              </div>
-                              {exp && (
-                                <div className="mv-finding-body">
-                                  {f.description && (
-                                    <div className="mv-finding-section">
-                                      <div className="mv-finding-section-label">📋 Description</div>
-                                      <p>{f.description}</p>
-                                    </div>
-                                  )}
-                                  {f.recommendation && (
-                                    <div className="mv-finding-section mv-finding-section-fix">
-                                      <div className="mv-finding-section-label">✅ Recommendation</div>
-                                      <p>{f.recommendation}</p>
-                                    </div>
-                                  )}
-                                  {f.file_path && (
-                                    <div className="mv-finding-section">
-                                      <div className="mv-finding-section-label">📁 File</div>
-                                      <code>{f.file_path}</code>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
 
                   {/* ═══ PERMISSIONS TAB ═══ */}
                   {activeTab === 'permissions' && (
