@@ -257,7 +257,7 @@ function App() {
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
           {activePage === 'Suspicious Domain'     && <SuspiciousDomains activeTarget={activeTarget} />}
           {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} />}
-          {activePage === 'Anti Phishing'         && <AntiPhishingScan />}
+          {activePage === 'Anti Phishing'         && <AntiPhishingScan activeTarget={activeTarget} />}
           {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} />}
           {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
           {activePage === 'VAPT Report'  && (
