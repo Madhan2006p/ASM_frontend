@@ -162,7 +162,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500' }}>
               <RefreshCw className="spin" size={18} />
-              <span>Deep vulnerability scanning is currently running — findings appear below in real time.</span>
+              <span>Vulnerability scanning is currently running — findings appear below in real time.</span>
               {vulnerabilities.length > 0 && (
                 <span style={{ marginLeft: 'auto', background: 'rgba(34,211,238,0.2)', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700' }}>
                   {vulnerabilities.length} found
