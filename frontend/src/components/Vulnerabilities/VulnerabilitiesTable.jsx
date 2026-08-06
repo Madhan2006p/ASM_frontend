@@ -197,7 +197,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
                     <p style={{ margin: 0, maxWidth: '400px', fontSize: '0.9rem', lineHeight: '1.5' }}>
                       {showScanningState 
                         ? (isVulnScanRunning 
-                            ? "The Python vulnerability scanner found 0 results. Nuclei is currently running deep scans in the background to uncover complex vulnerabilities."
+                            ? "The Python vulnerability scanner is currently assessing your attack surface for security risks in real time."
                             : "The scan is still in its early discovery phases (like subdomains and ports). Vulnerability payload testing has not started yet. Please wait.")
                         : "No vulnerabilities were found during the scan. Great job keeping your attack surface secure!"}
                     </p>
