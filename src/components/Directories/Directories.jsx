@@ -1,9 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import './Directories.css';
-import { Search, Folder, Lock, Database, ShieldAlert, Globe, RefreshCw, ExternalLink } from 'lucide-react';
+import {
+  Search, Folder, FolderOpen, Lock, Database, Globe, RefreshCw,
+  ExternalLink, FileText, KeyRound, Code2, ScrollText, GitBranch, Server,
+  LogIn, FileQuestion, Bug
+} from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
+
+// Backend categories that are treated as sensitive information disclosures.
+const SENSITIVE_CATEGORIES = new Set([
+  'Directory Listing', 'Backup File', 'Config File', 'Environment File',
+  'Credentials / Secrets', 'Database Dump', 'Source Code', 'Log File',
+  'VCS Metadata', 'Internal Path', 'Private Document', 'Sensitive Metadata'
+]);
+
+// Categories whose mere 2xx presence is an exposure (used for legacy fallback).
+const EXPOSED_CATEGORIES = new Set([
+  'Directory Listing', 'Backup File', 'Config File', 'Environment File',
+  'Credentials / Secrets', 'Database Dump', 'Source Code', 'Log File',
+  'VCS Metadata', 'Internal Path', 'Private Document', 'Sensitive Metadata'
+]);
 
 const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [directories, setDirectories] = useState([]);
@@ -33,6 +51,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     loadDirectories();
   }, [activeScanId]);
 
+  // ── Legacy fallbacks (only used for rows stored before the analysis engine) ──
   const getPathFromUrl = (urlStr) => {
     try {
       if (urlStr.startsWith('/') || !urlStr.includes('://')) {
@@ -40,82 +59,108 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       }
       const urlObj = new URL(urlStr);
       return urlObj.pathname;
-    } catch (e) {
+    } catch {
       return urlStr;
     }
   };
 
   const getCategory = (path) => {
     const p = path.toLowerCase();
-    if (p.endsWith('.zip') || p.endsWith('.tar.gz') || p.endsWith('.sql') || p.endsWith('.bak') || p.includes('backup')) return 'Backup File';
-    if (p.includes('admin') || p.includes('login') || p.includes('wp-admin') || p.includes('panel')) return 'Admin Panel';
-    if (p.includes('.git') || p.includes('.env') || p.includes('config') || p.includes('secret') || p.includes('private')) return 'Sensitive';
-    if (p.includes('/api/')) return 'Hidden';
-    return 'Public';
+    if (/\.(zip|tar\.gz|sql|bak|old|dump)$/.test(p) || p.includes('backup')) return 'Backup File';
+    if (p.includes('.env')) return 'Environment File';
+    if (p.includes('.git') || p.includes('.svn') || p.includes('.hg')) return 'VCS Metadata';
+    if (p.includes('admin') || p.includes('wp-admin') || p.includes('panel') || p.includes('phpmyadmin')) return 'Admin Panel';
+    if (p.includes('login') || p.includes('wp-login') || p.includes('signin')) return 'Login Page';
+    if (p.includes('config') || p.includes('secret') || p.includes('private') || p.includes('.htaccess')) return 'Config File';
+    if (p.includes('server-status') || p.includes('server-info')) return 'Sensitive Metadata';
+    if (p.includes('/api/') || p.includes('/graphql') || p.includes('swagger')) return 'API Endpoint';
+    if (p.includes('/log') || p.endsWith('.log')) return 'Log File';
+    if (/^(index|default)\.(php|html|aspx|jsp)$/.test(p)) return 'Public File';
+    if (/\.(php|py|js|java|rb|go|c|cpp|ts)$/.test(p) && !p.includes('/static/')) return 'Source Code';
+    if (/\.(css|js|png|jpe?g|gif|svg|ico|woff2?|ttf|map)$/.test(p) || p.includes('/static/') || p.includes('/assets/')) return 'Static Asset';
+    return 'Public File';
   };
 
-  const getIcon = (cat) => {
-    if (cat === 'Admin Panel') return <Lock size={16} />;
-    if (cat === 'Backup File') return <Database size={16} />;
-    if (cat === 'Sensitive') return <ShieldAlert size={16} />;
-    if (cat === 'Hidden') return <Globe size={16} />;
-    return <Folder size={16} />;
-  };
-
-  const getRisk = (cat, status) => {
-    // If the file is not actually exposed (e.g. 403 Forbidden, 401 Unauthorized, 404 Not Found),
-    // or if the server is offline/erroring, the risk is significantly lower.
-    if (status === 403 || status === 401 || status === 404 || status === 0 || status >= 500) return 'LOW';
-
-    if (cat === 'Sensitive' || cat === 'Backup File') return 'CRITICAL';
-    if (cat === 'Admin Panel') return 'HIGH';
-    if (cat === 'Hidden') return 'MEDIUM';
+  const getRisk = (category, status) => {
+    if (status === 403 || status === 401 || status === 404 || status === 0 || status == null || status >= 500) return 'LOW';
+    if (category === 'Credentials / Secrets' || category === 'Environment File' || category === 'Database Dump') return 'CRITICAL';
+    if (category === 'Backup File' || category === 'VCS Metadata' || category === 'Config File' || category === 'Source Code') return 'HIGH';
+    if (category === 'Admin Panel' || category === 'Directory Listing' || category === 'Log File' || category === 'Internal Path' || category === 'Private Document' || category === 'Sensitive Metadata') return 'MEDIUM';
     return 'LOW';
   };
 
-  const getAccess = (status) => {
-    if (status === 0) return 'Offline';
-    if (status === 401 || status === 403) return 'Protected';
-    if (status === 301 || status === 302 || status === 307 || status === 308) return 'Redirect';
+  const getStatus = (status, category) => {
+    if (status === 0 || status == null) return 'Unreachable';
+    if (status === 401 || status === 407) return 'Protected';
+    if (status === 403) return 'Forbidden';
     if (status === 404) return 'Not Found';
-    if (status === 200 || status === 201 || status === 204) return 'Public';
-    if (status >= 500) return 'Server Error';
-    return `HTTP ${status}`;
-  };
-
-  const getStatus = (status) => {
-    if (status === 0) return 'Unreachable';
-    if (status === 200 || status === 201 || status === 204) return 'Exposed';
-    if (status === 403) return 'Restricted';
-    if (status === 401) return 'Secured';
-    if (status === 301 || status === 302 || status === 307 || status === 308) return 'Redirect';
-    if (status === 404) return 'Not Found';
+    if (status === 405) return 'Restricted';
     if (status >= 500) return 'Error';
-    return `HTTP ${status}`;
+    if (status === 301 || status === 302 || status === 303 || status === 307 || status === 308) return 'Redirected';
+    if (status === 200 || status === 201 || status === 204) {
+      // Legacy rows: only flag a 2xx as Exposed when the path itself is sensitive.
+      return EXPOSED_CATEGORIES.has(category) ? 'Exposed' : 'Public';
+    }
+    return 'Public';
   };
 
+  // ── Category presentation ──
+  const getIcon = (cat) => {
+    switch (cat) {
+      case 'Admin Panel': return <Lock size={16} />;
+      case 'Backup File': return <Database size={16} />;
+      case 'Credentials / Secrets': return <KeyRound size={16} />;
+      case 'Environment File': return <FileText size={16} />;
+      case 'Database Dump': return <Database size={16} />;
+      case 'Source Code': return <Code2 size={16} />;
+      case 'Log File': return <ScrollText size={16} />;
+      case 'Directory Listing': return <FolderOpen size={16} />;
+      case 'VCS Metadata': return <GitBranch size={16} />;
+      case 'Internal Path': return <Server size={16} />;
+      case 'Sensitive Metadata': return <Bug size={16} />;
+      case 'Config File': return <FileText size={16} />;
+      case 'Private Document': return <Lock size={16} />;
+      case 'API Endpoint': return <Globe size={16} />;
+      case 'Login Page': return <LogIn size={16} />;
+      case 'Not Found': return <FileQuestion size={16} />;
+      case 'Static Asset': return <FileText size={16} />;
+      default: return <Folder size={16} />;
+    }
+  };
+
+  // ── Enrichment: backend classification wins, legacy fallbacks for old rows ──
+  // NOTE: the numeric HTTP status is preserved as `httpStatus` so the
+  // "HTTP Response" column can render the real code (e.g. "401 Unauthorized")
+  // while `status` carries the semantic access status (e.g. "Protected").
   const filteredData = directories.map(item => {
     const path = getPathFromUrl(item.url);
-    const category = getCategory(path);
-    const risk = getRisk(category, item.status);
-    const access = getAccess(item.status);
-    const status = getStatus(item.status);
+    const httpStatus = item.status;
+    const category = item.category || getCategory(path);
+    const risk = item.risk || getRisk(category, httpStatus);
+    const status = item.access_status || getStatus(httpStatus, category);
+    const isSensitive = item.is_sensitive !== undefined
+      ? item.is_sensitive
+      : (SENSITIVE_CATEGORIES.has(category) || status === 'Exposed');
+    const matches = Array.isArray(item.sensitive_matches) ? item.sensitive_matches : [];
     return {
       ...item,
+      httpStatus,
       path,
       category,
       risk,
-      access,
       status,
+      isSensitive,
+      matches,
       icon: getIcon(category)
     };
   }).filter(item => {
     // Pill Filter
-    if (filterPill === 'Sensitive' && item.category !== 'Sensitive') return false;
+    if (filterPill === 'Exposed' && item.status !== 'Exposed') return false;
+    if (filterPill === 'Sensitive' && !item.isSensitive) return false;
     if (filterPill === 'Admin' && item.category !== 'Admin Panel') return false;
     if (filterPill === 'Backup Files' && item.category !== 'Backup File') return false;
-    if (filterPill === 'Public' && item.category !== 'Public') return false;
-    if (filterPill === 'Hidden' && item.category !== 'Hidden') return false;
+    if (filterPill === 'Directory Listings' && item.category !== 'Directory Listing') return false;
+    if (filterPill === 'Public' && item.status !== 'Public') return false;
 
     // Search Box
     if (searchQuery && !item.path.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -123,18 +168,33 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return true;
   }).sort((a, b) => {
     const riskWeight = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
-    return (riskWeight[b.risk] || 0) - (riskWeight[a.risk] || 0);
+    const riskDiff = (riskWeight[b.risk] || 0) - (riskWeight[a.risk] || 0);
+    if (riskDiff !== 0) return riskDiff;
+    const statusWeight = { 'Exposed': 5, 'Restricted': 4, 'Protected': 3, 'Forbidden': 2, 'Redirected': 1, 'Error': 0, 'Unreachable': 0, 'Not Found': 0, 'Public': 0 };
+    return (statusWeight[b.status] || 0) - (statusWeight[a.status] || 0);
   });
 
+  const HTTP_LABELS = {
+    200: '200 OK', 201: '201 Created', 204: '204 No Content',
+    301: '301 Moved', 302: '302 Found', 303: '303 See Other',
+    307: '307 Redirect', 308: '308 Redirect',
+    401: '401 Unauthorized', 403: '403 Forbidden', 404: '404 Not Found',
+    405: '405 Not Allowed', 410: '410 Gone',
+    500: '500 Server Error', 501: '501 Not Implemented', 502: '502 Bad Gateway', 503: '503 Unavailable',
+  };
+  const getHttpLabel = (s) => HTTP_LABELS[s] || (s ? `HTTP ${s}` : 'Unreachable');
+
   const getStatusClass = (status) => {
-    if (status === 'Exposed')   return 'st-out';      // red — genuinely accessible
-    if (status === 'Restricted') return 'st-hlt';     // amber — blocked by server
-    if (status === 'Secured')    return 'st-hlt';     // amber — requires auth
-    if (status === 'Redirect')   return 'st-pat';     // blue — redirects away
-    if (status === 'Not Found')  return 'st-upd';     // grey — 404
-    if (status === 'Unreachable') return 'st-upd';    // grey - 0
-    if (status === 'Error')      return 'st-upd';     // grey - 5xx
-    return 'st-upd';                                  // grey — unknown
+    if (status === 'Exposed')     return 'st-exposed';
+    if (status === 'Public')      return 'st-public';
+    if (status === 'Protected')   return 'st-protected';
+    if (status === 'Restricted')  return 'st-restricted';
+    if (status === 'Redirected')  return 'st-redirected';
+    if (status === 'Forbidden')   return 'st-notfound';
+    if (status === 'Not Found')   return 'st-notfound';
+    if (status === 'Error')       return 'st-notfound';
+    if (status === 'Unreachable') return 'st-notfound';
+    return 'st-notfound';
   };
 
   const getRiskClass = (risk) => {
@@ -144,29 +204,35 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return 'risk-low';
   };
 
-  // Stats calculation
+  // Stats — aligned with backend classification
   const totalCount = directories.length;
-  const sensitiveCount = directories.filter(d => getCategory(getPathFromUrl(d.url)) === 'Sensitive').length;
-  const adminPanelsCount = directories.filter(d => getCategory(getPathFromUrl(d.url)) === 'Admin Panel').length;
-  const backupFilesCount = directories.filter(d => getCategory(getPathFromUrl(d.url)) === 'Backup File').length;
+  const exposedCount = directories.filter(d => (d.access_status || getStatus(d.status, d.category || getCategory(getPathFromUrl(d.url)))) === 'Exposed').length;
+  const sensitiveCount = directories.filter(d => {
+    if (d.is_sensitive !== undefined) return d.is_sensitive;
+    return SENSITIVE_CATEGORIES.has(d.category || getCategory(getPathFromUrl(d.url)));
+  }).length;
+  const highRiskCount = directories.filter(d => {
+    const risk = d.risk || getRisk(d.category || getCategory(getPathFromUrl(d.url)), d.status);
+    return risk === 'HIGH' || risk === 'CRITICAL';
+  }).length;
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        
-        <PageHeaderCard 
+
+        <PageHeaderCard
           badgeText="DISCOVERY"
           title="Directories"
-          subtitle="Discover exposed directories, hidden paths, sensitive files, admin panels, and publicly accessible resources across monitored assets."
+          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
           stats={[
-            { label: 'Directories Found', value: totalCount.toString(), subtext: 'Active accessible paths' },
+            { label: 'Directories Found', value: totalCount.toString(), subtext: 'Verified accessible paths' },
+            { label: 'Exposed', value: exposedCount.toString(), subtext: 'Sensitive content accessible' },
             { label: 'Sensitive Paths', value: sensitiveCount.toString(), subtext: 'Requires review' },
-            { label: 'Admin Panels', value: adminPanelsCount.toString(), subtext: 'High exposure risk' },
-            { label: 'Backup Files', value: backupFilesCount.toString(), subtext: 'Potential data leaks' }
+            { label: 'High / Critical Risk', value: highRiskCount.toString(), subtext: 'Priority remediation' }
           ]}
         />
 
-        <ScanSelector 
+        <ScanSelector
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
           setSelectedDomain={setSelectedDomain}
@@ -177,8 +243,8 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
 
         {/* Filter Pills */}
         <div className="global-filter-row">
-          {['All', 'Sensitive', 'Admin', 'Backup Files', 'Public', 'Hidden'].map(pill => (
-            <div 
+          {['All', 'Exposed', 'Sensitive', 'Admin', 'Backup Files', 'Directory Listings', 'Public'].map(pill => (
+            <div
               key={pill}
               className={`global-filter-pill ${filterPill === pill ? 'active' : ''}`}
               onClick={() => setFilterPill(pill)}
@@ -193,9 +259,9 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div className="global-search-box">
               <Search size={16} color="#94A3B8" />
-              <input 
-                type="text" 
-                placeholder="Search directory path, category..." 
+              <input
+                type="text"
+                placeholder="Search directory path, category..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -210,7 +276,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
               <tr>
                 <th>Directory Path</th>
                 <th>Category</th>
-                <th>Access</th>
+                <th>HTTP Response</th>
                 <th>Subdomain Scope</th>
                 <th>Risk Level</th>
                 <th>Status</th>
@@ -232,26 +298,36 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                     <td className="dir-path">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                         <span style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>{item.path}</span>
-                        <a 
-                          href={item.url && item.url.includes('://') ? item.url : `http://${item.subdomain_name || selectedDomain || 'localhost'}${item.path.startsWith('/') ? '' : '/'}${item.path}`} 
-                          target="_blank" 
+                        <a
+                          href={item.url && item.url.includes('://') ? item.url : `http://${item.subdomain_name || selectedDomain || 'localhost'}${item.path.startsWith('/') ? '' : '/'}${item.path}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', opacity: 0.8, transition: 'opacity 0.2s' }}
-                          title="Open exposed file in new tab"
+                          title="Open resource in new tab"
                           onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
                           onMouseLeave={(e) => e.currentTarget.style.opacity = 0.8}
                         >
                           <ExternalLink size={14} />
                         </a>
                       </div>
+                      {item.matches.length > 0 && (
+                        <div className="dir-match-chips">
+                          {item.matches.slice(0, 4).map(m => (
+                            <span key={m} className="dir-match-chip" title={`Detected: ${m.replace(/_/g, ' ')}`}>{m.replace(/_/g, ' ')}</span>
+                          ))}
+                          {item.matches.length > 4 && <span className="dir-match-chip dir-match-more">+{item.matches.length - 4}</span>}
+                        </div>
+                      )}
                     </td>
                     <td>
-                      <div className="dir-category">
+                      <div className="dir-category" title={item.category}>
                         {item.icon}
                         <span>{item.category}</span>
                       </div>
                     </td>
-                    <td><span className="dir-access">{item.access}</span></td>
+                    <td>
+                      <span className="dir-access" title={`HTTP ${item.httpStatus}`}>{getHttpLabel(item.httpStatus)}</span>
+                    </td>
                     <td>
                       <span className="dir-assets" style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>{item.subdomain_name || 'root domain'}</span>
                     </td>
