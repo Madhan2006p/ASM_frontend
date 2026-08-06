@@ -63,6 +63,7 @@ const menuGroups = [
   {
     title: 'MANAGE',
     items: [
+      { name: 'Asset Discovery Report', icon: <Search size={16} /> },
       { name: 'VAPT Report',  icon: <FileText size={16} /> },
       { name: 'Marketplace', icon: <Store size={16} /> },
       { name: 'Settings',    icon: <Settings size={16} /> },
