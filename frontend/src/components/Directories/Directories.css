@@ -272,12 +272,30 @@
 .risk-low { background-color: var(--bg-main); color: var(--text-secondary); border: 1px solid var(--border-color); }
 .risk-low .dot { background-color: var(--text-secondary); }
 
-/* Status Pill */
+/* Status Pill — semantic access status computed by the backend analysis engine */
 .dir-status-pill { display: inline-block; padding: 0.125rem 0.625rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; }
-.st-out { color: #F87171; border: 1px solid #FECACA; background-color: rgba(239, 68, 68, 0.08);}
-.st-hlt { color: #34D399; border: 1px solid rgba(16, 185, 129, 0.2); background-color: rgba(16, 185, 129, 0.08);}
-.st-upd { color: #60A5FA; border: 1px solid #BFDBFE; background-color: rgba(59, 130, 246, 0.08);}
-.st-pat { color: #EA580C; border: 1px solid #FED7AA; background-color: rgba(249, 115, 22, 0.08);}
+.st-exposed   { color: #F87171; border: 1px solid #FECACA; background-color: rgba(239, 68, 68, 0.08);}
+.st-public    { color: #34D399; border: 1px solid rgba(16, 185, 129, 0.2); background-color: rgba(16, 185, 129, 0.08);}
+.st-protected { color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.3); background-color: rgba(251, 191, 36, 0.08);}
+.st-restricted{ color: #FB923C; border: 1px solid #FED7AA; background-color: rgba(249, 115, 22, 0.08);}
+.st-redirected{ color: #60A5FA; border: 1px solid #BFDBFE; background-color: rgba(59, 130, 246, 0.08);}
+.st-notfound  { color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.3); background-color: rgba(148, 163, 184, 0.08);}
+
+/* Sensitive match chips under the path */
+.dir-match-chips { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.4rem; }
+.dir-match-chip {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  color: #F87171;
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  white-space: nowrap;
+}
+.dir-match-more { color: #94A3B8; background-color: var(--bg-main); border-color: var(--border-color); }
 
 .dir-last-seen { color: var(--text-secondary); font-weight: 500; }
 
@@ -296,10 +314,15 @@
 .light-mode .stat-green .dir-stat-sub {
   color: #059669 !important;
 }
-.light-mode .st-hlt {
+.light-mode .st-public {
   color: #059669 !important;
   border-color: #A7F3D0 !important;
   background-color: #ECFDF5 !important;
+}
+.light-mode .st-protected {
+  color: #B45309 !important;
+  border-color: #FDE68A !important;
+  background-color: #FFFBEB !important;
 }
 
 
