@@ -213,13 +213,17 @@ const SuspiciousDomains = () => {
                   <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{row.mx_record || '—'}</td>
                   <td style={{ fontSize: '0.8rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{row.whois_created || '—'}</td>
                   <td style={{ textAlign: 'right', paddingRight: '2rem' }}>
-                    <button 
-                      className="sw-btn-outline-blue" 
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                      onClick={() => setSelectedReport(row)}
-                    >
-                      <Eye size={12} /> WHOIS Details
-                    </button>
+                    {row.resolution_status !== 'Inactive' ? (
+                      <button 
+                        className="sw-btn-outline-blue" 
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                        onClick={() => setSelectedReport(row)}
+                      >
+                        <Eye size={12} /> WHOIS Details
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)' }}>-</span>
+                    )}
                   </td>
                 </tr>
               ))}
