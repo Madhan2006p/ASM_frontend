@@ -13,7 +13,7 @@ const PHASES = [
   { key: 'technologies',   label: 'Technology Fingerprinting',       field: 'technologies_done',progressStart: 55, progressEnd: 65   },
   { key: 'email',          label: 'Email Security (SPF/DMARC)',      field: 'email_done',      progressStart: 65,  progressEnd: 70   },
   { key: 'vuln_basic',     label: 'Basic Vulnerability Scan',        field: 'vuln_scan_phase', progressStart: 70,  progressEnd: 80,  phaseValue: 'basic' },
-  { key: 'vuln_deep',      label: 'Deep Vulnerability Scan (Nuclei)',field: 'vuln_scan_phase', progressStart: 80,  progressEnd: 85,  phaseValue: 'complete' },
+  { key: 'vuln_deep',      label: 'Deep Vulnerability Scan (Python Scanner)',field: 'vuln_scan_phase', progressStart: 80,  progressEnd: 85,  phaseValue: 'complete' },
   { key: 'ssl',            label: 'SSL/TLS Certificate Audit',       field: 'ssl_done',        progressStart: 85,  progressEnd: 90   },
   { key: 'antimalware',    label: 'Anti-Malware & VirusTotal Check', field: 'malware_done',    progressStart: 90,  progressEnd: 100  },
 ];
@@ -305,12 +305,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             </div>
           </div>
 
-          {/* Nuclei deep scan panel — shown when deep scan is active or done */}
+          {/* Deep scan panel — shown when deep scan is active or done */}
           {nucleiState && nucleiState.phases && nucleiState.phases.length > 0 && (
             <div className="spp-nuclei-panel">
               <div className="spp-nuclei-header">
                 <Shield size={13} />
-                <span>Deep Nuclei Scan</span>
+                <span>Deep Vulnerability Scan</span>
                 <span className="spp-nuclei-found">
                   {nucleiState.total_found} vuln{nucleiState.total_found !== 1 ? 's' : ''} found
                 </span>
