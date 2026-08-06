@@ -12,8 +12,7 @@ const Login = ({ onLogin, onNavigate }) => {
 
   const validate = (name, value) => {
     if (name === 'email') {
-      if (!value.trim()) return 'Email is required';
-      if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) return 'Invalid email address';
+      if (!value.trim()) return 'Email or username is required';
     }
     if (name === 'password' && !value) return 'Password is required';
     return '';
@@ -44,10 +43,7 @@ const Login = ({ onLogin, onNavigate }) => {
         });
         if (res.tokens) {
           api.setTokens(res.tokens.access, res.tokens.refresh);
-          setSuccessMsg('Authentication successful. Initializing workspace...');
-          setTimeout(() => {
-            onLogin(res.user);
-          }, 1500);
+          onLogin(res.user);
         } else {
           setApiError('Authentication failed: Missing security token.');
           setLoading(false);
