@@ -39,6 +39,7 @@ import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
 import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
 import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
 import VaptReport from './components/VaptReport/VaptReport';
+import AssetDiscoveryReport from './components/AssetDiscoveryReport/AssetDiscoveryReport';
 import { api } from './utils/api';
 
 function App() {
@@ -262,6 +263,14 @@ function App() {
           {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
           {activePage === 'VAPT Report'  && (
             <VaptReport
+              activeScanId={activeScanId}
+              scansList={filteredScansList}
+              selectedDomain={selectedDomain}
+              handleSelectScan={handleSelectScan}
+            />
+          )}
+          {activePage === 'Asset Discovery Report' && (
+            <AssetDiscoveryReport
               activeScanId={activeScanId}
               scansList={filteredScansList}
               selectedDomain={selectedDomain}
