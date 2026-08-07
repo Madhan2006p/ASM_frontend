@@ -38,6 +38,7 @@ import AssetDiscoveryDashboard from './components/Dashboard/AssetDiscoveryDashbo
 import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
 import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
 import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
+import AttackPathAnalysis from './components/AttackPathAnalysis/AttackPathAnalysis';
 import VaptReport from './components/VaptReport/VaptReport';
 import AssetDiscoveryReport from './components/AssetDiscoveryReport/AssetDiscoveryReport';
 import { api } from './utils/api';
@@ -248,7 +249,13 @@ function App() {
 
           {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard />}
-          {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysisDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysis initialTab="overview" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Graph'                 && <AttackPathAnalysis initialTab="graph" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Paths'                 && <AttackPathAnalysis initialTab="paths" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Critical Assets'             && <AttackPathAnalysis initialTab="critical-assets" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'MITRE Mapping'               && <AttackPathAnalysis initialTab="mitre" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Recommendations'             && <AttackPathAnalysis initialTab="recommendations" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Path Reports'         && <AttackPathAnalysis initialTab="reports" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
@@ -267,6 +274,7 @@ function App() {
               scansList={filteredScansList}
               selectedDomain={selectedDomain}
               handleSelectScan={handleSelectScan}
+              user={user}
             />
           )}
           {activePage === 'Asset Discovery Report' && (
@@ -275,6 +283,7 @@ function App() {
               scansList={filteredScansList}
               selectedDomain={selectedDomain}
               handleSelectScan={handleSelectScan}
+              user={user}
             />
           )}
           {activePage === 'Marketplace' && <Marketplace />}

@@ -4,7 +4,7 @@ import {
   FileText, Download, Shield, AlertTriangle, AlertCircle,
   CheckCircle, RefreshCw, ChevronDown, ChevronRight,
   Globe, Calendar, User, TrendingUp, Eye, X, Upload,
-  Settings2, Layers, Server, Lock, Cpu, Search
+  Settings2, Layers, Server, Lock, Cpu, Search, Building2
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -132,7 +132,7 @@ const certHealthCfg = (expiryDate, isValid) => {
 /* ═════════════════════════════════════════════════════════
    Main Component
 ═════════════════════════════════════════════════════════ */
-const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan }) => {
+const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan, user }) => {
 
   /* ── State ─────────────────────────────────── */
   const [loading, setLoading]             = useState(false);
@@ -147,7 +147,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
 
   /* Report config */
   const [reportTitle, setReportTitle]     = useState('Asset Discovery Report');
-  const [orgName, setOrgName]             = useState('');
+  const [orgName, setOrgName]             = useState(user?.organization || 'Infotech Sentinel');
   const [assessorName, setAssessorName]   = useState('');
   const [reportDate, setReportDate]       = useState(() => new Date().toISOString().split('T')[0]);
   const [scope, setScope]                 = useState('');
@@ -155,8 +155,39 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
     'Automated Attack Surface Management (ASM) scanning using Subfinder, Nmap, Wappalyzer, Wapiti, and Nuclei to discover and assess the full external attack surface.'
   );
   const [showSettings, setShowSettings]   = useState(false);
-  const [logoDataUrl, setLogoDataUrl]     = useState(null);
+  const [logoDataUrl, setLogoDataUrl]     = useState(user?.logo_url ? (user.logo_url.startsWith('http') || user.logo_url.startsWith('data:') ? user.logo_url : `${BASE_URL}${user.logo_url}`) : null);
   const logoInputRef                      = useRef(null);
+
+  /* Auto-sync organization profile and logo */
+  useEffect(() => {
+    const syncProfile = async () => {
+      if (user?.organization) {
+        setOrgName(prev => (prev && prev !== 'Infotech Sentinel') ? prev : user.organization);
+      }
+      if (user?.logo_url) {
+        const fullLogoUrl = (user.logo_url.startsWith('http') || user.logo_url.startsWith('data:'))
+          ? user.logo_url
+          : `${BASE_URL}${user.logo_url}`;
+        setLogoDataUrl(prev => prev || fullLogoUrl);
+      }
+      
+      try {
+        const profile = await api.get('/api/auth/profile/');
+        if (profile) {
+          if (profile.organization) setOrgName(prev => (prev && prev !== 'Infotech Sentinel') ? prev : profile.organization);
+          if (profile.logo_url) {
+            const fullUrl = (profile.logo_url.startsWith('http') || profile.logo_url.startsWith('data:'))
+              ? profile.logo_url
+              : `${BASE_URL}${profile.logo_url}`;
+            setLogoDataUrl(prev => prev || fullUrl);
+          }
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    };
+    syncProfile();
+  }, [user]);
 
   /* Filters */
   const [severityFilter, setSeverityFilter] = useState('ALL');
@@ -530,17 +561,27 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ╚══════════════════════════════════╝ */}
         <div id="cover" className="vapt-page vapt-cover-page">
           <div className="vapt-cover-header">
-            <div className="vapt-cover-logo">
-              {logoDataUrl
-                ? <img src={logoDataUrl} alt="Logo" className="vapt-org-logo" />
-                : <Search size={52} style={{ color: '#3B82F6' }} />}
+            <div className="vapt-cover-logo" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {logoDataUrl ? (
+                <img src={logoDataUrl} alt={orgName || 'Organization Logo'} className="vapt-org-logo" style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }} />
+              ) : (
+                <Building2 size={44} style={{ color: '#3B82F6' }} />
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>
+                  {orgName || 'Infotech Sentinel'}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Target Organization
+                </span>
+              </div>
             </div>
             <div className="vapt-cover-watermark">CONFIDENTIAL</div>
           </div>
           <div className="vapt-cover-center">
             <div className="vapt-cover-badge">ATTACK SURFACE MANAGEMENT</div>
             <h1 className="vapt-cover-title">{reportTitle}</h1>
-            {orgName && <p className="vapt-cover-org">Prepared for: <strong>{orgName}</strong></p>}
+            <p className="vapt-cover-org">Prepared for: <strong>{orgName || 'Infotech Sentinel'}</strong></p>
           </div>
           <div className="vapt-cover-meta">
             <div className="vapt-cover-meta-grid">
@@ -714,13 +755,13 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               </tbody></table>
             </div>
             <div className="card vapt-scope-card">
-              <h4><Server size={14}/> Tool Stack</h4>
+              <h4><Layers size={14}/> Surface Overview</h4>
               <table className="vapt-meta-table"><tbody>
-                <tr><td>Subdomain Discovery</td><td>Subfinder</td></tr>
-                <tr><td>Port Scanning</td><td>Nmap</td></tr>
-                <tr><td>Web Crawling</td><td>Wapiti</td></tr>
-                <tr><td>Tech Fingerprint</td><td>Wappalyzer, HTTPX</td></tr>
-                <tr><td>Vulnerability Scan</td><td>Nuclei</td></tr>
+                <tr><td>Active Subdomains</td><td><strong>{subdomains.length}</strong></td></tr>
+                <tr><td>Discovered Endpoints</td><td><strong>{endpoints.length}</strong></td></tr>
+                <tr><td>Open Network Ports</td><td><strong>{ports.length}</strong></td></tr>
+                <tr><td>Technologies Detected</td><td><strong>{technologies.length}</strong></td></tr>
+                <tr><td>SSL Certificates</td><td><strong>{certificates.length}</strong></td></tr>
               </tbody></table>
             </div>
             <div className="card vapt-scope-card vapt-scope-full">
@@ -728,12 +769,12 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               <p className="vapt-methodology-text">{methodology}</p>
               <div className="vapt-methodology-phases">
                 {[
-                  { icon: '🔍', phase: 'Subdomain Enumeration',    desc: 'Passive and active subdomain discovery using Subfinder, DNS brute-force, and certificate transparency logs.' },
-                  { icon: '🚪', phase: 'Port & Service Scanning',  desc: 'TCP/UDP port scanning with Nmap to identify open services, running versions, and exposed interfaces.' },
-                  { icon: '🌐', phase: 'Web Endpoint Discovery',   desc: 'Web crawling and directory enumeration to map all accessible endpoints and APIs.' },
-                  { icon: '🛠', phase: 'Technology Fingerprinting',desc: 'Identification of web frameworks, libraries, and backend tech via Wappalyzer and HTTP header analysis.' },
-                  { icon: '🔒', phase: 'Certificate Analysis',     desc: 'SSL/TLS inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
-                  { icon: '⚡', phase: 'Vulnerability Assessment', desc: 'Automated scanning with Nuclei templates against all discovered assets to identify known CVEs and misconfigurations.' },
+                  { icon: '🔍', phase: 'Subdomain Enumeration',    desc: 'Passive and active subdomain discovery using DNS brute-force, certificate transparency logs, and OSINT sources.' },
+                  { icon: '🚪', phase: 'Port & Service Scanning',  desc: 'Automated TCP/UDP port scanning to identify open network services, running protocols, and exposed interfaces.' },
+                  { icon: '🌐', phase: 'Web Endpoint Discovery',   desc: 'Web crawling and endpoint discovery to map accessible web applications, APIs, and administrative interfaces.' },
+                  { icon: '🛠', phase: 'Technology Fingerprinting',desc: 'Identification of web frameworks, libraries, CMS engines, and backend infrastructure via HTTP response header analysis.' },
+                  { icon: '🔒', phase: 'Certificate Analysis',     desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
+                  { icon: '⚡', phase: 'Vulnerability Assessment', desc: 'Automated vulnerability assessment scanning against discovered digital assets to identify known CVEs and security misconfigurations.' },
                 ].map((p, i) => (
                   <div key={i} className="vapt-phase-item">
                     <span className="vapt-phase-icon">{p.icon}</span>
@@ -905,6 +946,9 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                   const c = getSevColor(sev);
                   const expanded = expandedRows[`vuln-${v.id}`];
                   const cvssScore = getCVSS(sev, v.cvss_score);
+                  const assetsList = (Array.isArray(v.affected_assets) && v.affected_assets.length > 0)
+                    ? v.affected_assets.filter(Boolean)
+                    : [v.subdomain || v.domain || v.url || scope || 'Asset Domain'];
                   return (
                     <div key={v.id} className="card vapt-finding-card" style={{ borderLeft: `4px solid ${c.fg}` }}>
                       <div className="vapt-finding-header" onClick={() => toggleRow(`vuln-${v.id}`)}>
@@ -915,8 +959,10 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                           <div className="vapt-finding-meta">
                             <SeverityBadge severity={sev}/>
                             {v.cve && <span className="vapt-finding-cve">{v.cve}</span>}
-                            <span className="vapt-finding-asset">{v.subdomain || v.domain || scope || 'Asset'}</span>
-                            <span className="vapt-finding-tool">{v.source_tool || 'Nuclei'}</span>
+                            <span className="vapt-finding-asset" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                              <Globe size={11} />
+                              {assetsList.length > 1 ? `${assetsList.length} Affected Assets (${assetsList.slice(0, 2).join(', ')}${assetsList.length > 2 ? '…' : ''})` : assetsList[0]}
+                            </span>
                           </div>
                         </div>
                         <div className="vapt-finding-chevron">
@@ -936,6 +982,19 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                                 <h5>Remediation</h5><p>{v.remediation}</p>
                               </div>
                             )}
+                            <div className="vapt-detail-block" style={{ gridColumn: '1 / -1', background: 'rgba(15, 23, 42, 0.5)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                              <h5 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <Shield size={14} style={{ color: '#3b82f6' }} />
+                                Affected Assets ({assetsList.length})
+                              </h5>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {assetsList.map((ast, aIdx) => (
+                                  <span key={aIdx} style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px', padding: '4px 10px', fontSize: '0.82rem', color: '#93c5fd', fontWeight: 600 }}>
+                                    <code>{ast}</code>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                           <div className="vapt-detail-attrs">
                             <span><strong>CVSS:</strong> <span style={{ color: c.fg, fontWeight: 700 }}>{cvssScore.toFixed(1)}</span></span>
@@ -954,19 +1013,22 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               {/* Print: compact table */}
               <table className="vapt-print-table print-only">
                 <thead>
-                  <tr><th>#</th><th>Finding</th><th>Severity</th><th>CVSS</th><th>Asset</th><th>CVE / CWE</th></tr>
+                  <tr><th>#</th><th>Finding</th><th>Severity</th><th>CVSS</th><th>Affected Assets</th><th>CVE / CWE</th></tr>
                 </thead>
                 <tbody>
                   {filteredVulns.map((v, idx) => {
                     const sev = (v.severity || 'LOW').toUpperCase();
                     const c = getSevColor(sev);
+                    const assetsList = (Array.isArray(v.affected_assets) && v.affected_assets.length > 0)
+                      ? v.affected_assets.filter(Boolean)
+                      : [v.subdomain || v.domain || v.url || scope || '—'];
                     return (
                       <tr key={v.id}>
                         <td className="vapt-pt-num">{idx + 1}</td>
                         <td className="vapt-pt-title">{v.finding || v.vulnerability_id || 'Security Finding'}</td>
                         <td><span className="vapt-pt-badge" style={{ color: c.fg, border: `1px solid ${c.fg}` }}>{sev}</span></td>
                         <td className="vapt-pt-cvss" style={{ color: c.fg }}>{getCVSS(sev, v.cvss_score).toFixed(1)}</td>
-                        <td className="vapt-pt-asset">{v.subdomain || v.domain || '—'}</td>
+                        <td className="vapt-pt-asset">{assetsList.join(', ')}</td>
                         <td className="vapt-pt-cve">{[v.cve, v.cwe].filter(Boolean).join(' / ') || '—'}</td>
                       </tr>
                     );

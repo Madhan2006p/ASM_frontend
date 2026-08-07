@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Home, Globe, Search, Crosshair, PlusSquare, ShieldCheck,
   Eye, Activity, AlertCircle, FileText, Settings,
-  ChevronDown, Shield, Mail, Smartphone, User, Store
+  ChevronDown, Shield, Mail, Smartphone, User, Store,
+  GitMerge, ShieldAlert, Layers
 } from 'lucide-react';
 import './Sidebar.css';
 import { BASE_URL } from '../../utils/api';
@@ -25,6 +26,12 @@ const menuGroups = [
     title: 'ATTACK PATH ANALYSIS',
     items: [
       { name: 'Attack Path Analysis Dashboard', icon: <Activity size={16} /> },
+      { name: 'Attack Graph',                 icon: <GitMerge size={16} /> },
+      { name: 'Attack Paths',                 icon: <Crosshair size={16} /> },
+      { name: 'Critical Assets',             icon: <ShieldAlert size={16} /> },
+      { name: 'MITRE Mapping',               icon: <Layers size={16} /> },
+      { name: 'Recommendations',             icon: <ShieldCheck size={16} /> },
+      { name: 'Attack Path Reports',         icon: <FileText size={16} /> },
     ]
   },
 

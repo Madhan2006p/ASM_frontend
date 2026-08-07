@@ -556,7 +556,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                 <tr><td>Target</td><td>{scope||(scanMeta?.target||'—')}</td></tr>
                 <tr><td>Scan ID</td><td>{localScanId||activeScanId||'—'}</td></tr>
                 <tr><td>Web Findings</td><td>{webVulns.length}</td></tr>
-                <tr><td>Tools</td><td>Nuclei, Wapiti, Nmap, Subfinder</td></tr>
+                <tr><td>Engine</td><td>Enterprise ASM & VAPT Engine</td></tr>
                 <tr><td>Date</td><td>{scanMeta?.created_at ? new Date(scanMeta.created_at).toLocaleDateString() : reportDate}</td></tr>
               </tbody></table>
             </div>
@@ -565,7 +565,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
               <table className="vapt-meta-table"><tbody>
                 <tr><td>Apps Audited</td><td>{mobileScans.filter(s=>s.status==='completed').length}</td></tr>
                 <tr><td>Mobile Findings</td><td>{mobileFindings.length}</td></tr>
-                <tr><td>Tool</td><td>MobSF (Mobile Security Framework)</td></tr>
+                <tr><td>Engine</td><td>Mobile Security Analyzer</td></tr>
                 <tr><td>Analysis Type</td><td>SAST / DAST</td></tr>
                 <tr><td>Platforms</td><td>
                   {[mobileScans.some(s=>s.source==='android')&&'Android', mobileScans.some(s=>s.source==='ios')&&'iOS']
@@ -579,8 +579,8 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
               <div className="vapt-methodology-phases">
                 {[
                   { icon:'🔍', phase:'Reconnaissance',         desc:'Subdomain enumeration, port scanning, technology fingerprinting.' },
-                  { icon:'🕵️', phase:'Vulnerability Discovery', desc:'Automated scanning with Nuclei, web fuzzing with Wapiti, certificate analysis.' },
-                  { icon:'📱', phase:'Mobile Analysis',         desc:'SAST/DAST of Android/iOS binaries via MobSF.' },
+                  { icon:'🕵️', phase:'Vulnerability Discovery', desc:'Automated vulnerability signature scanning, web application fuzzing, certificate analysis.' },
+                  { icon:'📱', phase:'Mobile Analysis',         desc:'SAST/DAST static and dynamic binary security analysis.' },
                   { icon:'📊', phase:'Risk Assessment',         desc:'Findings scored by severity and mapped to OWASP categories.' },
                   { icon:'📝', phase:'Reporting',               desc:'Comprehensive report with remediation guidance and CVE/CWE mapping.' },
                 ].map((p,i) => (

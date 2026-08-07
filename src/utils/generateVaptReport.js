@@ -267,8 +267,8 @@ export function generateVaptReportHTML({
       <table class="meta-table">
         <tr><td>Target Domain</td><td><code>${escapeHtml(scope||'N/A')}</code></td></tr>
         <tr><td>Total Web Findings</td><td><strong>${webVulns.length}</strong></td></tr>
-        <tr><td>Scanner Tools</td><td>Nuclei, Wapiti, Nmap, Subfinder</td></tr>
-        <tr><td>Assessment Type</td><td>Automated + Manual</td></tr>
+        <tr><td>Assessment Engine</td><td>Enterprise ASM & VAPT Engine</td></tr>
+        <tr><td>Assessment Type</td><td>Automated + Manual Verification</td></tr>
         <tr><td>Classification</td><td>Black-box / Grey-box</td></tr>
       </table>
     </div>
@@ -277,7 +277,7 @@ export function generateVaptReportHTML({
       <table class="meta-table">
         <tr><td>Apps Audited</td><td><strong>${mobileScans.filter(s=>s.status==='completed').length}</strong></td></tr>
         <tr><td>Mobile Findings</td><td><strong>${mobileFindings.length}</strong></td></tr>
-        <tr><td>Analysis Tool</td><td>MobSF (Mobile Security Framework)</td></tr>
+        <tr><td>Analysis Engine</td><td>Mobile Security Analyzer</td></tr>
         <tr><td>Analysis Type</td><td>SAST / DAST</td></tr>
         <tr><td>Platforms</td><td>${[
           mobileScans.some(s=>s.source==='android') && 'Android (APK/AAB)',
@@ -292,9 +292,9 @@ export function generateVaptReportHTML({
 
   <div class="phases-grid">
     ${[
-      { icon:'🔍', phase:'Phase 1: Reconnaissance',        desc:'Subdomain enumeration, DNS reconnaissance, port scanning, service fingerprinting, and attack surface mapping using Subfinder, Nmap, and passive OSINT techniques.' },
-      { icon:'🕵️', phase:'Phase 2: Vulnerability Discovery', desc:'Automated scanning using Nuclei template library, web fuzzing with Wapiti, SSL/TLS analysis, and directory brute-forcing to identify exploitable weaknesses.' },
-      { icon:'📱', phase:'Phase 3: Mobile Analysis',        desc:'Static and dynamic analysis of Android/iOS application binaries using MobSF to identify insecure coding patterns, permission misuse, hardcoded secrets, and API vulnerabilities.' },
+      { icon:'🔍', phase:'Phase 1: Reconnaissance',        desc:'Subdomain enumeration, DNS reconnaissance, port scanning, service fingerprinting, and attack surface mapping using passive OSINT and active discovery techniques.' },
+      { icon:'🕵️', phase:'Phase 2: Vulnerability Discovery', desc:'Automated vulnerability signature scanning, web application fuzzing, SSL/TLS security analysis, and endpoint mapping.' },
+      { icon:'📱', phase:'Phase 3: Mobile Analysis',        desc:'Static (SAST) and dynamic (DAST) analysis of Android/iOS application binaries to identify insecure coding patterns, permission misuse, hardcoded secrets, and API flaws.' },
       { icon:'⚡', phase:'Phase 4: Exploitation & Validation', desc:'Manual verification of identified vulnerabilities to eliminate false positives, determine exploitability, and assess true business impact.' },
       { icon:'📊', phase:'Phase 5: Risk Assessment',        desc:'All findings classified by severity (Critical/High/Medium/Low/Info) using CVSS v3.1 scoring and mapped to OWASP Top 10, CWE, and CVE identifiers.' },
       { icon:'📝', phase:'Phase 6: Reporting',              desc:'Comprehensive report with detailed findings, proof-of-concept evidence, business impact analysis, and actionable remediation guidance.' },
@@ -324,8 +324,7 @@ export function generateVaptReportHTML({
         <th style="width:44px">CVSS</th>
         <th style="width:70px">Source</th>
         <th>Asset / Target</th>
-        <th style="width:90px">Tool</th>
-        <th style="width:90px">CVE / CWE</th>
+        <th style="width:100px">CVE / CWE</th>
       </tr>
     </thead>
     <tbody>
@@ -339,7 +338,6 @@ export function generateVaptReportHTML({
           <td class="td-cvss" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)}</td>
           <td style="font-size:7.5pt">${f.source==='mobile'?'📱 Mobile':'🌐 Web'}</td>
           <td class="td-asset"><code>${escapeHtml(f.asset||'—')}</code></td>
-          <td style="font-size:7.5pt">${escapeHtml(f.tool||'—')}</td>
           <td class="td-cve">${escapeHtml([f.cve, f.cwe].filter(Boolean).join(' / ')||'—')}</td>
         </tr>`;
       }).join('')}
@@ -373,7 +371,6 @@ export function generateVaptReportHTML({
       ${f.cwe ? `<span class="meta-tag" style="background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe">CWE: ${escapeHtml(f.cwe)}</span>` : ''}
       ${f.category ? `<span class="meta-tag">Category: ${escapeHtml(f.category)}</span>` : ''}
       <span class="meta-tag">${f.source==='mobile'?'📱':'🌐'} ${escapeHtml(f.source_label||f.source)}</span>
-      <span class="meta-tag">🔧 ${escapeHtml(f.tool||'Unknown')}</span>
       ${f.asset ? `<span class="meta-tag">🎯 ${escapeHtml(f.asset)}</span>` : ''}
       ${f.discovered_at ? `<span class="meta-tag">📅 ${new Date(f.discovered_at).toLocaleDateString()}</span>` : ''}
     </div>
@@ -398,7 +395,6 @@ export function generateVaptReportHTML({
       ${f.cve ? `<div class="attr-item"><span class="attr-label">CVE ID</span><span class="attr-value"><code>${escapeHtml(f.cve)}</code></span></div>` : ''}
       ${f.cwe ? `<div class="attr-item"><span class="attr-label">CWE ID</span><span class="attr-value"><code>${escapeHtml(f.cwe)}</code></span></div>` : ''}
       <div class="attr-item"><span class="attr-label">Affected Asset</span><span class="attr-value"><code>${escapeHtml(f.asset||'—')}</code></span></div>
-      <div class="attr-item"><span class="attr-label">Discovery Tool</span><span class="attr-value">${escapeHtml(f.tool||'—')}</span></div>
       ${f.category ? `<div class="attr-item"><span class="attr-label">Category</span><span class="attr-value">${escapeHtml(f.category)}</span></div>` : ''}
     </div>
   </div>

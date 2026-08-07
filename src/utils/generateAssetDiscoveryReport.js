@@ -151,10 +151,14 @@ export function generateAssetDiscoveryReportHTML({
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
     <div class="cover-top">
-      <div class="cover-logo-wrap">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:14px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:70px;max-width:200px;object-fit:contain;border-radius:6px"/>`
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:60px;max-width:180px;object-fit:contain;border-radius:4px"/>`
           : `<div class="cover-shield">🔍</div>`}
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:16pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || 'Infotech Sentinel')}</span>
+          <span style="font-size:8pt;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em">Target Organization</span>
+        </div>
       </div>
       <div class="cover-confidential">CONFIDENTIAL</div>
     </div>
@@ -162,7 +166,7 @@ export function generateAssetDiscoveryReportHTML({
     <div class="cover-center">
       <div class="cover-label">ATTACK SURFACE MANAGEMENT</div>
       <h1 class="cover-title">${escapeHtml(reportTitle)}</h1>
-      ${orgName ? `<p class="cover-org">Prepared for: <strong>${escapeHtml(orgName)}</strong></p>` : ''}
+      <p class="cover-org">Prepared for: <strong>${escapeHtml(orgName || 'Infotech Sentinel')}</strong></p>
     </div>
 
     <div class="cover-meta-box">
@@ -333,14 +337,14 @@ export function generateAssetDiscoveryReportHTML({
       </table>
     </div>
     <div>
-      <h3 class="sub-heading">🛠 Tool Stack</h3>
+      <h3 class="sub-heading">📊 Surface Overview</h3>
       <table class="meta-table">
-        <tr><td>Subdomain Discovery</td><td>Subfinder, DNS Brute-force</td></tr>
-        <tr><td>Port Scanning</td><td>Nmap (TCP/UDP)</td></tr>
-        <tr><td>Web Crawling</td><td>Wapiti, Custom Crawler</td></tr>
-        <tr><td>Tech Fingerprint</td><td>Wappalyzer, HTTPX</td></tr>
-        <tr><td>Vulnerability Scan</td><td>Nuclei Template Engine</td></tr>
-        <tr><td>Certificate Analysis</td><td>OpenSSL, HTTPX</td></tr>
+        <tr><td>Active Subdomains</td><td><strong>${subdomains.length}</strong></td></tr>
+        <tr><td>Discovered Endpoints</td><td><strong>${endpoints.length}</strong></td></tr>
+        <tr><td>Open Network Ports</td><td><strong>${ports.length}</strong></td></tr>
+        <tr><td>Technologies Detected</td><td><strong>${technologies.length}</strong></td></tr>
+        <tr><td>SSL Certificates</td><td><strong>${certificates.length}</strong></td></tr>
+        <tr><td>Assessment Engine</td><td>Enterprise ASM Scanner</td></tr>
       </table>
     </div>
   </div>
@@ -350,12 +354,12 @@ export function generateAssetDiscoveryReportHTML({
 
   <div class="phases-grid">
     ${[
-      { icon: '🔍', phase: 'Phase 1: Subdomain Enumeration', desc: 'Passive and active subdomain enumeration using Subfinder, DNS brute-force, and certificate transparency logs to map the full external attack surface.' },
-      { icon: '🚪', phase: 'Phase 2: Port & Service Scanning', desc: 'TCP/UDP port scanning using Nmap to identify open services, running versions, and exposed management interfaces.' },
-      { icon: '🌐', phase: 'Phase 3: Web Endpoint Discovery', desc: 'Web crawling and directory fuzzing to enumerate all accessible endpoints, APIs, and web assets exposed on identified hosts.' },
-      { icon: '🛠', phase: 'Phase 4: Technology Fingerprinting', desc: 'Identification of web frameworks, libraries, CMS, CDN, and backend technologies using Wappalyzer and HTTPX header analysis.' },
-      { icon: '🔒', phase: 'Phase 5: Certificate Analysis', desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
-      { icon: '⚡', phase: 'Phase 6: Vulnerability Assessment', desc: 'Automated vulnerability scanning using Nuclei template engine against all discovered assets to identify known CVEs and misconfigurations.' },
+      { icon: '🔍', phase: 'Phase 1: Subdomain Enumeration', desc: 'Passive and active subdomain discovery using DNS brute-force, certificate transparency logs, and OSINT sources to map the full external attack surface.' },
+      { icon: '🚪', phase: 'Phase 2: Port & Service Scanning', desc: 'Automated TCP/UDP port scanning to identify open network services, running protocols, and exposed interfaces.' },
+      { icon: '🌐', phase: 'Phase 3: Web Endpoint Discovery', desc: 'Web crawling and endpoint discovery to map accessible web applications, APIs, and administrative interfaces.' },
+      { icon: '🛠', phase: 'Phase 4: Technology Fingerprinting', desc: 'Identification of web frameworks, libraries, CMS engines, CDN providers, and backend infrastructure via HTTP response header analysis.' },
+      { icon: '🔒', phase: 'Phase 5: Certificate Analysis', desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version security configuration.' },
+      { icon: '⚡', phase: 'Phase 6: Vulnerability Assessment', desc: 'Automated vulnerability assessment scanning against discovered digital assets to identify known CVEs and security misconfigurations.' },
     ].map(p => `
       <div class="phase-card">
         <div class="phase-icon">${p.icon}</div>
@@ -408,18 +412,29 @@ export function generateAssetDiscoveryReportHTML({
   </table>
 </div>`;
 
+  /* Helper to resolve all affected assets as an array */
+  const resolveAssetList = (v) => {
+    if (Array.isArray(v?.affected_assets) && v.affected_assets.length > 0) {
+      return v.affected_assets.filter(Boolean);
+    }
+    const list = [v?.subdomain, v?.domain, v?.url].filter(Boolean);
+    if (list.length > 0) return [...new Set(list)];
+    return scope ? [scope] : ['Target Domain'];
+  };
+
   /* ── Vulnerability Findings ─────────────────────────────── */
   const vulnRows = vulnerabilities.map((v, idx) => {
     const sev = (v.severity || 'LOW').toUpperCase();
     const c = getSC(sev);
     const cvss = cvssOf(sev, v.cvss_score);
+    const assets = resolveAssetList(v);
+    const assetChips = assets.map(a => `<code>${escapeHtml(a)}</code>`).join(' ');
     return `<tr>
       <td class="td-num">${idx + 1}</td>
       <td class="td-title">${escapeHtml(v.finding || v.vulnerability_id || 'Security Finding')}</td>
       <td>${badgeHtml(sev)}</td>
       <td class="td-cvss" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)}</td>
-      <td class="td-asset"><code>${escapeHtml(v.subdomain || v.domain || scope || '—')}</code></td>
-      <td style="font-size:7.5pt">${escapeHtml(v.source_tool || 'Nuclei')}</td>
+      <td class="td-asset" style="max-width:260pt">${assetChips}</td>
       <td class="td-cve">${escapeHtml([v.cve, v.cwe].filter(Boolean).join(' / ') || '—')}</td>
     </tr>`;
   }).join('');
@@ -439,13 +454,12 @@ export function generateAssetDiscoveryReportHTML({
         <th>Finding / Vulnerability</th>
         <th style="width:80px">Severity</th>
         <th style="width:44px">CVSS</th>
-        <th>Affected Asset</th>
-        <th style="width:70px">Tool</th>
-        <th style="width:90px">CVE / CWE</th>
+        <th>Affected Assets (${vulnerabilities.reduce((acc, curr) => acc + (curr.affected_assets?.length || 1), 0)})</th>
+        <th style="width:100px">CVE / CWE</th>
       </tr>
     </thead>
     <tbody>
-      ${totalVulns > 0 ? vulnRows : `<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">No vulnerabilities identified in this scan.</td></tr>`}
+      ${totalVulns > 0 ? vulnRows : `<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">No vulnerabilities identified in this scan.</td></tr>`}
     </tbody>
   </table>
 </div>`;
@@ -456,6 +470,7 @@ export function generateAssetDiscoveryReportHTML({
     const c = getSC(sev);
     const cvss = cvssOf(sev, v.cvss_score);
     const cvssLabel = cvss >= 9 ? 'Critical' : cvss >= 7 ? 'High' : cvss >= 4 ? 'Medium' : cvss >= 0.1 ? 'Low' : 'Info';
+    const assets = resolveAssetList(v);
     return `
 <div class="finding-block">
   <div class="finding-header" style="border-left:5px solid ${c.dot};background:${c.bg}">
@@ -475,9 +490,8 @@ export function generateAssetDiscoveryReportHTML({
     <div class="finding-header-meta">
       ${v.cve ? `<span class="meta-tag" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">CVE: ${escapeHtml(v.cve)}</span>` : ''}
       ${v.cwe ? `<span class="meta-tag" style="background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe">CWE: ${escapeHtml(v.cwe)}</span>` : ''}
+      <span class="meta-tag" style="background:#dbeafe;color:#1e40af;border-color:#bfdbfe;font-weight:700">🎯 ${assets.length} Affected Asset(s)</span>
       ${v.category ? `<span class="meta-tag">Category: ${escapeHtml(v.category)}</span>` : ''}
-      <span class="meta-tag">🔧 ${escapeHtml(v.source_tool || 'Nuclei')}</span>
-      ${v.subdomain || v.domain ? `<span class="meta-tag">🎯 ${escapeHtml(v.subdomain || v.domain)}</span>` : ''}
     </div>
   </div>
   <div class="finding-body">
@@ -492,13 +506,18 @@ export function generateAssetDiscoveryReportHTML({
         <div class="finding-section-label" style="color:#15803d">✅ Remediation</div>
         <p class="finding-text" style="color:#166534">${escapeHtml(v.remediation)}</p>
       </div>` : ''}
+      <div class="finding-section" style="grid-column:1/-1;border-left:3px solid #3b82f6;background:#eff6ff;padding:8px 12px;margin-top:6px">
+        <div class="finding-section-label" style="color:#1d4ed8;margin-bottom:4px">🛡 Affected Assets (${assets.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${assets.map(a => `<code style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:7.5pt;border:1px solid #bfdbfe">${escapeHtml(a)}</code>`).join(' ')}
+        </div>
+      </div>
     </div>
     <div class="finding-attrs">
+      <div class="attr-item" style="grid-column:1/-1"><span class="attr-label">Affected Assets (${assets.length})</span><span class="attr-value" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">${assets.map(a => `<code>${escapeHtml(a)}</code>`).join(' ')}</span></div>
       <div class="attr-item"><span class="attr-label">CVSS Score</span><span class="attr-value" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)} / 10.0 (${cvssLabel})</span></div>
       ${v.cve ? `<div class="attr-item"><span class="attr-label">CVE ID</span><span class="attr-value"><code>${escapeHtml(v.cve)}</code></span></div>` : ''}
       ${v.cwe ? `<div class="attr-item"><span class="attr-label">CWE ID</span><span class="attr-value"><code>${escapeHtml(v.cwe)}</code></span></div>` : ''}
-      <div class="attr-item"><span class="attr-label">Affected Asset</span><span class="attr-value"><code>${escapeHtml(v.subdomain || v.domain || '—')}</code></span></div>
-      <div class="attr-item"><span class="attr-label">Discovery Tool</span><span class="attr-value">${escapeHtml(v.source_tool || 'Nuclei')}</span></div>
     </div>
   </div>
 </div>`;
