@@ -68,7 +68,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
             severity: v.severity || 'LOW',
             status: 'Open',
             cvss,
-            asset: v.subdomain || v.domain || 'Target Scope',
+            affected_assets: v.affected_assets || [v.subdomain || v.domain || 'Target Scope'],
             age: dateStr,
             source_tool: v.source_tool || 'Nuclei',
             exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
@@ -105,9 +105,9 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,CVE,Severity,Status,CVSS,Asset,Age,Exploit\n"
+      + "Title,CVE,Severity,Status,CVSS,Affected Assets,Age,Exploit\n"
       + filteredData.map(row => 
-          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${row.asset}","${row.age}",${row.exploit}`
+          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${(row.affected_assets || []).join(', ')}","${row.age}",${row.exploit}`
         ).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
