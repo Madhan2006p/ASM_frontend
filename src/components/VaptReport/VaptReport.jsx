@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateVaptReportHTML } from '../../utils/generateVaptReport';
 import {
-  FileText, Download, Printer, Shield, AlertTriangle, AlertCircle,
-  CheckCircle, RefreshCw, ChevronDown, ChevronRight,
+  FileText, Download, Printer, Shield, AlertTriangle, AlertCircle, AlertOctagon, Clock,
+  CheckCircle, CheckCircle2, RefreshCw, ChevronDown, ChevronRight,
   Target, Cpu, Smartphone, Globe, Calendar,
   User, TrendingUp, Eye, X, Upload,
-  Settings2, Layers
+  Settings2, Layers, Lock, KeyRound, ShieldCheck, Box, Search
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
@@ -372,12 +372,12 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
         {/* ── Sticky section nav (screen only) ── */}
         <div className="vapt-section-nav no-print">
           {[
-            { id:'cover',          label:'📄 Cover'            },
-            { id:'exec',           label:'📊 Executive Summary' },
-            { id:'scope-sec',      label:'🎯 Scope'            },
-            { id:'findings',       label:'🔍 Findings'          },
-            ...(mobileScans.length > 0 ? [{ id:'mobile-sec', label:'📱 Mobile' }] : []),
-            { id:'remediation-sec',label:'🛡️ Remediation'      },
+            { id:'cover',          label:'Cover'            },
+            { id:'exec',           label:'Executive Summary' },
+            { id:'scope-sec',      label:'Scope'            },
+            { id:'findings',       label:'Findings'          },
+            ...(mobileScans.length > 0 ? [{ id:'mobile-sec', label:'Mobile Security' }] : []),
+            { id:'remediation-sec',label:'Remediation Roadmap'      },
           ].map(s => (
             <button key={s.id} className={`vapt-nav-btn ${activeSection===s.id?'active':''}`} onClick={()=>scrollTo(s.id)}>
               {s.label}
@@ -390,12 +390,35 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             ╚══════════════════════════════════╝ */}
         <div id="cover" className="vapt-page vapt-cover-page">
           <div className="vapt-cover-header">
-            <div className="vapt-cover-logo">
-              {logoDataUrl
-                ? <img src={logoDataUrl} alt="Logo" className="vapt-org-logo" />
-                : <Shield size={52} style={{ color:'#3B82F6' }} />}
+            {/* Target Organization */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {logoDataUrl ? (
+                <img src={logoDataUrl} alt={orgName || 'Organization Logo'} className="vapt-org-logo" style={{ maxHeight: '52px', maxWidth: '180px', objectFit: 'contain' }} />
+              ) : (
+                <Shield size={38} style={{ color: '#60A5FA' }} />
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.01em', textShadow: '0 2px 4px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
+                  {orgName || scope || 'Target Organization'}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#93C5FD', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Target Organization
+                </span>
+              </div>
             </div>
-            <div className="vapt-cover-watermark">CONFIDENTIAL</div>
+
+            {/* Assessment Provider (Hackers Infotech) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.4)', padding: '7px 16px', borderRadius: '8px' }}>
+              <Shield size={22} style={{ color: '#60A5FA' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right' }}>
+                <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  HACKERS INFOTECH
+                </span>
+                <span style={{ fontSize: '0.68rem', color: '#93C5FD', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Assessment Provider
+                </span>
+              </div>
+            </div>
           </div>
           <div className="vapt-cover-center">
             <div className="vapt-cover-badge">VULNERABILITY ASSESSMENT &amp; PENETRATION TEST</div>
@@ -620,7 +643,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             <div className="vapt-filter-group">
               <label>Source</label>
               <div className="vapt-filter-pills">
-                {[['ALL','ALL'],['WEB','🌐 Web'],['MOBILE','📱 Mobile']].map(([v,l]) => (
+                {[['ALL','ALL'],['WEB','Web'],['MOBILE','Mobile']].map(([v,l]) => (
                   <button key={v} className={`vapt-pill ${sourceFilter===v?'active':''}`} onClick={()=>setSourceFilter(v)}>{l}</button>
                 ))}
               </div>
@@ -652,7 +675,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                           <div className="vapt-finding-title">{finding.title}</div>
                           <div className="vapt-finding-meta">
                             <SeverityBadge severity={finding.severity}/>
-                            <span className="vapt-finding-source-badge">{finding.source==='mobile'?'📱':'🌐'} {finding.source_label}</span>
+                            <span className="vapt-finding-source-badge">{finding.source_label}</span>
                             {finding.cve && <span className="vapt-finding-cve">{finding.cve}</span>}
                             <span className="vapt-finding-asset">{finding.asset}</span>
                             <span className="vapt-finding-tool">{finding.tool}</span>
@@ -773,10 +796,10 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
           </div>
           <div className="vapt-remediation-roadmap">
             {[
-              { timeline:'Immediate (0–48 hrs)',    severity:'CRITICAL', color:'#EF4444', icon:'🚨', count:countBySev.CRITICAL||0, guidance:'Patch or mitigate immediately. Isolate affected systems and escalate to security leadership.' },
-              { timeline:'Short-term (7–14 days)',  severity:'HIGH',     color:'#F97316', icon:'⚠️', count:countBySev.HIGH||0,     guidance:'Plan and deploy patches. Implement compensating controls where patching is delayed.' },
-              { timeline:'Medium-term (1–3 months)',severity:'MEDIUM',   color:'#EAB308', icon:'🔶', count:countBySev.MEDIUM||0,   guidance:'Address in the next sprint or maintenance window. Track via security backlog.' },
-              { timeline:'Long-term (3–6 months)',  severity:'LOW / INFO',color:'#22C55E', icon:'📌', count:(countBySev.LOW||0)+(countBySev.INFO||0), guidance:'Document and address in regular security reviews.' },
+              { timeline:'Immediate (0–48 hrs)',    severity:'CRITICAL', color:'#EF4444', icon:<AlertOctagon size={20} style={{color:'#EF4444'}}/>, count:countBySev.CRITICAL||0, guidance:'Patch or mitigate immediately. Isolate affected systems and escalate to security leadership.' },
+              { timeline:'Short-term (7–14 days)',  severity:'HIGH',     color:'#F97316', icon:<AlertTriangle size={20} style={{color:'#F97316'}}/>, count:countBySev.HIGH||0,     guidance:'Plan and deploy patches. Implement compensating controls where patching is delayed.' },
+              { timeline:'Medium-term (1–3 months)',severity:'MEDIUM',   color:'#EAB308', icon:<Clock size={20} style={{color:'#EAB308'}}/>, count:countBySev.MEDIUM||0,   guidance:'Address in the next sprint or maintenance window. Track via security backlog.' },
+              { timeline:'Long-term (3–6 months)',  severity:'LOW / INFO',color:'#22C55E', icon:<CheckCircle2 size={20} style={{color:'#22C55E'}}/>, count:(countBySev.LOW||0)+(countBySev.INFO||0), guidance:'Document and address in regular security reviews.' },
             ].map((item,i) => (
               <div key={i} className="vapt-roadmap-item" style={{borderLeft:`4px solid ${item.color}`}}>
                 <div className="vapt-roadmap-header">
@@ -794,12 +817,12 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             <h3>General Security Recommendations</h3>
             <div className="vapt-bp-grid">
               {[
-                { icon:'🔒', title:'Input Validation',      desc:'Sanitize all inputs server-side. Use parameterized queries.' },
-                { icon:'🔑', title:'Auth & Session',        desc:'Enforce MFA, secure cookies (HttpOnly, Secure), proper logout.' },
-                { icon:'🛡️', title:'Security Headers',      desc:'Add CSP, X-Frame-Options, HSTS, Referrer-Policy.' },
-                { icon:'📦', title:'Dependency Management', desc:'Audit third-party libraries. Subscribe to CVE feeds.' },
-                { icon:'🔍', title:'Continuous Monitoring', desc:'Implement SIEM, WAF, IDS. Schedule recurring VAPT.' },
-                { icon:'👩‍💻', title:'Developer Training',   desc:'Conduct OWASP Top 10 & mobile security training regularly.' },
+                { icon:<Lock size={18} style={{color:'#3b82f6'}}/>, title:'Input Validation',      desc:'Sanitize all inputs server-side. Use parameterized queries.' },
+                { icon:<KeyRound size={18} style={{color:'#3b82f6'}}/>, title:'Auth & Session',        desc:'Enforce MFA, secure cookies (HttpOnly, Secure), proper logout.' },
+                { icon:<ShieldCheck size={18} style={{color:'#3b82f6'}}/>, title:'Security Headers',      desc:'Add CSP, X-Frame-Options, HSTS, Referrer-Policy.' },
+                { icon:<Box size={18} style={{color:'#3b82f6'}}/>, title:'Dependency Management', desc:'Audit third-party libraries. Subscribe to CVE feeds.' },
+                { icon:<Search size={18} style={{color:'#3b82f6'}}/>, title:'Continuous Monitoring', desc:'Implement SIEM, WAF, IDS. Schedule recurring VAPT.' },
+                { icon:<ShieldCheck size={18} style={{color:'#3b82f6'}}/>, title:'Developer Training',   desc:'Conduct OWASP Top 10 & mobile security training regularly.' },
               ].map((bp,i) => (
                 <div key={i} className="card vapt-bp-card">
                   <span className="vapt-bp-icon">{bp.icon}</span>
