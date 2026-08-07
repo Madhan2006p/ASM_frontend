@@ -11,6 +11,49 @@
   padding-bottom: 3rem;
 }
 
+/* ── Running top header on each section ──────────────────────── */
+.vapt-running-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.76rem;
+  font-family: var(--font-family);
+}
+.vapt-rh-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.vapt-rh-icon {
+  color: var(--brand-primary);
+}
+.vapt-rh-provider {
+  color: #3B82F6;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.vapt-rh-sep {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.vapt-rh-title {
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.vapt-rh-right {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+.vapt-rh-right strong {
+  color: var(--text-primary);
+}
+
 /* ── Header action row ──────────────────────────────────────── */
 .vapt-header-actions {
   display: flex;

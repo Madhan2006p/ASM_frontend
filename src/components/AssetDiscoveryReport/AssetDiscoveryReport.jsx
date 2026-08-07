@@ -563,25 +563,35 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
           <div className="vapt-cover-header">
             <div className="vapt-cover-logo" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               {logoDataUrl ? (
-                <img src={logoDataUrl} alt={orgName || 'Organization Logo'} className="vapt-org-logo" style={{ maxHeight: '60px', maxWidth: '200px', objectFit: 'contain' }} />
+                <img src={logoDataUrl} alt={orgName || 'Organization Logo'} className="vapt-org-logo" style={{ maxHeight: '55px', maxWidth: '180px', objectFit: 'contain' }} />
               ) : (
-                <Building2 size={44} style={{ color: '#3B82F6' }} />
+                <Building2 size={40} style={{ color: '#60A5FA' }} />
               )}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>
-                  {orgName || 'Infotech Sentinel'}
+                <span style={{ fontSize: '1.3rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.01em', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  {orgName || scope || 'Target Organization'}
                 </span>
-                <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                <span style={{ fontSize: '0.72rem', color: '#93C5FD', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Target Organization
                 </span>
               </div>
             </div>
-            <div className="vapt-cover-watermark">CONFIDENTIAL</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right' }}>
+                <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#60A5FA', letterSpacing: '0.02em', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>
+                  HACKERS INFOTECH
+                </span>
+                <span style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Assessment Provider
+                </span>
+              </div>
+              <div className="vapt-cover-watermark">CONFIDENTIAL</div>
+            </div>
           </div>
           <div className="vapt-cover-center">
             <div className="vapt-cover-badge">ATTACK SURFACE MANAGEMENT</div>
             <h1 className="vapt-cover-title">{reportTitle}</h1>
-            <p className="vapt-cover-org">Prepared for: <strong>{orgName || 'Infotech Sentinel'}</strong></p>
+            <p className="vapt-cover-org">Prepared for: <strong>{orgName || scope || 'Target Organization'}</strong> &nbsp;|&nbsp; Assessed by: <strong>Hackers Infotech</strong></p>
           </div>
           <div className="vapt-cover-meta">
             <div className="vapt-cover-meta-grid">
@@ -739,6 +749,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  3 — SCOPE & METHODOLOGY        ║
             ╚══════════════════════════════════╝ */}
         <div id="scope-sec" className="vapt-page vapt-print-break">
+          {renderRunningHeader('2. Scope & Methodology')}
           <div className="vapt-section-title">
             <Globe size={18} className="vapt-section-icon"/>
             <h2>2. Scope &amp; Methodology</h2>
@@ -790,6 +801,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  4 — ASSET INVENTORY            ║
             ╚══════════════════════════════════╝ */}
         <div id="assets" className="vapt-page vapt-print-break">
+          {renderRunningHeader('3. Asset Inventory')}
           <div className="vapt-section-title">
             <Globe size={18} className="vapt-section-icon"/>
             <h2>3. Asset Inventory</h2>
@@ -907,6 +919,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  5 — VULNERABILITY FINDINGS     ║
             ╚══════════════════════════════════╝ */}
         <div id="vulns" className="vapt-page vapt-print-break">
+          {renderRunningHeader('4. Vulnerability Findings')}
           <div className="vapt-section-title">
             <Eye size={18} className="vapt-section-icon"/>
             <h2>4. Vulnerability Findings</h2>

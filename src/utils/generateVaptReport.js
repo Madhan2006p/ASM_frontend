@@ -74,6 +74,17 @@ export function generateVaptReportHTML({
   logoDataUrl, allFindings, webVulns, mobileFindings, mobileScans,
   countBySev, totalFindings, riskScore, riskLbl, riskCol,
 }) {
+  const getHeaderHtml = (sectionTitle) => `
+<div class="page-header">
+  <div class="header-brand" style="display:flex;align-items:center;gap:6px">
+    <span class="provider-name" style="color:#1e40af;font-weight:900;letter-spacing:0.08em">HACKERS INFOTECH</span>
+    <span class="header-divider" style="color:#94a3b8">|</span>
+    <span class="section-name" style="color:#334155;text-transform:uppercase;font-weight:700">${escapeHtml(sectionTitle)}</span>
+  </div>
+  <div class="header-target" style="color:#64748b;font-size:7pt">
+    Target Org: <strong style="color:#0f172a">${escapeHtml(orgName || scope || 'Target Organization')}</strong>
+  </div>
+</div>`;
 
   const sevKeys = ['CRITICAL','HIGH','MEDIUM','LOW','INFO'];
   const fDate = fmtDate(reportDate);
@@ -83,13 +94,23 @@ export function generateVaptReportHTML({
 <div class="page cover-page">
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
-    <div class="cover-top">
-      <div class="cover-logo-wrap">
+    <div class="cover-top" style="display:flex;justify-content:space-between;align-items:center">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:12px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:70px;max-width:200px;object-fit:contain;border-radius:6px"/>`
-          : `<div class="cover-shield">🛡️</div>`}
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:55px;max-width:160px;object-fit:contain;border-radius:4px"/>`
+          : `<div class="cover-shield" style="font-size:20pt">🎯</div>`}
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:14pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || scope || 'Target Organization')}</span>
+          <span style="font-size:7.5pt;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Target Organization</span>
+        </div>
       </div>
-      <div class="cover-confidential">CONFIDENTIAL</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;flex-direction:column;text-align:right">
+          <span style="font-size:13pt;font-weight:900;color:#1e40af;letter-spacing:-0.02em">HACKERS INFOTECH</span>
+          <span style="font-size:7pt;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
+        </div>
+        <div class="cover-confidential" style="margin-left:8px">CONFIDENTIAL</div>
+      </div>
     </div>
 
     <div class="cover-center">
@@ -142,7 +163,7 @@ export function generateVaptReportHTML({
   /* ── Table of Contents ───────────────────────────────────── */
   const tocPage = `
 <div class="page">
-  <div class="page-header"><span>TABLE OF CONTENTS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('Table of Contents')}
   <h2 class="section-heading" style="margin-top:0">Table of Contents</h2>
   <table class="toc-table">
     <tr><td class="toc-num">1.</td><td class="toc-title">Executive Summary</td><td class="toc-dots"></td></tr>
@@ -163,7 +184,7 @@ export function generateVaptReportHTML({
   /* ── Executive Summary ───────────────────────────────────── */
   const execPage = `
 <div class="page">
-  <div class="page-header"><span>1. EXECUTIVE SUMMARY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('1. Executive Summary')}
   <h2 class="section-heading">1. Executive Summary</h2>
 
   <p class="narrative">
@@ -258,7 +279,7 @@ export function generateVaptReportHTML({
   /* ── Scope & Methodology ─────────────────────────────────── */
   const scopePage = `
 <div class="page">
-  <div class="page-header"><span>2. SCOPE &amp; METHODOLOGY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('2. Scope & Methodology')}
   <h2 class="section-heading">2. Scope &amp; Methodology</h2>
 
   <div class="two-col">
@@ -309,7 +330,7 @@ export function generateVaptReportHTML({
   /* ── Findings summary table (overview before detail) ──────── */
   const findingsSummaryPage = `
 <div class="page">
-  <div class="page-header"><span>3. FINDINGS SUMMARY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('3. Findings Summary')}
   <h2 class="section-heading">3. Findings Summary</h2>
   <p class="narrative">
     The following table provides a consolidated summary of all <strong>${totalFindings}</strong> security findings identified during this assessment.
@@ -403,7 +424,7 @@ export function generateVaptReportHTML({
 
   const detailedFindingsPage = `
 <div class="page">
-  <div class="page-header"><span>4. DETAILED FINDINGS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('4. Detailed Findings')}
   <h2 class="section-heading">4. Detailed Findings</h2>
   <p class="narrative">
     This section provides a detailed analysis of each security finding identified during the assessment.
@@ -415,7 +436,7 @@ export function generateVaptReportHTML({
   /* ── Mobile VAPT section ─────────────────────────────────── */
   const mobilePage = mobileScans.length > 0 ? `
 <div class="page">
-  <div class="page-header"><span>5. MOBILE APPLICATION SECURITY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('5. Mobile Application Security')}
   <h2 class="section-heading">5. Mobile Application Security</h2>
   <p class="narrative">
     Mobile application security analysis was performed using MobSF (Mobile Security Framework),
@@ -457,7 +478,7 @@ export function generateVaptReportHTML({
   /* ── Remediation Roadmap ─────────────────────────────────── */
   const remediationPage = `
 <div class="page">
-  <div class="page-header"><span>${mobileScans.length>0?'6':'5'}. REMEDIATION ROADMAP</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${mobileScans.length > 0 ? '6' : '5'}. Remediation Roadmap`)}
   <h2 class="section-heading">${mobileScans.length>0?'6':'5'}. Remediation Roadmap</h2>
   <p class="narrative">
     The following remediation roadmap prioritises findings based on risk severity and provides

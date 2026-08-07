@@ -146,27 +146,45 @@ export function generateAssetDiscoveryReportHTML({
     <div class="cover-sev-lbl">${s.label}</div>
   </div>`).join('');
 
+  const getHeaderHtml = (sectionTitle) => `
+<div class="page-header">
+  <div class="header-brand" style="display:flex;align-items:center;gap:6px">
+    <span class="provider-name" style="color:#1e40af;font-weight:900;letter-spacing:0.08em">HACKERS INFOTECH</span>
+    <span class="header-divider" style="color:#94a3b8">|</span>
+    <span class="section-name" style="color:#334155;text-transform:uppercase;font-weight:700">${escapeHtml(sectionTitle)}</span>
+  </div>
+  <div class="header-target" style="color:#64748b;font-size:7pt">
+    Target Org: <strong style="color:#0f172a">${escapeHtml(orgName || scope || 'Target Organization')}</strong>
+  </div>
+</div>`;
+
   const coverPage = `
 <div class="page cover-page">
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
-    <div class="cover-top">
-      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:14px">
+    <div class="cover-top" style="display:flex;justify-content:space-between;align-items:center">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:12px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:60px;max-width:180px;object-fit:contain;border-radius:4px"/>`
-          : `<div class="cover-shield">🔍</div>`}
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:55px;max-width:160px;object-fit:contain;border-radius:4px"/>`
+          : `<div class="cover-shield" style="font-size:20pt">🎯</div>`}
         <div style="display:flex;flex-direction:column">
-          <span style="font-size:16pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || 'Infotech Sentinel')}</span>
-          <span style="font-size:8pt;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.06em">Target Organization</span>
+          <span style="font-size:14pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || scope || 'Target Organization')}</span>
+          <span style="font-size:7.5pt;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Target Organization</span>
         </div>
       </div>
-      <div class="cover-confidential">CONFIDENTIAL</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="display:flex;flex-direction:column;text-align:right">
+          <span style="font-size:13pt;font-weight:900;color:#1e40af;letter-spacing:-0.02em">HACKERS INFOTECH</span>
+          <span style="font-size:7pt;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
+        </div>
+        <div class="cover-confidential" style="margin-left:8px">CONFIDENTIAL</div>
+      </div>
     </div>
 
     <div class="cover-center">
       <div class="cover-label">ATTACK SURFACE MANAGEMENT</div>
       <h1 class="cover-title">${escapeHtml(reportTitle)}</h1>
-      <p class="cover-org">Prepared for: <strong>${escapeHtml(orgName || 'Infotech Sentinel')}</strong></p>
+      <p class="cover-org">Prepared for: <strong>${escapeHtml(orgName || scope || 'Target Organization')}</strong> | Assessed by: <strong>Hackers Infotech</strong></p>
     </div>
 
     <div class="cover-meta-box">
@@ -212,7 +230,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const tocPage = `
 <div class="page">
-  <div class="page-header"><span>TABLE OF CONTENTS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('Table of Contents')}
   <h2 class="section-heading">Table of Contents</h2>
   <table class="toc-table">
     ${toc.map(t => `<tr><td class="toc-num">${t.n}.</td><td class="toc-title">${escapeHtml(t.title)}</td><td class="toc-dots"></td></tr>`).join('')}
@@ -228,7 +246,7 @@ export function generateAssetDiscoveryReportHTML({
   let sn = 1;
   const execPage = `
 <div class="page">
-  <div class="page-header"><span>1. EXECUTIVE SUMMARY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('1. Executive Summary')}
   <h2 class="section-heading">1. Executive Summary</h2>
 
   <p class="narrative">
@@ -322,7 +340,7 @@ export function generateAssetDiscoveryReportHTML({
   /* ── Scope & Methodology ────────────────────────────────── */
   const scopePage = `
 <div class="page">
-  <div class="page-header"><span>2. SCOPE &amp; METHODOLOGY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('2. Scope & Methodology')}
   <h2 class="section-heading">2. Scope &amp; Methodology</h2>
 
   <div class="two-col">
@@ -388,7 +406,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const assetInventoryPage = `
 <div class="page">
-  <div class="page-header"><span>3. ASSET INVENTORY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('3. Asset Inventory')}
   <h2 class="section-heading">3. Asset Inventory</h2>
   <p class="narrative">
     The following table lists all <strong>${subdomains.length}</strong> subdomains discovered during the assessment,
@@ -441,7 +459,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const findingsSummaryPage = `
 <div class="page">
-  <div class="page-header"><span>4. VULNERABILITY FINDINGS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('4. Vulnerability Findings')}
   <h2 class="section-heading">4. Vulnerability Findings</h2>
   <p class="narrative">
     The following <strong>${totalVulns}</strong> vulnerabilities were identified across the discovered attack surface.
@@ -525,7 +543,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const detailedFindingsPage = vulnerabilities.length > 0 ? `
 <div class="page">
-  <div class="page-header"><span>4. DETAILED FINDINGS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('4. Detailed Findings')}
   <h2 class="section-heading">4. Detailed Findings</h2>
   <p class="narrative">
     This section provides a detailed analysis of all ${totalVulns} vulnerabilities identified during the assessment.
@@ -560,7 +578,7 @@ export function generateAssetDiscoveryReportHTML({
 
     return `
 <div class="page">
-  <div class="page-header"><span>${techNum}. TECHNOLOGY FINGERPRINT</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${techNum}. Technology Fingerprint`)}
   <h2 class="section-heading">${techNum}. Technology Fingerprint</h2>
   <p class="narrative">
     The following <strong>${technologies.length}</strong> technologies were detected across the attack surface.
@@ -607,7 +625,7 @@ export function generateAssetDiscoveryReportHTML({
 
     return `
 <div class="page">
-  <div class="page-header"><span>${certNum}. SSL / TLS OVERVIEW</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${certNum}. SSL / TLS Overview`)}
   <h2 class="section-heading">${certNum}. SSL / TLS Overview</h2>
   <p class="narrative">
     The following <strong>${certificates.length}</strong> SSL/TLS certificates were analysed.
@@ -647,7 +665,7 @@ export function generateAssetDiscoveryReportHTML({
   const remNum = toc[toc.length - 1].n;
   const remediationPage = `
 <div class="page">
-  <div class="page-header"><span>${remNum}. HARDENING RECOMMENDATIONS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${remNum}. Hardening Recommendations`)}
   <h2 class="section-heading">${remNum}. Hardening Recommendations</h2>
   <p class="narrative">
     The following remediation roadmap prioritises findings based on risk severity and provides
