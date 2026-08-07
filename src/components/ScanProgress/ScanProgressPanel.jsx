@@ -12,8 +12,7 @@ const PHASES = [
   { key: 'directories',    label: 'Directory Enumeration',           field: 'directories_done',progressStart: 45,  progressEnd: 55   },
   { key: 'technologies',   label: 'Technology Fingerprinting',       field: 'technologies_done',progressStart: 55, progressEnd: 65   },
   { key: 'email',          label: 'Email Security (SPF/DMARC)',      field: 'email_done',      progressStart: 65,  progressEnd: 70   },
-  { key: 'vuln_basic',     label: 'Basic Vulnerability Scan',        field: 'vuln_scan_phase', progressStart: 70,  progressEnd: 80,  phaseValue: 'basic' },
-  { key: 'vuln_deep',      label: 'Deep Vulnerability Scan (Nuclei)',field: 'vuln_scan_phase', progressStart: 80,  progressEnd: 85,  phaseValue: 'complete' },
+  { key: 'vulnerabilities',label: 'Vulnerability Scan',             field: 'vulnerabilities_done',progressStart: 70, progressEnd: 85 },
   { key: 'ssl',            label: 'SSL/TLS Certificate Audit',       field: 'ssl_done',        progressStart: 85,  progressEnd: 90   },
   { key: 'antimalware',    label: 'Anti-Malware & VirusTotal Check', field: 'malware_done',    progressStart: 90,  progressEnd: 100  },
 ];
@@ -33,14 +32,6 @@ function getPhaseStatus(phase, scanData) {
 
   if (phase.field === null) {
     return progress > 0 ? 'done' : (scanData.status === 'running' ? 'running' : 'pending');
-  }
-
-  if (phase.field === 'vuln_scan_phase') {
-    if (scanData.vuln_scan_phase === phase.phaseValue) return 'running';
-    if (phase.phaseValue === 'basic' && (scanData.vuln_scan_phase === 'basic' || scanData.vuln_scan_phase === 'complete')) return 'done';
-    if (phase.phaseValue === 'complete' && scanData.vuln_scan_phase === 'complete') return 'running';
-    if (phase.phaseValue === 'basic' && scanData.vuln_scan_phase && scanData.vuln_scan_phase !== 'pending') return 'done';
-    return 'pending';
   }
 
   if (scanData[phase.field] === true) return 'done';
@@ -172,7 +163,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
           // Log phase transitions
           if (prev && prev.phase_name !== data.phase_name && data.phase_name) {
             setLog(prevLog => [...prevLog, {
-              phase: `🔬 Nuclei: ${data.phase_name}`,
+              phase: `🐍 Python Scanner: ${data.phase_name}`,
               status: 'running',
               time: new Date().toISOString()
             }]);
@@ -214,10 +205,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const target = scanData?.target ?? activeScan?.target ?? '';
 
   const vulnPhase = scanData?.vuln_scan_phase;
-  const vulnBadge =
-    vulnPhase === 'running_nuclei' ? '🔍 Nuclei' :
-    vulnPhase === 'running_wapiti' ? '🕷️ Wapiti' :
-    isDeepScanRunning ? '🔬 Deep Scan' : null;
+  const vulnBadge = isDeepScanRunning || (vulnPhase && vulnPhase !== 'pending' && vulnPhase !== 'complete') ? '🐍 Python Scanner' : null;
 
   if (!activeScanId) return null;
   if (!visible) return null;
@@ -293,7 +281,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               ))}
             </div>
             <div className="spp-progress-phases">
-              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vuln_basic').map(phase => {
+              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vulnerabilities').map(phase => {
                 const st = getPhaseStatus(phase, scanData || activeScan);
                 return (
                   <span key={phase.key} className={`spp-phase-label ${st}`}>
@@ -305,12 +293,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             </div>
           </div>
 
-          {/* Nuclei deep scan panel — shown when deep scan is active or done */}
+          {/* Deep scan panel — shown when deep scan is active or done */}
           {nucleiState && nucleiState.phases && nucleiState.phases.length > 0 && (
             <div className="spp-nuclei-panel">
               <div className="spp-nuclei-header">
                 <Shield size={13} />
-                <span>Deep Nuclei Scan</span>
+                <span>Python Vulnerability Scanner</span>
                 <span className="spp-nuclei-found">
                   {nucleiState.total_found} vuln{nucleiState.total_found !== 1 ? 's' : ''} found
                 </span>

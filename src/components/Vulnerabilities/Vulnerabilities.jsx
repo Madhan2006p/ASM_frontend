@@ -68,7 +68,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
             severity: v.severity || 'LOW',
             status: 'Open',
             cvss,
-            asset: v.subdomain || v.domain || 'Target Scope',
+            affected_assets: v.affected_assets || [v.subdomain || v.domain || 'Target Scope'],
             age: dateStr,
             source_tool: v.source_tool || 'Nuclei',
             exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
@@ -105,9 +105,9 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,CVE,Severity,Status,CVSS,Asset,Age,Exploit\n"
+      + "Title,CVE,Severity,Status,CVSS,Affected Assets,Age,Exploit\n"
       + filteredData.map(row => 
-          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${row.asset}","${row.age}",${row.exploit}`
+          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${(row.affected_assets || []).join(', ')}","${row.age}",${row.exploit}`
         ).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -162,7 +162,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500' }}>
               <RefreshCw className="spin" size={18} />
-              <span>Deep vulnerability scanning is currently running — findings appear below in real time.</span>
+              <span>Vulnerability scanning is currently running — findings appear below in real time.</span>
               {vulnerabilities.length > 0 && (
                 <span style={{ marginLeft: 'auto', background: 'rgba(34,211,238,0.2)', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700' }}>
                   {vulnerabilities.length} found

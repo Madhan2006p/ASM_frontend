@@ -64,15 +64,13 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
               <th>SEVERITY</th>
               <th>STATUS</th>
               <th>CVSS</th>
-              <th>ASSET</th>
-              <th>SOURCE</th>
               <th>AGE</th>
             </tr>
           </thead>
           <tbody>
             {(loading && (!data || data.length === 0)) ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                   Loading vulnerabilities list...
                 </td>
@@ -115,26 +113,12 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
                         <span className="cvss-score">{row.cvss.toFixed(1)}</span>
                       </div>
                     </td>
-                    <td className="font-mono text-secondary">{row.asset}</td>
-                    <td>
-                      <span style={{ 
-                        padding: '2px 6px', 
-                        borderRadius: '4px', 
-                        background: '#f1f5f9', 
-                        fontSize: '0.75rem', 
-                        fontWeight: 600,
-                        color: '#475569',
-                        textTransform: 'uppercase'
-                      }}>
-                        {row.source_tool}
-                      </span>
-                    </td>
                     <td className="text-secondary">{row.age}</td>
                   </tr>
                   
                   {expandedRows[row.id] && (
                     <tr className="vuln-expanded-row">
-                      <td colSpan="9" style={{ padding: 0, borderTop: 'none', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
+                      <td colSpan="7" style={{ padding: 0, borderTop: 'none', background: 'var(--bg-main)', borderBottom: '1px solid var(--border-color)' }}>
                         <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: 'inset 0 4px 6px -4px rgba(0,0,0,0.1)' }}>
                           
                           {/* Description Block */}
@@ -188,6 +172,22 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
                               </div>
                             </div>
                           )}
+
+                          {/* Affected Assets Block */}
+                          {row.affected_assets && row.affected_assets.length > 0 && (
+                            <div style={{ background: 'var(--bg-card)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                              <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Shield size={16} /> Affected Assets
+                              </h4>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                                {row.affected_assets.map((asset, idx) => (
+                                  <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--bg-main)', color: 'var(--accent)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.9rem', fontWeight: '600', border: '1px solid var(--border-color)' }}>
+                                    {asset}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -196,7 +196,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
               ))
             ) : (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '4rem 2rem', color: '#64748B' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '4rem 2rem', color: '#64748B' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ background: showScanningState ? 'rgba(34, 211, 238, 0.1)' : 'rgba(34, 197, 94, 0.1)', padding: '1rem', borderRadius: '50%' }}>
                       {showScanningState ? (
@@ -211,7 +211,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
                     <p style={{ margin: 0, maxWidth: '400px', fontSize: '0.9rem', lineHeight: '1.5' }}>
                       {showScanningState 
                         ? (isVulnScanRunning 
-                            ? "The Python vulnerability scanner found 0 results. Nuclei is currently running deep scans in the background to uncover complex vulnerabilities."
+                            ? "The Python vulnerability scanner is currently assessing your attack surface for security risks in real time."
                             : "The scan is still in its early discovery phases (like subdomains and ports). Vulnerability payload testing has not started yet. Please wait.")
                         : "No vulnerabilities were found during the scan. Great job keeping your attack surface secure!"}
                     </p>

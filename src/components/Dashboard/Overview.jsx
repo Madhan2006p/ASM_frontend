@@ -490,20 +490,18 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
               <table className="ov-table">
                 <thead><tr>
                   <th>Vulnerability</th>
-                  <th style={{width:'150px',textAlign:'center'}}>Source Tool</th>
                   <th style={{width:'90px'}}>Risk</th>
                 </tr></thead>
                 <tbody>
                   {vulns.slice(0, 6).map((v, i) => (
                     <tr key={i}>
                       <td><span className="ov-link">{v.finding || v.vulnerability_id}</span></td>
-                      <td className="ov-td-center" style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{v.source_tool || 'Nuclei'}</td>
                       <td><span className={`ov-pill ${PILL[(v.severity || 'LOW').toUpperCase()]}`}>{v.severity}</span></td>
                     </tr>
                   ))}
                   {vulns.length === 0 && (
                     <tr>
-                      <td colSpan="3" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Your website is secure now</td>
+                      <td colSpan="2" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>Your website is secure now</td>
                     </tr>
                   )}
                 </tbody>

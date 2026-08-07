@@ -48,7 +48,8 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         return urlStr;
       }
       const urlObj = new URL(urlStr);
-      return urlObj.pathname + urlObj.search;
+      const fullPath = urlObj.pathname + urlObj.search;
+      return (fullPath === '/' || !fullPath) ? urlStr : fullPath;
     } catch (e) {
       return urlStr;
     }
