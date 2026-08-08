@@ -142,6 +142,28 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           subtitle="Track, triage and remediate findings across your attack surface."
         />
 
+        {/* Vulnerability Breakdown */}
+        <div className="vuln-breakdown-section">
+          <div className="vuln-section-header">
+            <TrendingUp size={16} />
+            <span>Vulnerability Breakdown</span>
+          </div>
+          <div className="vuln-stats-grid">
+            {localVulnStats.map((vuln, idx) => (
+              <div key={idx} className={`vuln-card ${vuln.bgClass}`}>
+                <div className="vuln-top-row">
+                  <div className="vuln-icon-wrapper" style={{ padding: '0.25rem', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>{vuln.icon}</div>
+                  <span className={`vuln-value ${vuln.colorClass}`}>{vuln.value}</span>
+                </div>
+                <span className="vuln-label">{vuln.label}</span>
+                <div className="vuln-progress-bar">
+                  <div className={`vuln-progress-fill ${vuln.bar}`} style={{ width: vulnerabilities.length > 0 ? `${(vuln.value / vulnerabilities.length) * 100}%` : '0%' }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
           <ScanSelector 
             assignedDomains={assignedDomains}
@@ -184,27 +206,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           </div>
         )}
 
-        {/* Vulnerability Breakdown */}
-        <div className="vuln-breakdown-section">
-          <div className="vuln-section-header">
-            <TrendingUp size={16} />
-            <span>Vulnerability Breakdown</span>
-          </div>
-          <div className="vuln-stats-grid">
-            {localVulnStats.map((vuln, idx) => (
-              <div key={idx} className={`vuln-card ${vuln.bgClass}`}>
-                <div className="vuln-top-row">
-                  <div className="vuln-icon-wrapper" style={{ padding: '0.25rem', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>{vuln.icon}</div>
-                  <span className={`vuln-value ${vuln.colorClass}`}>{vuln.value}</span>
-                </div>
-                <span className="vuln-label">{vuln.label}</span>
-                <div className="vuln-progress-bar">
-                  <div className={`vuln-progress-fill ${vuln.bar}`} style={{ width: vulnerabilities.length > 0 ? `${(vuln.value / vulnerabilities.length) * 100}%` : '0%' }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+
 
         <VulnerabilitiesTable
           data={filteredData}

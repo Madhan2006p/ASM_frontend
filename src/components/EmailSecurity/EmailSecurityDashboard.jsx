@@ -117,12 +117,6 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
           { label:'DKIM Pass Rate',  value: `${Math.round((dkim/total)*100)}%` },
           { label:'DMARC Pass Rate', value: `${Math.round((dmarc/total)*100)}%` },
         ]}
-        actions={
-          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-            <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-              assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-          </div>
-        }
       />
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'0.75rem'}}>
@@ -131,6 +125,9 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
         <CT label="DMARC Protected" value={dmarc} sub={`/ ${data.length}`} good={dmarc>0 && dmarc===data.length} />
         <CT label="Fully Protected" value={full}  sub={`/ ${data.length}`} good={full>0 && full===data.length} />
       </div>
+
+      <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
         <W title={<><Mail size={12}/> Email Authentication Overview</>}>

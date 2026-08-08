@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, AlertTriangle, CheckCircle, ShieldAlert, FileText } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './AntiPhishingScan.css';
 import AntiPhishingDetail from './AntiPhishingDetail';
 
-const AntiPhishingScan = ({ activeTarget }) => {
+const AntiPhishingScan = ({ activeTarget, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [reports, setReports] = useState([]);
   const loadReports = async () => {
     try {
@@ -38,6 +39,12 @@ const AntiPhishingScan = ({ activeTarget }) => {
           { label: 'Malicious', value: reports.filter(r => r.classification?.toLowerCase() === 'malicious' || r.ecosystem_classification?.toLowerCase().includes('malicious')).length.toString() },
           { label: 'Suspicious', value: reports.filter(r => r.classification?.toLowerCase() === 'suspicious' || r.ecosystem_classification?.toLowerCase().includes('suspicious')).length.toString() },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       <div className="card global-table-wrapper" style={{ marginTop: '2rem' }}>

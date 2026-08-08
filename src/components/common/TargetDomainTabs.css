@@ -1,0 +1,74 @@
+.target-domain-tabs-container {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  background: var(--bg-card, #0f172a);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.target-domain-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.target-domain-tabs-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+}
+
+.target-domain-tabs-wrapper::-webkit-scrollbar {
+  height: 3px;
+}
+
+.target-domain-tabs-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.3);
+  border-radius: 3px;
+}
+
+.target-domain-tab-btn {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--text-secondary, #94a3b8) !important;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-family: inherit;
+  border-radius: 0 !important;
+}
+
+.target-domain-tab-btn:hover {
+  color: #3b82f6 !important;
+}
+
+.target-domain-tab-btn.active {
+  color: #3b82f6 !important;
+  border-bottom: 2px solid #3b82f6 !important;
+  font-weight: 700;
+}

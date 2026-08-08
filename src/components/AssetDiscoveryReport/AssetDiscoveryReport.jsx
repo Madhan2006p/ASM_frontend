@@ -11,6 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './AssetDiscoveryReport.css';
 
@@ -132,7 +133,7 @@ const certHealthCfg = (expiryDate, isValid) => {
 /* ═════════════════════════════════════════════════════════
    Main Component
 ═════════════════════════════════════════════════════════ */
-const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan, user }) => {
+const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, selectedDomain, setSelectedDomain, handleSelectScan, user }) => {
 
   /* ── State ─────────────────────────────────── */
   const [loading, setLoading]             = useState(false);

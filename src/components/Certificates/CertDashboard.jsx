@@ -2,8 +2,9 @@ import React from 'react';
 import { Filter, ArrowRight } from 'lucide-react';
 import './CertDashboard.css';
 import PageHeaderCard from '../common/PageHeaderCard';
+import ScanSelector from '../common/ScanSelector';
 
-const CertDashboard = ({ certs = [], loading }) => {
+const CertDashboard = ({ certs = [], loading, assignedDomains, selectedDomain, setSelectedDomain, scansList, activeScanId, handleSelectScan }) => {
   const activeCount = certs.length;
   const expiringSoonCount = certs.filter(c => c.days !== null && c.days > 0 && c.days <= 30).length;
   const expiredCount = certs.filter(c => c.days === 0).length;
@@ -71,6 +72,17 @@ const CertDashboard = ({ certs = [], loading }) => {
           { label: 'Weak Configurations', value: weakCount.toString(), subtext: 'Protocol or cipher issues' }
         ]}
       />
+
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+      </div>
 
       {/* Middle Grid: Score & Timeline */}
       <div className="cert-middle-grid">

@@ -12,6 +12,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './VaptReport.css';
 
@@ -117,7 +118,7 @@ const PieTooltip = ({ active, payload }) => {
 /* ═════════════════════════════════════════════════════════
    Main Component
 ═════════════════════════════════════════════════════════ */
-const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan }) => {
+const VaptReport = ({ activeScanId, scansList, assignedDomains, selectedDomain, setSelectedDomain, handleSelectScan }) => {
 
   /* ── State ─────────────────────────────────── */
   const [loading, setLoading]               = useState(false);

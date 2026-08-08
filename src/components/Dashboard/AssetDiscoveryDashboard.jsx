@@ -122,13 +122,10 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
           { label:'High Vulns',     value:(vs.high||0).toString(),     subtext:'address within 7 days' },
           { label:'SSL Expiring',   value:sslExpiring.toString(),      subtext:'within 90 days' },
         ]}
-        actions={
-          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-            <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-              assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-          </div>
-        }
       />
+
+      <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
 
       {/* KPI Strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))',gap:'0.75rem'}}>

@@ -4,6 +4,7 @@ import {
   FileText, Search, RefreshCw, Filter, Layers as LayersIcon
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { fetchAndAnalyzeAttackPaths } from './attackPathEngine';
 
 import AttackPathOverview from './AttackPathOverview';
@@ -134,6 +135,14 @@ const AttackPathAnalysis = ({
           </div>
         }
       />
+
+      <div style={{ marginTop: '1.25rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
 
       {/* ── Reusable Filter Bar ───────────────────────────────── */}
       <div className="apa-filter-bar no-print">
