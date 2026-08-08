@@ -190,7 +190,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (status === 'Protected')   return 'st-protected';
     if (status === 'Restricted')  return 'st-restricted';
     if (status === 'Redirected')  return 'st-redirected';
-    if (status === 'Forbidden')   return 'st-notfound';
+    if (status === 'Forbidden')   return 'st-forbidden';
     if (status === 'Not Found')   return 'st-notfound';
     if (status === 'Error')       return 'st-notfound';
     if (status === 'Unreachable') return 'st-notfound';
@@ -202,6 +202,12 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (risk === 'HIGH') return 'risk-high';
     if (risk === 'MEDIUM') return 'risk-med';
     return 'risk-low';
+  };
+
+  const getHttpStyle = (status) => {
+    if (status === 200 || status === '200') return { color: '#4ADE80', backgroundColor: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)' };
+    if (status === 403 || status === '403') return { color: '#F87171', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' };
+    return { color: '#94A3B8', backgroundColor: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)' };
   };
 
   // Stats — aligned with backend classification
@@ -326,7 +332,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                       </div>
                     </td>
                     <td>
-                      <span className="dir-access" title={`HTTP ${item.httpStatus}`}>{getHttpLabel(item.httpStatus)}</span>
+                      <span className="dir-access" style={getHttpStyle(item.httpStatus)} title={`HTTP ${item.httpStatus}`}>{getHttpLabel(item.httpStatus)}</span>
                     </td>
                     <td>
                       <span className="dir-assets" style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>{item.subdomain_name || 'root domain'}</span>

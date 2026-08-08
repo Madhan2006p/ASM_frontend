@@ -20,10 +20,10 @@ import './AssetDiscoveryReport.css';
 ───────────────────────────────────────────────────────── */
 const SEV_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4, WARNING: 5 };
 const SEV_COLORS = {
-  CRITICAL: { bg: 'rgba(239,68,68,0.12)',  fg: '#EF4444', border: 'rgba(239,68,68,0.3)',  chart: '#EF4444' },
-  HIGH:     { bg: 'rgba(249,115,22,0.12)', fg: '#F97316', border: 'rgba(249,115,22,0.3)', chart: '#F97316' },
-  MEDIUM:   { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.3)',  chart: '#EAB308' },
-  LOW:      { bg: 'rgba(34,197,94,0.12)',  fg: '#22C55E', border: 'rgba(34,197,94,0.3)',  chart: '#22C55E' },
+  CRITICAL: { bg: 'rgba(239,68,68,0.12)',  fg: '#F87171', border: 'rgba(239,68,68,0.3)',  chart: '#F87171' },
+  HIGH:     { bg: 'rgba(249,115,22,0.12)', fg: '#EA580C', border: 'rgba(249,115,22,0.3)', chart: '#EA580C' },
+  MEDIUM:   { bg: 'rgba(56,189,248,0.12)', fg: '#38BDF8', border: 'rgba(56,189,248,0.3)', chart: '#38BDF8' },
+  LOW:      { bg: 'rgba(74,222,128,0.12)', fg: '#4ADE80', border: 'rgba(74,222,128,0.3)', chart: '#4ADE80' },
   INFO:     { bg: 'rgba(59,130,246,0.12)', fg: '#3B82F6', border: 'rgba(59,130,246,0.3)', chart: '#3B82F6' },
   WARNING:  { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.3)',  chart: '#EAB308' },
 };
@@ -77,10 +77,10 @@ const calcRiskScore = (counts) => {
   return Math.min(10, (CRITICAL * 10 + HIGH * 7 + MEDIUM * 4 + LOW * 1) / total).toFixed(1);
 };
 const riskLabel = (score) => {
-  if (score >= 8) return { label: 'CRITICAL', color: '#EF4444' };
-  if (score >= 6) return { label: 'HIGH',     color: '#F97316' };
-  if (score >= 4) return { label: 'MEDIUM',   color: '#EAB308' };
-  if (score >= 2) return { label: 'LOW',      color: '#22C55E' };
+  if (score >= 8) return { label: 'CRITICAL', color: '#F87171' };
+  if (score >= 6) return { label: 'HIGH',     color: '#EA580C' };
+  if (score >= 4) return { label: 'MEDIUM',   color: '#38BDF8' };
+  if (score >= 2) return { label: 'LOW',      color: '#4ADE80' };
   return              { label: 'MINIMAL',  color: '#3B82F6' };
 };
 
@@ -1156,10 +1156,10 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, select
           </div>
           <div className="vapt-remediation-roadmap">
             {[
-              { timeline: 'Immediate (0–48 hrs)',    severity: 'CRITICAL', color: '#EF4444', icon: <AlertOctagon size={20} style={{ color: '#EF4444' }} />, count: countBySev.CRITICAL || 0,    guidance: 'Patch or mitigate all Critical vulnerabilities. Isolate affected assets and escalate to security leadership immediately.' },
-              { timeline: 'Short-term (7–14 days)',  severity: 'HIGH',     color: '#F97316', icon: <AlertTriangle size={20} style={{ color: '#F97316' }} />, count: countBySev.HIGH || 0,         guidance: 'Resolve High severity vulnerabilities and renew any expired SSL certificates. Implement compensating controls where patching is delayed.' },
-              { timeline: 'Medium-term (1–3 months)',severity: 'MEDIUM',   color: '#EAB308', icon: <Clock size={20} style={{ color: '#EAB308' }} />, count: countBySev.MEDIUM || 0,       guidance: 'Address Medium severity issues. Restrict sensitive open ports to VPN/allow-lists. Renew certificates expiring within 30 days.' },
-              { timeline: 'Long-term (3–6 months)',  severity: 'LOW / INFO',color: '#22C55E', icon: <CheckCircle2 size={20} style={{ color: '#22C55E' }} />, count: (countBySev.LOW || 0) + (countBySev.INFO || 0), guidance: 'Update outdated technology stacks, audit third-party components, and incorporate findings into regular security reviews.' },
+              { timeline: 'Immediate (0–48 hrs)',    severity: 'CRITICAL', color: '#F87171', icon: <AlertOctagon size={20} style={{ color: '#F87171' }} />, count: countBySev.CRITICAL || 0,    guidance: 'Patch or mitigate all Critical vulnerabilities. Isolate affected assets and escalate to security leadership immediately.' },
+              { timeline: 'Short-term (7–14 days)',  severity: 'HIGH',     color: '#EA580C', icon: <AlertTriangle size={20} style={{ color: '#EA580C' }} />, count: countBySev.HIGH || 0,         guidance: 'Resolve High severity vulnerabilities and renew any expired SSL certificates. Implement compensating controls where patching is delayed.' },
+              { timeline: 'Medium-term (1–3 months)',severity: 'MEDIUM',   color: '#38BDF8', icon: <Clock size={20} style={{ color: '#38BDF8' }} />, count: countBySev.MEDIUM || 0,       guidance: 'Address Medium severity issues. Restrict sensitive open ports to VPN/allow-lists. Renew certificates expiring within 30 days.' },
+              { timeline: 'Long-term (3–6 months)',  severity: 'LOW / INFO',color: '#4ADE80', icon: <CheckCircle2 size={20} style={{ color: '#4ADE80' }} />, count: (countBySev.LOW || 0) + (countBySev.INFO || 0), guidance: 'Update outdated technology stacks, audit third-party components, and incorporate findings into regular security reviews.' },
             ].map((item, i) => (
               <div key={i} className="vapt-roadmap-item" style={{ borderLeft: `4px solid ${item.color}` }}>
                 <div className="vapt-roadmap-header">
