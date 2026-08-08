@@ -23,9 +23,12 @@ const TargetDomainTabs = ({
 
   return (
     <div className="target-domain-tabs-container">
-      <div className="target-domain-label">
-        <Lock size={12} /> TARGET DOMAIN
+      <div className="target-domain-label-badge">
+        <Lock size={13} className="target-domain-lock-icon" />
+        <span>TARGET DOMAIN</span>
       </div>
+
+      <div className="target-domain-divider"></div>
 
       <div className="target-domain-tabs-wrapper">
         {tabs.map((tab) => {
