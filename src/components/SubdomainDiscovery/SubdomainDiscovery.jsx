@@ -116,13 +116,14 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                 <th>DOMAIN / ASSET</th>
                 <th>SCAN STATUS</th>
                 <th>HOSTED</th>
-                <th>UPDATED AT</th>
+                <th>CREATED DATE</th>
+                <th>UPDATED DATE</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="5" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Fetching subdomain intelligence...
                   </td>
@@ -148,7 +149,10 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                       {hosted}
                     </td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                      {formatDate(item.updated_at || item.created_at)}
+                      {formatDate(item.created_date)}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                      {formatDate(item.updated_date)}
                     </td>
                   </tr>
                 );
@@ -156,7 +160,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="5" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
                     No subdomains found.
                   </td>
                 </tr>
