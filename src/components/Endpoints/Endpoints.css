@@ -234,8 +234,8 @@
 .risk-high .dot { background-color: #EA580C; }
 .risk-med { background-color: rgba(20, 184, 166, 0.1); color: #38BDF8; border: 1px solid #A5F3FC; }
 .risk-med .dot { background-color: #38BDF8; }
-.risk-low { background-color: var(--bg-main); color: var(--text-secondary); border: 1px solid var(--border-color); }
-.risk-low .dot { background-color: var(--text-secondary); }
+.risk-low { background-color: rgba(74, 222, 128, 0.1); color: #4ADE80; border: 1px solid rgba(74, 222, 128, 0.2); }
+.risk-low .dot { background-color: #4ADE80; }
 
 /* Asset */
 .ep-asset-txt { font-size: 0.8125rem; font-weight: 600; color: var(--text-secondary); }
