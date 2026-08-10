@@ -1,36 +1,47 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Smartphone, CloudUpload, Shield, Activity, Trash2, X,
-  RefreshCw, Layers, Lock, AlertTriangle, AlertCircle,
-  CheckCircle, Info, ChevronRight, Search, FileText,
-  Cpu, Eye, ShieldOff, ShieldCheck, Package, Code,
+  RefreshCw, Layers, Lock,
+  CheckCircle, Info, ChevronRight, Search,
+  Cpu, Eye, ShieldOff, Package, Code,
   Wifi, Binary, BarChart2, Key, Hash
 } from 'lucide-react';
-import PageHeaderCard from '../common/PageHeaderCard';
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
 
-/* ── Severity helpers ─────────────────────────────────────── */
-const SEV_CFG = {
-  CRITICAL: { bg: 'rgba(239,68,68,0.12)',  fg: '#EF4444', border: 'rgba(239,68,68,0.25)'  },
-  HIGH:     { bg: 'rgba(249,115,22,0.12)', fg: '#F97316', border: 'rgba(249,115,22,0.25)' },
-  MEDIUM:   { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.25)'  },
-  LOW:      { bg: 'rgba(34,197,94,0.12)',  fg: '#22C55E', border: 'rgba(34,197,94,0.25)'  },
-  INFO:     { bg: 'rgba(59,130,246,0.12)', fg: '#3B82F6', border: 'rgba(59,130,246,0.25)' },
-  DANGEROUS:{ bg: 'rgba(239,68,68,0.12)',  fg: '#EF4444', border: 'rgba(239,68,68,0.25)'  },
-  NORMAL:   { bg: 'rgba(34,197,94,0.12)',  fg: '#22C55E', border: 'rgba(34,197,94,0.25)'  },
-  SIGNATURE:{ bg: 'rgba(59,130,246,0.12)', fg: '#3B82F6', border: 'rgba(59,130,246,0.25)' },
-  WARNING:  { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.25)'  },
-};
-const getSev = (s) => SEV_CFG[(s || '').toUpperCase()] || SEV_CFG.INFO;
-const SevBadge = ({ severity }) => {
-  const c = getSev(severity);
+/* ── Severity pill (Open Ports style: rounded tab with colored dot) ── */
+const SevPill = ({ severity }) => {
+  const s = ((severity || 'NORMAL') + '').toUpperCase();
+  const cls = ['CRITICAL', 'DANGEROUS'].includes(s) ? 'mv-sev-crit'
+    : s === 'HIGH' ? 'mv-sev-high'
+    : s === 'MEDIUM' ? 'mv-sev-med'
+    : s === 'WARNING' ? 'mv-sev-warn'
+    : s === 'LOW' ? 'mv-sev-low'
+    : s === 'INFO' ? 'mv-sev-info'
+    : 'mv-sev-normal';
   return (
-    <span style={{
-      color: c.fg, fontWeight: 600, fontSize: '0.85rem', textTransform: 'capitalize'
-    }}>
-      {severity || 'Normal'}
+    <span className={`mv-sev-pill ${cls}`}>
+      <span className="mv-sev-dot" /> {s}
     </span>
+  );
+};
+
+const ExpandableCell = ({ text, fallback, maxChars = 60 }) => {
+  const [expanded, setExpanded] = useState(false);
+  const value = (text && text.trim()) ? text : fallback;
+  const truncated = value.length > maxChars;
+  return (
+    <div className="mv-expandable-cell">
+      <span>{expanded ? value : (truncated ? value.slice(0, maxChars) + '…' : value)}</span>
+      {truncated && (
+        <button
+          className="mv-expand-toggle"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {expanded ? 'Less' : 'More'}
+        </button>
+      )}
+    </div>
   );
 };
 
@@ -128,7 +139,7 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
       if(st==='dangerous') d++; else if(st==='signature') s++; else n++;
     });
     let pScore = Math.max(0, 100 - (d * 5));
-    const appPerms = { count: perms.length, score: pScore, grade: calculateGrade(pScore), items: perms, dangerousCount: d };
+    const appPerms = { count: perms.length, score: pScore, grade: calculateGrade(pScore), items: perms };
 
     // Common findings helper
     const summarizeFindings = (cats) => {
@@ -148,9 +159,8 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
     const networkSec = summarizeFindings(['network']);
     const certAnalyse = summarizeFindings(['certificate']);
     const manifestAnalyse = summarizeFindings(['manifest']);
-    const codeAnalyse = summarizeFindings(['code', 'api', 'android', 'ios']); // Added for Code Analysis
 
-    return { appPerms, networkSec, certAnalyse, manifestAnalyse, codeAnalyse };
+    return { appPerms, networkSec, certAnalyse, manifestAnalyse };
   };
 
   const stats = getStats();
@@ -169,16 +179,7 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   return (
     <div className="global-page-container page-animate">
 
-      <PageHeaderCard
-        badgeText="MOBILE SECURITY"
-        title="Mobile Security"
-        subtitle="Automated Static & Dynamic security analysis of iOS and Android binaries via MobSF."
-        stats={[
-          { label: 'Total Apps', value: history.length.toString(), subtext: 'Analyzed Applications' },
-        ]}
-      />
-
-      {/* Controls */}
+      {/* Controls (platform toggles, score & app selector) above the header */}
       <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -199,19 +200,8 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
           </button>
         </div>
         <div style={{display:'flex', alignItems:'center', gap:'1rem'}}>
-           {selectedApp && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem', marginRight: '1rem',
-                background: 'rgba(59, 130, 246, 0.1)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(59, 130, 246, 0.3)'
-              }}>
-                <ShieldCheck size={18} color="#22C55E" />
-                <span style={{fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)'}}>
-                  Overall Security Score: <span style={{color: 'var(--text-primary)', fontSize: '1rem'}}>{selectedApp.score || 85}/100</span>
-                </span>
-              </div>
-           )}
            <div className="mv-app-select-wrapper">
-             <span className="mv-app-select-label">App Name</span>
+             <span className="mv-app-select-label">Version</span>
              <select 
                className="mv-app-select"
                value={selectedApp?.id || ''}
@@ -220,10 +210,10 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
                  if(app) fetchDetail(app);
                }}
              >
-               {filteredApps.length === 0 && <option value="">No apps found</option>}
+               {filteredApps.length === 0 && <option value="">No versions found</option>}
                {filteredApps.map(a => (
                  <option key={a.id} value={a.id}>
-                   {a.app_name || a.file_name || 'Unknown App'}
+                   {a.version_name || a.app_name || a.file_name || 'Unknown'}
                  </option>
                ))}
              </select>
@@ -236,75 +226,6 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
       {!loadingDetail && detail && (
         <div className="mv-content-container">
           
-          {/* Injecting requested data (Manifest Details, Dangerous Perms) above cards */}
-          <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '0.5rem'}}>
-            <div style={{background: 'var(--bg-card)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)'}}>
-              <div style={{fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                <FileText size={16}/> APPLICATION MANIFEST DETAILS
-              </div>
-              <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
-                <div>
-                  <div style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom:'4px'}}>App Name</div>
-                  <div style={{fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)'}}>{selectedApp.app_name || selectedApp.file_name || 'Unknown'}</div>
-                </div>
-                <div>
-                  <div style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom:'4px'}}>Platform</div>
-                  <div style={{fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)'}}>{selectedApp.source === 'ios' ? 'iOS' : 'Android'}</div>
-                </div>
-                <div>
-                  <div style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom:'4px'}}>File</div>
-                  <div style={{fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)'}}>{selectedApp.file_name || 'app.apk'}</div>
-                </div>
-                <div>
-                  <div style={{fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom:'4px'}}>Scanned</div>
-                  <div style={{fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)'}}>{selectedApp.updated_at ? new Date(selectedApp.updated_at).toLocaleString() : 'N/A'}</div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{background: 'var(--bg-card)', padding: '1.25rem', borderRadius: '12px', border: '1px solid var(--border-color)', maxHeight: '180px', overflowY: 'auto'}}>
-              <div style={{fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                <span style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}><AlertTriangle size={16}/> DANGEROUS PERMISSIONS</span>
-                <span style={{background: 'rgba(239,68,68,0.15)', color: '#EF4444', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem'}}>{stats.appPerms.dangerousCount} Found</span>
-              </div>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
-                {stats.appPerms.items.filter(p => (p.status||'').toLowerCase() === 'dangerous').slice(0,5).map((p, i) => (
-                   <div key={i} style={{background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.6rem', borderRadius: '6px', fontSize: '0.8rem', color: '#EF4444', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
-                     <span style={{color: '#EF4444'}}>●</span> {p.permission_name}
-                   </div>
-                ))}
-                {stats.appPerms.dangerousCount === 0 && <div style={{color: 'var(--text-muted)', fontSize: '0.85rem'}}>No dangerous permissions detected.</div>}
-              </div>
-            </div>
-          </div>
-
-          <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '0.5rem'}}>
-            <div style={{background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '10px'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem'}}>
-                Code Security <span>{stats.codeAnalyse.score}/100</span>
-              </div>
-              <div style={{width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden'}}>
-                <div style={{height: '100%', background: '#22C55E', borderRadius: '3px', width: `${stats.codeAnalyse.score}%`}}></div>
-              </div>
-            </div>
-            <div style={{background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '10px'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem'}}>
-                Manifest Security <span>{stats.manifestAnalyse.score}/100</span>
-              </div>
-              <div style={{width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden'}}>
-                <div style={{height: '100%', background: '#22C55E', borderRadius: '3px', width: `${stats.manifestAnalyse.score}%`}}></div>
-              </div>
-            </div>
-            <div style={{background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '1rem', borderRadius: '10px'}}>
-              <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem'}}>
-                Network Security <span>{stats.networkSec.score}/100</span>
-              </div>
-              <div style={{width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden'}}>
-                <div style={{height: '100%', background: '#22C55E', borderRadius: '3px', width: `${stats.networkSec.score}%`}}></div>
-              </div>
-            </div>
-          </div>
-
           {/* CARDS */}
           <div className="mv-cards-row">
             <div className={`mv-stat-card ${selectedCategory==='App Permission'?'active':''}`} onClick={()=>setSelectedCategory('App Permission')}>
@@ -370,12 +291,11 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
             </div>
           </div>
 
-          {/* TABLE */}
+          {/* TABLE (Endpoints / Open Ports UI) */}
           <div className="mv-table-wrapper">
             <table className="mv-table">
               <thead>
                 <tr>
-                  <th>Sno</th>
                   <th>{selectedCategory === 'App Permission' ? 'Permission' : 'Vulnerability'}</th>
                   <th>Severity</th>
                   <th>Information</th>
@@ -385,29 +305,37 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
               </thead>
               <tbody>
                 {tableData.length === 0 && (
-                  <tr><td colSpan="6" style={{textAlign:'center', padding:'3rem', color:'#6b7280'}}>No items found for {selectedCategory}.</td></tr>
+                  <tr><td colSpan="5" style={{textAlign:'center', padding:'3rem', color:'#64748B'}}>No items found for {selectedCategory}.</td></tr>
                 )}
                 {tableData.map((row, idx) => {
                   const isPerm = selectedCategory === 'App Permission';
                   const title = isPerm ? row.permission_name : row.vulnerability;
                   const severity = isPerm ? (row.status || 'Normal') : row.severity;
-                  
-                  // Mock details to look like screenshot if real data is too long or missing
-                  let info = isPerm ? (row.description ? row.description.substring(0,40)+' ...more' : 'Enables Regular Apps ...more') 
-                                    : (row.description ? row.description.substring(0,40)+' ...more' : '-');
-                  let desc = isPerm ? 'Allows ...more' 
-                                    : (row.recommendation ? row.recommendation.substring(0,40)+' ...more' : '-');
-                                    
-                  const created = detail.scan?.updated_at ? new Date(detail.scan.updated_at).toLocaleDateString('en-GB').replace(/\//g,'-') : '30-9-2024';
+
+                  // Expandable cells with a working More/Less toggle
+                  const info = isPerm ? (row.description || 'Enables Regular Apps to access the device.') : (row.description || '-');
+                  const desc = isPerm ? 'See permission details above.' : (row.recommendation || '-');
+
+                  const created = detail.scan?.updated_at
+                    ? new Date(detail.scan.updated_at).toLocaleString('en-GB', {
+                        day: '2-digit', month: '2-digit', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit',
+                      }).replace(/\//g, '-')
+                    : '30-09-2024';
 
                   return (
-                    <tr key={idx}>
-                      <td className="mv-table-col-sno">{idx + 1}</td>
-                      <td className="mv-table-col-title">{title}</td>
-                      <td><SevBadge severity={severity} /></td>
-                      <td className="mv-table-col-info">{info}</td>
-                      <td className="mv-table-col-desc">{desc}</td>
-                      <td className="mv-table-col-date">{created}</td>
+                    <tr key={`${selectedCategory}-${idx}`}>
+                      <td>
+                        <div className="mv-title">{title}</div>
+                        <div className="mv-id-row">
+                          <span className="mv-id-badge">F-{idx + 1}</span>
+                          {isPerm ? '• Permission' : (row.category ? `• ${row.category}` : '')}
+                        </div>
+                      </td>
+                      <td><SevPill severity={severity} /></td>
+                      <td><ExpandableCell text={info} /></td>
+                      <td><ExpandableCell text={desc} /></td>
+                      <td className="mv-date"><span className="mv-date-inner">{created}</span></td>
                     </tr>
                   )
                 })}
