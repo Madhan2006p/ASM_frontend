@@ -132,7 +132,6 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
         <PageHeaderCard
           badgeText="OWASP TOP 10"
           title="Vulnerability Management"
-          subtitle="OWASP Top 10 (2021) powered scanning — track, triage and remediate findings across your attack surface."
         />
 
         <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>

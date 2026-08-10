@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { ExternalLink, Bug, RefreshCw, Shield, X, FileText, Wrench, Link as LinkIcon, Eye } from 'lucide-react';
+import { ExternalLink, Bug, RefreshCw, Shield, X, FileText, Wrench, Link as LinkIcon } from 'lucide-react';
 
 const getSeverityClass = (severity) => (severity || 'low').toLowerCase();
 
@@ -82,7 +82,7 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
                 </td>
               </tr>
             ) : data && data.length > 0 ? (
-              data.map((row) => (
+              data.map((row, idx) => (
                 <tr
                   key={row.id}
                   onClick={() => openModal(row)}
@@ -90,8 +90,8 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
                   className="vuln-row-clickable"
                   title="Click for details"
                 >
-                  <td style={{ textAlign: 'center', color: '#94A3B8' }}>
-                    <Eye size={15} title="View details" />
+                  <td style={{ textAlign: 'center', color: '#94A3B8', fontVariantNumeric: 'tabular-nums' }}>
+                    {idx + 1}
                   </td>
                   <td>
                     {row.owasp_id ? (
