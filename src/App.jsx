@@ -44,10 +44,27 @@ import AssetDiscoveryReport from './components/AssetDiscoveryReport/AssetDiscove
 import { api } from './utils/api';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('access_token') || !!localStorage.getItem('refresh_token');
+  });
   const [authRoute, setAuthRoute] = useState('landing');
-  const [activePage, setActivePage] = useState('Executive Dashboard');
-  const [user, setUser] = useState(null);
+  const [activePage, setActivePage] = useState(() => {
+    const cachedUser = localStorage.getItem('user_profile');
+    if (cachedUser) {
+      try {
+        const u = JSON.parse(cachedUser);
+        if (u.is_superuser) return 'Super Admin Dashboard';
+      } catch (e) {}
+    }
+    return 'Executive Dashboard';
+  });
+  const [user, setUser] = useState(() => {
+    const cachedUser = localStorage.getItem('user_profile');
+    if (cachedUser) {
+      try { return JSON.parse(cachedUser); } catch (e) {}
+    }
+    return null;
+  });
 
   const [activeScanId, setActiveScanId] = useState(null);
   const [activeTarget, setActiveTarget] = useState('');
@@ -56,9 +73,9 @@ function App() {
 
   const handleLogin = (userData) => {
     if (userData) {
-      setUser({
+      const profile = {
         id: userData.id,
-        name: userData.name || userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
+        name: userData.name || (userData.email ? userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : (userData.username || 'User')),
         email: userData.email,
         organization: userData.organization || 'Infotech Sentinel',
         organization_id: userData.organization_id || '1',
@@ -67,16 +84,17 @@ function App() {
         role: userData.role || 'member',
         features: userData.features || [],
         profile_photo_url: userData.profile_photo_url || null,
-      });
+      };
+      setUser(profile);
+      localStorage.setItem('user_profile', JSON.stringify(profile));
+
       // Store admin-assigned domains from login payload
       if (Array.isArray(userData.assigned_domains)) {
         setAssignedDomains(userData.assigned_domains);
       }
       
-      if (userData.is_superuser) {
+      if (userData.is_superuser && activePage === 'Executive Dashboard') {
         setActivePage('Super Admin Dashboard');
-      } else if (activePage === 'Super Admin Dashboard') {
-        setActivePage('Executive Dashboard');
       }
     }
     setIsAuthenticated(true);
@@ -84,6 +102,7 @@ function App() {
 
   const handleLogout = () => {
     api.setTokens(null, null);
+    localStorage.removeItem('user_profile');
     setIsAuthenticated(false);
     setUser(null);
     setActivePage('Executive Dashboard');
@@ -126,16 +145,29 @@ function App() {
   // Check auth session on mount
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('access_token') || localStorage.getItem('refresh_token');
       if (token) {
         try {
           const userData = await api.get('/api/auth/profile/');
-          // profile endpoint returns user data directly (not nested under 'user')
           handleLogin(userData);
         } catch (e) {
-          console.error("Session restoration failed", e);
-          api.setTokens(null, null);
+          console.log("Access token validation failed, attempting refresh...", e);
+          const newAccess = await api.refresh();
+          if (newAccess) {
+            try {
+              const userData = await api.get('/api/auth/profile/');
+              handleLogin(userData);
+              return;
+            } catch (retryErr) {
+              console.error("Failed profile fetch after refresh", retryErr);
+            }
+          }
+          if (!localStorage.getItem('access_token') && !localStorage.getItem('refresh_token')) {
+            handleLogout();
+          }
         }
+      } else {
+        setIsAuthenticated(false);
       }
     };
     checkSession();

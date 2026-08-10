@@ -34,13 +34,15 @@ class ApiClient {
       });
       if (res.ok) {
         const data = await res.json();
-        this.setTokens(data.access);
+        this.setTokens(data.access, data.refresh || this.refreshToken);
         return data.access;
+      }
+      if (res.status === 401 || res.status === 400) {
+        this.setTokens(null, null);
       }
     } catch (e) {
       console.error('Failed to refresh token', e);
     }
-    this.setTokens(null, null);
     return null;
   }
 
