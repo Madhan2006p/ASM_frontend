@@ -163,21 +163,21 @@ export function generateAssetDiscoveryReportHTML({
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
     <div class="cover-top" style="display:flex;justify-content:space-between;align-items:center">
-      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:14px">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:12px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:52px;max-width:180px;object-fit:contain"/>`
-          : `<div class="cover-shield" style="font-size:24pt;color:#60a5fa">🎯</div>`}
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:55px;max-width:160px;object-fit:contain;border-radius:4px"/>`
+          : `<div class="cover-shield" style="font-size:20pt">🎯</div>`}
         <div style="display:flex;flex-direction:column">
-          <span style="font-size:15pt;font-weight:900;color:#ffffff !important;letter-spacing:-0.01em;white-space:nowrap;text-shadow:0 2px 4px rgba(0,0,0,0.6)">${escapeHtml(orgName || scope || 'Target Organization')}</span>
-          <span style="font-size:7.5pt;font-weight:800;color:#93c5fd !important;text-transform:uppercase;letter-spacing:0.09em">Target Organization</span>
+          <span style="font-size:14pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || scope || 'Target Organization')}</span>
+          <span style="font-size:7.5pt;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Target Organization</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px;background:rgba(59,130,246,0.15);border:0.75pt solid rgba(59,130,246,0.4);padding:6pt 14pt;border-radius:6pt">
-        <div style="font-size:16pt;color:#60a5fa">🛡️</div>
+      <div style="display:flex;align-items:center;gap:12px">
         <div style="display:flex;flex-direction:column;text-align:right">
-          <span style="font-size:12.5pt;font-weight:900;color:#ffffff !important;letter-spacing:0.05em;white-space:nowrap">HACKERS INFOTECH</span>
-          <span style="font-size:7pt;font-weight:800;color:#93c5fd !important;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
+          <span style="font-size:13pt;font-weight:900;color:#1e40af;letter-spacing:-0.02em">HACKERS INFOTECH</span>
+          <span style="font-size:7pt;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
         </div>
+        <div class="cover-confidential" style="margin-left:8px">CONFIDENTIAL</div>
       </div>
     </div>
 
@@ -400,8 +400,7 @@ export function generateAssetDiscoveryReportHTML({
       <td style="font-family:monospace;font-size:8pt;color:#475569">${escapeHtml(ip)}</td>
       <td style="font-size:7.5pt">${portList || '<span style="color:#94a3b8">—</span>'}</td>
       <td style="font-size:7.5pt;color:#475569">${techList.map(t => escapeHtml(t.name)).slice(0, 3).join(', ') || '—'}</td>
-      <td style="text-align:center;font-size:7.5pt;color:#475569">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—'}</td>
-      <td style="text-align:center;font-size:7.5pt;color:#475569">${sub.updated_at ? new Date(sub.updated_at).toLocaleDateString() : (sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—')}</td>
+      <td style="text-align:center;font-size:8pt;color:#475569">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—'}</td>
     </tr>`;
   }).join('');
 
@@ -411,23 +410,22 @@ export function generateAssetDiscoveryReportHTML({
   <h2 class="section-heading">3. Asset Inventory</h2>
   <p class="narrative">
     The following table lists all <strong>${subdomains.length}</strong> subdomains discovered during the assessment,
-    along with their IP addresses, status, open ports, detected technologies, discovery dates, and last update timestamps.
+    along with their IP addresses, status, open ports, and detected technologies.
   </p>
   <table class="findings-summary-table">
     <thead>
       <tr>
-        <th style="width:28px">#</th>
+        <th style="width:32px">#</th>
         <th>Domain / Asset</th>
-        <th style="width:65px">Status</th>
-        <th style="width:95px">IP Address</th>
+        <th style="width:70px">Status</th>
+        <th style="width:110px">IP Address</th>
         <th>Open Ports</th>
         <th>Technologies</th>
-        <th style="width:70px">Discovered</th>
-        <th style="width:75px">Last Updated</th>
+        <th style="width:80px">Discovered</th>
       </tr>
     </thead>
     <tbody>
-      ${subdomains.length > 0 ? assetRows : `<tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8">No subdomains discovered in this scan.</td></tr>`}
+      ${subdomains.length > 0 ? assetRows : `<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">No subdomains discovered in this scan.</td></tr>`}
     </tbody>
   </table>
 </div>`;
@@ -448,15 +446,13 @@ export function generateAssetDiscoveryReportHTML({
     const c = getSC(sev);
     const cvss = cvssOf(sev, v.cvss_score);
     const assets = resolveAssetList(v);
-    const assetStackHtml = `<div class="asset-stack-list">
-      ${assets.map(a => `<div class="asset-stack-item"><code>${escapeHtml(a)}</code></div>`).join('')}
-    </div>`;
+    const assetChips = assets.map(a => `<code>${escapeHtml(a)}</code>`).join(' ');
     return `<tr>
       <td class="td-num">${idx + 1}</td>
       <td class="td-title">${escapeHtml(v.finding || v.vulnerability_id || 'Security Finding')}</td>
       <td>${badgeHtml(sev)}</td>
       <td class="td-cvss" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)}</td>
-      <td class="td-asset">${assetStackHtml}</td>
+      <td class="td-asset" style="max-width:260pt">${assetChips}</td>
       <td class="td-cve">${escapeHtml([v.cve, v.cwe].filter(Boolean).join(' / ') || '—')}</td>
     </tr>`;
   }).join('');
@@ -640,9 +636,9 @@ export function generateAssetDiscoveryReportHTML({
   <!-- Summary strip -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
     ${[
-      { label: 'Healthy', value: certStats['Healthy'] || 0, color: '#14532d', bg: '#dcfce7', border: '#86efac' },
-      { label: 'Expiring Soon', value: certStats['Expiring Soon'] || 0, color: '#9a3412', bg: '#ffedd5', border: '#fdba74' },
-      { label: 'Expired', value: certStats['Expired'] || 0, color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
+      { label: '✅ Healthy', value: certStats['Healthy'] || 0, color: '#14532d', bg: '#dcfce7', border: '#86efac' },
+      { label: '⏳ Expiring Soon', value: certStats['Expiring Soon'] || 0, color: '#9a3412', bg: '#ffedd5', border: '#fdba74' },
+      { label: '❌ Expired', value: certStats['Expired'] || 0, color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
     ].map(s => `<div class="info-box" style="border:1px solid ${s.border};background:${s.bg}">
       <div class="info-box-title" style="color:${s.color}">${s.label}</div>
       <div class="info-box-num" style="color:${s.color}">${s.value}</div>
@@ -678,13 +674,13 @@ export function generateAssetDiscoveryReportHTML({
 
   <div class="roadmap-grid">
     ${[
-      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`, label: 'IMMEDIATE',  sub: '0 – 48 hours',    color: '#dc2626', bg: '#fee2e2', cnt: countBySev.CRITICAL || 0,
+      { icon: '🚨', label: 'IMMEDIATE',   sub: '0 – 48 hours',   color: '#dc2626', bg: '#fee2e2', cnt: countBySev.CRITICAL || 0,
         desc: `Patch or take offline all Critical vulnerabilities. These are actively exploitable and pose immediate risk. Escalate to leadership immediately.` },
-      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, label: 'SHORT TERM',  sub: '7 – 14 days',    color: '#ea580c', bg: '#ffedd5', cnt: (countBySev.HIGH || 0) + (certStats['Expired'] || 0),
+      { icon: '⚠️', label: 'SHORT TERM',  sub: '7 – 14 days',    color: '#ea580c', bg: '#ffedd5', cnt: (countBySev.HIGH || 0) + (certStats['Expired'] || 0),
         desc: `Resolve all High severity vulnerabilities and renew expired SSL certificates. Implement compensating controls where patching is delayed.` },
-      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: 'MEDIUM TERM', sub: '30 – 90 days',   color: '#ca8a04', bg: '#fef9c3', cnt: (countBySev.MEDIUM || 0) + ports.filter(p => [21, 22, 23, 3306, 5432].includes(Number(p.port))).length,
+      { icon: '🔶', label: 'MEDIUM TERM', sub: '30 – 90 days',   color: '#ca8a04', bg: '#fef9c3', cnt: (countBySev.MEDIUM || 0) + ports.filter(p => [21, 22, 23, 3306, 5432].includes(Number(p.port))).length,
         desc: `Address Medium severity findings and restrict sensitive open ports (SSH, FTP, DB) to allow-lists. Renew certificates expiring within 30 days.` },
-      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`, label: 'LONG TERM',   sub: '3 – 6 months',   color: '#15803d', bg: '#dcfce7', cnt: (countBySev.LOW || 0) + (countBySev.INFO || 0),
+      { icon: '📌', label: 'LONG TERM',   sub: '3 – 6 months',   color: '#15803d', bg: '#dcfce7', cnt: (countBySev.LOW || 0) + (countBySev.INFO || 0),
         desc: `Update outdated technology stacks, audit third-party dependencies, and incorporate findings into the regular security review cycle.` },
     ].map(item => `
       <div class="roadmap-card" style="border-left:5px solid ${item.color}">
@@ -703,17 +699,18 @@ export function generateAssetDiscoveryReportHTML({
   <h3 class="sub-heading" style="margin-top:20px">General Asset Hardening Recommendations</h3>
   <div class="rec-grid">
     ${[
-      { title: 'Reduce Attack Surface', desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
-      { title: 'Authentication Controls', desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
-      { title: 'Security Headers', desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
-      { title: 'Dependency Management', desc: 'Audit and update all detected technology stacks. Subscribe to CVE advisories.' },
-      { title: 'TLS Hygiene', desc: 'Enforce TLS 1.2+. Disable TLS 1.0/1.1 and SSLv3. Automate certificate renewal.' },
-      { title: 'Continuous Monitoring', desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
-      { title: 'Port Restriction', desc: 'Restrict sensitive ports (22, 3306, 27017) to VPN or specific IP allow-lists only.' },
-      { title: 'Asset Inventory', desc: 'Maintain a live inventory of all discovered assets and their risk classification.' },
+      { icon: '🔒', title: 'Reduce Attack Surface', desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
+      { icon: '🔑', title: 'Authentication Controls', desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
+      { icon: '🛡️', title: 'Security Headers', desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
+      { icon: '📦', title: 'Dependency Management', desc: 'Audit and update all detected technology stacks. Subscribe to CVE advisories.' },
+      { icon: '🔒', title: 'TLS Hygiene', desc: 'Enforce TLS 1.2+. Disable TLS 1.0/1.1 and SSLv3. Automate certificate renewal.' },
+      { icon: '🔍', title: 'Continuous Monitoring', desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
+      { icon: '🚪', title: 'Port Restriction', desc: 'Restrict sensitive ports (22, 3306, 27017) to VPN or specific IP allow-lists only.' },
+      { icon: '📋', title: 'Asset Inventory', desc: 'Maintain a live inventory of all discovered assets and their risk classification.' },
     ].map(r => `
       <div class="rec-card">
-        <div><strong style="font-size:9pt;color:#1e40af">${escapeHtml(r.title)}</strong>
+        <span class="rec-icon">${r.icon}</span>
+        <div><strong style="font-size:9pt">${escapeHtml(r.title)}</strong>
         <p style="margin:3px 0 0;font-size:7.5pt;color:#475569;line-height:1.5">${escapeHtml(r.desc)}</p></div>
       </div>`).join('')}
   </div>
@@ -1128,30 +1125,7 @@ export function generateAssetDiscoveryReportHTML({
     .td-num   { font-weight: 800; color: #64748b; text-align: center; width: 22pt; }
     .td-title { font-weight: 600; }
     .td-cvss  { text-align: center; font-family: monospace; }
-    .td-asset { font-size: 7.5pt; width: 170pt; vertical-align: top; }
-    .asset-stack-list {
-      display: flex;
-      flex-direction: column;
-      gap: 3pt;
-      padding: 1pt 0;
-    }
-    .asset-stack-item {
-      display: block;
-    }
-    .asset-stack-item code {
-      display: inline-block;
-      background: #eff6ff;
-      color: #1e40af;
-      border: 0.75pt solid #bfdbfe;
-      border-radius: 3pt;
-      padding: 1.5pt 5pt;
-      font-family: 'Courier New', monospace;
-      font-size: 7.2pt;
-      font-weight: 600;
-      white-space: nowrap;
-      word-break: keep-all;
-      line-height: 1.25;
-    }
+    .td-asset { font-size: 7.5pt; max-width: 110pt; word-break: break-all; }
     .td-cve   { font-family: 'Courier New', monospace; font-size: 7pt; color: #64748b; }
 
     /* ══ DETAILED FINDINGS ═══════════════════════════════════ */

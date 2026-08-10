@@ -396,34 +396,130 @@
   text-align: left;
 }
 
+/* 8-Column Reference Table Styling */
 .tech-table th {
-  padding: 0.85rem 1.25rem;
-  font-size: 0.75rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: var(--text-secondary);
-  background-color: var(--bg-main);
-  border-bottom: 1px solid var(--border-color);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: #1e293b;
+  background-color: #e0f2fe !important;
+  border-bottom: 1px solid #cbd5e1;
+  text-transform: none;
+  letter-spacing: 0.02em;
   position: sticky;
   top: 0;
   z-index: 2;
 }
 
+.th-content {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  user-select: none;
+}
+
+.th-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.header-icon {
+  color: #64748b;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.th-content:hover .header-icon {
+  opacity: 1;
+  color: #1e293b;
+}
+
 .tech-table td {
-  padding: 0.85rem 1.25rem;
+  padding: 0.85rem 1rem;
   font-size: 0.875rem;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border-color);
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
   vertical-align: middle;
 }
 
-.tech-table tr:last-child td {
-  border-bottom: none;
+.tech-table tr:hover td {
+  background-color: #f8fafc !important;
 }
 
-.tech-table tr:hover td {
-  background-color: rgba(59, 130, 246, 0.04) !important;
+.tech-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.tech-status-badge .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #16a34a;
+}
+
+.tech-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tech-more-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #93c5fd;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tech-more-btn:hover {
+  background: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.action-team-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.action-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .font-bold { font-weight: 700; }

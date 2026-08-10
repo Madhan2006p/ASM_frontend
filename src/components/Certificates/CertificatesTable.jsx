@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Check, ArrowRight, Eye, ShieldCheck } from 'lucide-react';
-import SSLDetailModal from './SSLDetailModal';
+import { Search, ChevronDown, Check, ArrowRight } from 'lucide-react';
 import './Certificates.css';
 
 const CertificatesTable = ({ certs = [], loading }) => {
@@ -8,7 +7,6 @@ const CertificatesTable = ({ certs = [], loading }) => {
   const [issuerFilter, setIssuerFilter] = useState('Issuer: All');
   const [tlsFilter, setTlsFilter] = useState('TLS Version: All');
   const [healthFilter, setHealthFilter] = useState('Health Status: All');
-  const [selectedCert, setSelectedCert] = useState(null);
 
   const [showIssuerMenu, setShowIssuerMenu] = useState(false);
   const [showTlsMenu, setShowTlsMenu] = useState(false);
@@ -50,9 +48,9 @@ const CertificatesTable = ({ certs = [], loading }) => {
 
   return (
     <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
-      
-      {/* Top Controls */}
-      <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', margin: 0 }}>
+        
+        {/* Top Controls */}
+        <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', margin: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="global-search-box">
             <Search size={16} color="#94A3B8" />
@@ -115,29 +113,7 @@ const CertificatesTable = ({ certs = [], loading }) => {
             )}
           </div>
 
-          {/* Custom Health Dropdown */}
-          <div className="global-custom-select" ref={healthRef}>
-            <button 
-              className="global-custom-select-btn" 
-              onClick={() => setShowHealthMenu(!showHealthMenu)}
-              style={{ minWidth: '160px', justifyContent: 'space-between' }}
-            >
-              {healthFilter} <ChevronDown size={16} color="#94A3B8" />
-            </button>
-            {showHealthMenu && (
-              <div className="global-custom-dropdown-menu">
-                {healthStatuses.map(status => (
-                  <div 
-                    key={status}
-                    className={`global-custom-dropdown-item ${healthFilter === status ? 'active' : ''}`}
-                    onClick={() => { setHealthFilter(status); setShowHealthMenu(false); }}
-                  >
-                    {status} {healthFilter === status && <Check size={14} />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+
 
         </div>
       </div>
@@ -155,12 +131,11 @@ const CertificatesTable = ({ certs = [], loading }) => {
               <th>Expiration Date</th>
               <th>Days Left</th>
               <th>Health Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {filteredData.map((row) => (
-              <tr key={row.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedCert(row)}>
+              <tr key={row.id}>
                 <td className="font-bold font-mono">{row.domain}</td>
                 <td className="text-slate-600">{row.issuer}</td>
                 <td>
@@ -179,19 +154,11 @@ const CertificatesTable = ({ certs = [], loading }) => {
                     {row.health}
                   </span>
                 </td>
-                <td style={{ textAlign: 'right' }}>
-                  <button 
-                    className="action-link" 
-                    onClick={(e) => { e.stopPropagation(); setSelectedCert(row); }}
-                  >
-                    <Eye size={15} /> Inspect
-                  </button>
-                </td>
               </tr>
             ))}
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   {loading ? 'Loading certificates...' : 'No certificates match the current filters.'}
                 </td>
               </tr>
@@ -199,14 +166,6 @@ const CertificatesTable = ({ certs = [], loading }) => {
           </tbody>
         </table>
       </div>
-
-      {/* Modal Inspector */}
-      {selectedCert && (
-        <SSLDetailModal 
-          cert={selectedCert} 
-          onClose={() => setSelectedCert(null)} 
-        />
-      )}
     </div>
   );
 };

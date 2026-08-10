@@ -95,6 +95,17 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
 
   return (
     <div className="global-page-container page-animate">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+      </div>
+
       <PageHeaderCard
         badgeText="ATTACK PATH ANALYSIS"
         title="Attack Path Analysis Dashboard"
@@ -126,7 +137,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
               <div className="card-icon purple"><Target size={24} /></div>
               <div className="card-info">
                 <h4>Exposed Crown Jewels</h4>
-                <div className="card-value">{stats.exposedCrownJewels}</div>
+                <div className="card-value">{stats.exposedCrownJewewls || stats.exposedCrownJewels}</div>
               </div>
             </div>
             <div className="metric-card-premium">
@@ -136,17 +147,6 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
                 <div className="card-value">{stats.pathComplexity}</div>
               </div>
             </div>
-          </div>
-
-          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-            <ScanSelector 
-              assignedDomains={assignedDomains}
-              selectedDomain={selectedDomain}
-              setSelectedDomain={setSelectedDomain}
-              scansList={scansList}
-              activeScanId={activeScanId}
-              handleSelectScan={handleSelectScan}
-            />
           </div>
           
           <div className="data-section-premium" style={{ marginTop: '1.5rem' }}>

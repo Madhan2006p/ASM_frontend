@@ -8,6 +8,7 @@ import { api } from '../../utils/api';
 const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [certs, setCerts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [healthFilter, setHealthFilter] = useState('Health Status: All');
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -93,7 +94,7 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
 
           return {
             id: c.id,
-            domain: c.subdomain || c.domain || '—',
+            domain: c.subdomain || c.domain,
             issuer: isError ? '—' : parseIssuer(c.issuer_name),
             type,
             tls,
@@ -120,19 +121,20 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        <CertDashboard certs={certs} loading={loading} />
-        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
+        <CertDashboard 
+          certs={certs} 
+          loading={loading}
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+          healthFilter={healthFilter}
+          setHealthFilter={setHealthFilter}
+        />
         <CertFindings certs={certs} loading={loading} />
-        <CertificatesTable certs={certs} loading={loading} />
+        <CertificatesTable certs={certs} loading={loading} healthFilter={healthFilter} setHealthFilter={setHealthFilter} />
       </div>
     </div>
   );

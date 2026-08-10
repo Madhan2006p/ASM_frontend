@@ -170,6 +170,15 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
   return (
     <div className="global-page-container page-animate">
+      {/* Target Domain Tabs Switcher */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
+
       {/* Top Row: 6 Metric Tiles */}
       <div className="exec-metrics-grid">
         <div className="exec-metric-tile tile-red-surface">
@@ -201,15 +210,6 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-tile-value">{metrics.ssl_expiring_soon}</div>
           <div className="exec-tile-label">SSL Expiring &lt; 90 Days</div>
         </div>
-      </div>
-
-      {/* Target Domain Tabs Switcher */}
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
       </div>
 
       {/* SECTION: ASSET DISCOVERY (ROW 2) */}

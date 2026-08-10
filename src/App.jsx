@@ -5,7 +5,6 @@ import Overview from './components/Dashboard/Overview';
 import SubdomainDiscovery from './components/SubdomainDiscovery/SubdomainDiscovery';
 import Endpoints from './components/Endpoints/Endpoints';
 import Vulnerabilities from './components/Vulnerabilities/Vulnerabilities';
-import OWASPScannerUI from './components/Vulnerabilities/OWASPScannerUI';
 import Certificates from './components/Certificates/Certificates';
 import OpenPorts from './components/OpenPorts/OpenPorts';
 import Directories from './components/Directories/Directories';
@@ -39,43 +38,27 @@ import AssetDiscoveryDashboard from './components/Dashboard/AssetDiscoveryDashbo
 import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
 import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
 import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
+import AttackPathAnalysis from './components/AttackPathAnalysis/AttackPathAnalysis';
 import VaptReport from './components/VaptReport/VaptReport';
 import AssetDiscoveryReport from './components/AssetDiscoveryReport/AssetDiscoveryReport';
 import { api } from './utils/api';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem('access_token') || !!localStorage.getItem('refresh_token');
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authRoute, setAuthRoute] = useState('landing');
-  const [activePage, setActivePage] = useState(() => {
-    const cachedUser = localStorage.getItem('user_profile');
-    if (cachedUser) {
-      try {
-        const u = JSON.parse(cachedUser);
-        if (u.is_superuser) return 'Super Admin Dashboard';
-      } catch (e) {}
-    }
-    return 'Executive Dashboard';
-  });
-  const [user, setUser] = useState(() => {
-    const cachedUser = localStorage.getItem('user_profile');
-    if (cachedUser) {
-      try { return JSON.parse(cachedUser); } catch (e) {}
-    }
-    return null;
-  });
+  const [activePage, setActivePage] = useState('Executive Dashboard');
+  const [user, setUser] = useState(null);
 
   const [activeScanId, setActiveScanId] = useState(null);
   const [activeTarget, setActiveTarget] = useState('');
   const [scansList, setScansList] = useState([]);
-  const [assignedDomains, setAssignedDomains] = useState([]);
+  const [assignedDomains, setAssignedDomains] = useState(['kct.ac.in', 'hackersinfotech.com']);
 
   const handleLogin = (userData) => {
     if (userData) {
-      const profile = {
+      setUser({
         id: userData.id,
-        name: userData.name || (userData.email ? userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ') : (userData.username || 'User')),
+        name: userData.name || userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
         email: userData.email,
         organization: userData.organization || 'Infotech Sentinel',
         organization_id: userData.organization_id || '1',
@@ -84,17 +67,18 @@ function App() {
         role: userData.role || 'member',
         features: userData.features || [],
         profile_photo_url: userData.profile_photo_url || null,
-      };
-      setUser(profile);
-      localStorage.setItem('user_profile', JSON.stringify(profile));
-
+      });
       // Store admin-assigned domains from login payload
-      if (Array.isArray(userData.assigned_domains)) {
+      if (Array.isArray(userData.assigned_domains) && userData.assigned_domains.length > 0) {
         setAssignedDomains(userData.assigned_domains);
+      } else {
+        setAssignedDomains(['kct.ac.in', 'hackersinfotech.com']);
       }
       
-      if (userData.is_superuser && activePage === 'Executive Dashboard') {
+      if (userData.is_superuser) {
         setActivePage('Super Admin Dashboard');
+      } else if (activePage === 'Super Admin Dashboard') {
+        setActivePage('Executive Dashboard');
       }
     }
     setIsAuthenticated(true);
@@ -102,7 +86,6 @@ function App() {
 
   const handleLogout = () => {
     api.setTokens(null, null);
-    localStorage.removeItem('user_profile');
     setIsAuthenticated(false);
     setUser(null);
     setActivePage('Executive Dashboard');
@@ -145,29 +128,16 @@ function App() {
   // Check auth session on mount
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('refresh_token');
+      const token = localStorage.getItem('access_token');
       if (token) {
         try {
           const userData = await api.get('/api/auth/profile/');
+          // profile endpoint returns user data directly (not nested under 'user')
           handleLogin(userData);
         } catch (e) {
-          console.log("Access token validation failed, attempting refresh...", e);
-          const newAccess = await api.refresh();
-          if (newAccess) {
-            try {
-              const userData = await api.get('/api/auth/profile/');
-              handleLogin(userData);
-              return;
-            } catch (retryErr) {
-              console.error("Failed profile fetch after refresh", retryErr);
-            }
-          }
-          if (!localStorage.getItem('access_token') && !localStorage.getItem('refresh_token')) {
-            handleLogout();
-          }
+          console.error("Session restoration failed", e);
+          api.setTokens(null, null);
         }
-      } else {
-        setIsAuthenticated(false);
       }
     };
     checkSession();
@@ -197,14 +167,6 @@ function App() {
   };
 
   useEffect(() => {
-    // Prioritize any currently running scan so ScanProgressPanel pops up automatically
-    const runningScan = scansList.find(s => s.status === 'running');
-    if (runningScan) {
-      setActiveScanId(runningScan.id);
-      setActiveTarget(runningScan.target);
-      return;
-    }
-
     // When selected domain changes, auto-select the latest scan for that domain
     if (selectedDomain) {
       const filtered = scansList.filter(s => s.target === selectedDomain);
@@ -288,34 +250,46 @@ function App() {
           {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
           {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
-          {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard />}
-          {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysisDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysis initialTab="overview" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Graph'                 && <AttackPathAnalysis initialTab="graph" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Paths'                 && <AttackPathAnalysis initialTab="paths" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Critical Assets'             && <AttackPathAnalysis initialTab="critical-assets" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'MITRE Mapping'               && <AttackPathAnalysis initialTab="mitre" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Recommendations'             && <AttackPathAnalysis initialTab="recommendations" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Attack Path Reports'         && <AttackPathAnalysis initialTab="reports" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
 
-          {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
-          {activePage === 'Mobile Security'       && <MobileVAPT />}
+          {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Mobile Security'       && <MobileVAPT assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
-          {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard />}
-          {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
-          {activePage === 'Suspicious Domain'     && <SuspiciousDomains activeTarget={activeTarget} />}
-          {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} />}
-          {activePage === 'Anti Phishing'         && <AntiPhishingScan activeTarget={activeTarget} />}
-          {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} />}
-          {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
+          {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Suspicious Domain'     && <SuspiciousDomains activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Anti Phishing'         && <AntiPhishingScan activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'VAPT Report'  && (
             <VaptReport
               activeScanId={activeScanId}
               scansList={filteredScansList}
+              assignedDomains={assignedDomains}
               selectedDomain={selectedDomain}
+              setSelectedDomain={setSelectedDomain}
               handleSelectScan={handleSelectScan}
+              user={user}
             />
           )}
           {activePage === 'Asset Discovery Report' && (
             <AssetDiscoveryReport
               activeScanId={activeScanId}
               scansList={filteredScansList}
+              assignedDomains={assignedDomains}
               selectedDomain={selectedDomain}
+              setSelectedDomain={setSelectedDomain}
               handleSelectScan={handleSelectScan}
+              user={user}
             />
           )}
           {activePage === 'Marketplace' && <Marketplace />}
