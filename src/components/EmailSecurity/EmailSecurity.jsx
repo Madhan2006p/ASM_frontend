@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Shield, ChevronDown, ChevronUp, Server, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../../utils/api';
 import './EmailSecurity.css';
@@ -248,7 +248,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-
                   </>
                 )}
               </div>
@@ -279,7 +278,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-
                   </>
                 )}
               </div>
@@ -310,7 +308,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-
                   </>
                 )}
               </div>
