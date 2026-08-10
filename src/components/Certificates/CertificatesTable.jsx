@@ -48,9 +48,9 @@ const CertificatesTable = ({ certs = [], loading }) => {
 
   return (
     <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
-        
-        {/* Top Controls */}
-        <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', margin: 0 }}>
+      
+      {/* Top Controls */}
+      <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', margin: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="global-search-box">
             <Search size={16} color="#94A3B8" />
@@ -113,7 +113,29 @@ const CertificatesTable = ({ certs = [], loading }) => {
             )}
           </div>
 
-
+          {/* Custom Health Dropdown */}
+          <div className="global-custom-select" ref={healthRef}>
+            <button 
+              className="global-custom-select-btn" 
+              onClick={() => setShowHealthMenu(!showHealthMenu)}
+              style={{ minWidth: '160px', justifyContent: 'space-between' }}
+            >
+              {healthFilter} <ChevronDown size={16} color="#94A3B8" />
+            </button>
+            {showHealthMenu && (
+              <div className="global-custom-dropdown-menu">
+                {healthStatuses.map(status => (
+                  <div 
+                    key={status}
+                    className={`global-custom-dropdown-item ${healthFilter === status ? 'active' : ''}`}
+                    onClick={() => { setHealthFilter(status); setShowHealthMenu(false); }}
+                  >
+                    {status} {healthFilter === status && <Check size={14} />}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
         </div>
       </div>

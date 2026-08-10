@@ -81,14 +81,6 @@ const ImpersonatingAccount = ({ activeTarget, assignedDomains, selectedDomain, s
   return (
     <div className="global-page-container page-animate">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Impersonating Accounts"
@@ -99,6 +91,12 @@ const ImpersonatingAccount = ({ activeTarget, assignedDomains, selectedDomain, s
           { label: 'Platforms Detected', value: platformsChecked.toString(), subtext: 'Unique social sites' },
           { label: 'Active Alerts', value: activeThreats.toString(), subtext: 'Pending resolution' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Select Scan & Info Row */}

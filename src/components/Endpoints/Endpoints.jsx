@@ -132,38 +132,35 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const methodOptions = ['All Methods', 'GET', 'POST', 'PUT', 'DELETE'];
   const riskOptions = ['All Risks', 'Critical', 'High', 'Medium', 'Low'];
 
-  const getRiskCount = (risk) => {
-    if (risk === 'All Risks') return endpoints.length;
-    return endpoints.filter(ep => mapRisk(ep.threat_count) === risk.toUpperCase()).length;
-  };
+  // Stats calculation
+  const totalRoutes = endpoints.length;
+  const unauthHigh = endpoints.filter(ep => mapAuth(ep.http_status) === 'Unauthenticated' && ep.threat_count > 0).length;
+  const exposedConfigs = endpoints.filter(ep => ep.http_url.includes('config') || ep.http_url.includes('env') || ep.http_url.includes('.git')).length;
+  const failedRequests = endpoints.filter(ep => ep.http_status >= 400).length;
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
         
-        {/* Active Scan Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
-
         <PageHeaderCard 
           badgeText="ENDPOINTS"
           title="Endpoints"
           subtitle="Discovered API endpoints and web routes across your assets."
           stats={[
-            { label: 'All Risks', value: getRiskCount('All Risks').toString(), subtext: 'Total cataloged', active: riskFilter === 'All Risks', onClick: () => setRiskFilter('All Risks') },
-            { label: 'Critical', value: getRiskCount('Critical').toString(), subtext: 'Immediate action', active: riskFilter === 'Critical', onClick: () => setRiskFilter('Critical') },
-            { label: 'High', value: getRiskCount('High').toString(), subtext: 'Elevated threat', active: riskFilter === 'High', onClick: () => setRiskFilter('High') },
-            { label: 'Medium', value: getRiskCount('Medium').toString(), subtext: 'Needs review', active: riskFilter === 'Medium', onClick: () => setRiskFilter('Medium') },
-            { label: 'Low', value: getRiskCount('Low').toString(), subtext: 'Low exposure', active: riskFilter === 'Low', onClick: () => setRiskFilter('Low') }
+            { label: 'Unauthenticated API', value: unauthHigh.toString(), subtext: 'Threat Detected' },
+            { label: 'Exposed Files/Configs', value: exposedConfigs.toString(), subtext: 'Needs review' },
+            { label: 'Active Routes', value: totalRoutes.toString(), subtext: 'Total cataloged' },
+            { label: 'Failed Requests', value: failedRequests.toString(), subtext: 'Error responses' }
           ]}
+        />
+
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
         />
 
         {/* Filters and Controls */}
@@ -181,19 +178,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           </div>
           
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              style={{
-                height: '36px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '0 1rem',
-                fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', outline: 'none'
-              }}
-            >
-              {methodOptions.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
           </div>
         </div>
 

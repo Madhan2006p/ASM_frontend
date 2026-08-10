@@ -222,54 +222,43 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return risk === 'HIGH' || risk === 'CRITICAL';
   }).length;
 
-  const getDirCount = (pill) => {
-    const mappedDirs = directories.map(item => {
-      const isSensitive = item.is_sensitive === true || item.is_sensitive === 'true' || SENSITIVE_CATEGORIES.has(item.category || getCategory(getPathFromUrl(item.url)));
-      const category = item.category || getCategory(getPathFromUrl(item.url));
-      const status = item.access_status || getStatus(item.status, category);
-      return { ...item, isSensitive, category, status };
-    });
-
-    if (pill === 'All') return mappedDirs.length;
-    if (pill === 'Exposed') return mappedDirs.filter(item => item.status === 'Exposed').length;
-    if (pill === 'Sensitive') return mappedDirs.filter(item => item.isSensitive).length;
-    if (pill === 'Admin') return mappedDirs.filter(item => item.category === 'Admin Panel').length;
-    if (pill === 'Backup Files') return mappedDirs.filter(item => item.category === 'Backup File').length;
-    if (pill === 'Directory Listings') return mappedDirs.filter(item => item.category === 'Directory Listing').length;
-    if (pill === 'Public') return mappedDirs.filter(item => item.status === 'Public').length;
-    return 0;
-  };
-
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-
-        {/* Active Scan Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
 
         <PageHeaderCard
           badgeText="DISCOVERY"
           title="Directories"
           subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
           stats={[
-            { label: 'All', value: getDirCount('All').toString(), subtext: 'Total directory paths', active: filterPill === 'All', onClick: () => setFilterPill('All') },
-            { label: 'Exposed', value: getDirCount('Exposed').toString(), subtext: 'Sensitive exposes', active: filterPill === 'Exposed', onClick: () => setFilterPill('Exposed') },
-            { label: 'Sensitive', value: getDirCount('Sensitive').toString(), subtext: 'Needs review', active: filterPill === 'Sensitive', onClick: () => setFilterPill('Sensitive') },
-            { label: 'Admin', value: getDirCount('Admin').toString(), subtext: 'Admin panels', active: filterPill === 'Admin', onClick: () => setFilterPill('Admin') },
-            { label: 'Backup Files', value: getDirCount('Backup Files').toString(), subtext: 'Backup archives', active: filterPill === 'Backup Files', onClick: () => setFilterPill('Backup Files') },
-            { label: 'Directory Listings', value: getDirCount('Directory Listings').toString(), subtext: 'Open listings', active: filterPill === 'Directory Listings', onClick: () => setFilterPill('Directory Listings') },
-            { label: 'Public', value: getDirCount('Public').toString(), subtext: 'Public directories', active: filterPill === 'Public', onClick: () => setFilterPill('Public') }
+            { label: 'Directories Found', value: totalCount.toString(), subtext: 'Verified accessible paths' },
+            { label: 'Exposed', value: exposedCount.toString(), subtext: 'Sensitive content accessible' },
+            { label: 'Sensitive Paths', value: sensitiveCount.toString(), subtext: 'Requires review' },
+            { label: 'High / Critical Risk', value: highRiskCount.toString(), subtext: 'Priority remediation' }
           ]}
         />
+
+        <ScanSelector
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+
+        {/* Filter Pills */}
+        <div className="global-filter-row">
+          {['All', 'Exposed', 'Sensitive', 'Admin', 'Backup Files', 'Directory Listings', 'Public'].map(pill => (
+            <div
+              key={pill}
+              className={`global-filter-pill ${filterPill === pill ? 'active' : ''}`}
+              onClick={() => setFilterPill(pill)}
+            >
+              {pill}
+            </div>
+          ))}
+        </div>
 
         {/* Table Controls */}
         <div className="global-controls-row">

@@ -101,52 +101,18 @@ const AttackPathAnalysis = ({
 
   const currentScanMeta = scansList?.find((s) => s.id === Number(resolvedScanId));
 
-  const filteredAnalysisData = useMemo(() => {
-    if (!analysisData) return null;
-    const sev = filters.severity;
-    let filteredPaths = analysisData.attackPaths;
-    if (sev === 'CRITICAL') filteredPaths = analysisData.attackPaths.filter(p => p.riskScore >= 80);
-    else if (sev === 'HIGH') filteredPaths = analysisData.attackPaths.filter(p => p.riskScore >= 60 && p.riskScore < 80);
-    else if (sev === 'MEDIUM') filteredPaths = analysisData.attackPaths.filter(p => p.riskScore >= 40 && p.riskScore < 60);
-    else if (sev === 'LOW') filteredPaths = analysisData.attackPaths.filter(p => p.riskScore < 40);
-    
-    return {
-      ...analysisData,
-      attackPaths: filteredPaths
-    };
-  }, [analysisData, filters.severity]);
-
-  const getPathCount = (sev) => {
-    if (!analysisData) return 0;
-    if (sev === 'ALL') return analysisData.attackPaths.length;
-    if (sev === 'CRITICAL') return analysisData.attackPaths.filter(p => p.riskScore >= 80).length;
-    if (sev === 'HIGH') return analysisData.attackPaths.filter(p => p.riskScore >= 60 && p.riskScore < 80).length;
-    if (sev === 'MEDIUM') return analysisData.attackPaths.filter(p => p.riskScore >= 40 && p.riskScore < 60).length;
-    if (sev === 'LOW') return analysisData.attackPaths.filter(p => p.riskScore < 40).length;
-    return 0;
-  };
-
   return (
     <div className="global-page-container page-animate apa-wrapper">
-      <div style={{ marginBottom: '1.25rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       {/* ── Page Header ─────────────────────────────────────── */}
       <PageHeaderCard
         badgeText="MODULE"
         title="Attack Path Analysis"
         subtitle="Automated attack chain correlation from Internet entry vectors to critical business crown jewels."
         stats={[
-          { label: 'All Paths', value: getPathCount('ALL').toString(), subtext: 'correlated', active: filters.severity === 'ALL', onClick: () => setFilters({ ...filters, severity: 'ALL' }) },
-          { label: 'Critical', value: getPathCount('CRITICAL').toString(), subtext: 'score >= 80', active: filters.severity === 'CRITICAL', onClick: () => setFilters({ ...filters, severity: 'CRITICAL' }) },
-          { label: 'High', value: getPathCount('HIGH').toString(), subtext: 'score >= 60', active: filters.severity === 'HIGH', onClick: () => setFilters({ ...filters, severity: 'HIGH' }) },
-          { label: 'Medium', value: getPathCount('MEDIUM').toString(), subtext: 'score >= 40', active: filters.severity === 'MEDIUM', onClick: () => setFilters({ ...filters, severity: 'MEDIUM' }) },
-          { label: 'Low', value: getPathCount('LOW').toString(), subtext: 'score < 40', active: filters.severity === 'LOW', onClick: () => setFilters({ ...filters, severity: 'LOW' }) }
+          { label: 'Attack Paths',      value: analysisData?.stats?.totalAttackPaths?.toString() || '0', subtext: 'correlated' },
+          { label: 'Critical Paths',    value: analysisData?.stats?.criticalAttackPaths?.toString() || '0', subtext: 'high risk' },
+          { label: 'Crown Jewels',      value: analysisData?.stats?.criticalAssetsCount?.toString() || '0', subtext: 'exposed' },
+          { label: 'Path Risk Score',   value: `${analysisData?.stats?.overallAttackPathScore || 0}/100`, subtext: 'overall' },
         ]}
         actions={
           <div className="vapt-header-actions no-print">
@@ -170,13 +136,29 @@ const AttackPathAnalysis = ({
         }
       />
 
-
+      <div style={{ marginTop: '1.25rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
 
       {/* ── Reusable Filter Bar ───────────────────────────────── */}
       <div className="apa-filter-bar no-print">
         <div className="apa-filter-item">
           <Filter size={13} />
           <span>Filters:</span>
+        </div>
+
+        <div className="apa-filter-item">
+          <select value={filters.severity} onChange={(e) => setFilters({ ...filters, severity: e.target.value })}>
+            <option value="ALL">Severity: All</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
+          </select>
         </div>
 
         <div className="apa-filter-item">
@@ -233,11 +215,11 @@ const AttackPathAnalysis = ({
           <RefreshCw size={36} className="spin" style={{ color: 'var(--brand-primary)' }} />
           <span>Correlating attack path chain vectors for Scan #{resolvedScanId}…</span>
         </div>
-      ) : filteredAnalysisData ? (
+      ) : analysisData ? (
         <div className="apa-tab-content">
           {activeTab === 'overview' && (
             <AttackPathOverview
-              analysisData={filteredAnalysisData}
+              analysisData={analysisData}
               onNavigateTab={(tab) => setActiveTab(tab)}
               onSelectPath={handleSelectPathForGraph}
             />
@@ -245,7 +227,7 @@ const AttackPathAnalysis = ({
 
           {activeTab === 'graph' && (
             <AttackGraph
-              analysisData={filteredAnalysisData}
+              analysisData={analysisData}
               selectedPath={selectedPathForGraph}
               onClearSelectedPath={() => setSelectedPathForGraph(null)}
             />
@@ -253,27 +235,27 @@ const AttackPathAnalysis = ({
 
           {activeTab === 'paths' && (
             <AttackPathsTable
-              attackPaths={filteredAnalysisData.attackPaths}
+              attackPaths={analysisData.attackPaths}
               onHighlightPath={handleSelectPathForGraph}
               onExportPath={() => setActiveTab('reports')}
             />
           )}
 
           {activeTab === 'critical-assets' && (
-            <CriticalAssetsView criticalAssets={filteredAnalysisData.criticalAssets} />
+            <CriticalAssetsView criticalAssets={analysisData.criticalAssets} />
           )}
 
           {activeTab === 'mitre' && (
-            <MitreMappingView mitreMapping={filteredAnalysisData.mitreMapping} />
+            <MitreMappingView mitreMapping={analysisData.mitreMapping} />
           )}
 
           {activeTab === 'recommendations' && (
-            <RecommendationsView recommendations={filteredAnalysisData.recommendations} />
+            <RecommendationsView recommendations={analysisData.recommendations} />
           )}
 
           {activeTab === 'reports' && (
             <AttackPathReportsView
-              analysisData={filteredAnalysisData}
+              analysisData={analysisData}
               scanMeta={currentScanMeta}
               selectedDomain={selectedDomain}
             />

@@ -81,14 +81,6 @@ const SuspiciousDomains = ({ assignedDomains, selectedDomain, setSelectedDomain 
   return (
     <div className="sd-container">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Suspicious Domains"
@@ -99,6 +91,12 @@ const SuspiciousDomains = ({ assignedDomains, selectedDomain, setSelectedDomain 
           { label: 'Newly Registered',value: reports.filter(r => r.whois_created).length.toString(), subtext: 'WHOIS verified' },
           { label: 'Confirmed Malicious', value: maliciousCount.toString(), subtext: 'Threat intelligence hit' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Tabs */}

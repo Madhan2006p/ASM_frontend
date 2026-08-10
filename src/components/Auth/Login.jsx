@@ -12,7 +12,7 @@ const Login = ({ onLogin, onNavigate }) => {
 
   const validate = (name, value) => {
     if (name === 'email') {
-      if (!value.trim()) return 'Username or Email is required';
+      if (!value.trim()) return 'Email or username is required';
     }
     if (name === 'password' && !value) return 'Password is required';
     return '';
@@ -79,11 +79,11 @@ const Login = ({ onLogin, onNavigate }) => {
             )}
 
             <div className="form-group">
-              <label>Username or E-mail:</label>
+              <label>E-mail:</label>
               <input
-                type="text"
+                type="email"
                 name="email"
-                placeholder="Username or E-mail"
+                placeholder="e.g. John doe@gmail.com"
                 value={formData.email}
                 onChange={handleChange}
                 required

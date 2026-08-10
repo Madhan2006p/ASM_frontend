@@ -118,9 +118,9 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        <TechDashboard onExport={handleExport} subdomainTechs={subdomainTechs} loading={loading} />
+        <TechDashboard onExport={handleExport} technologies={subdomainTechs} loading={loading} />
         
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
           <ScanSelector 
             assignedDomains={assignedDomains}
             selectedDomain={selectedDomain}

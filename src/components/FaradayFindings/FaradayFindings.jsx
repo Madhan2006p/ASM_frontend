@@ -122,26 +122,10 @@ const FaradayFindings = ({ activeScanId, assignedDomains, selectedDomain, setSel
   return (
     <div className="global-page-container page-animate">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       <PageHeaderCard
         badgeText="VULNERABILITY INTEGRATION"
         title="Faraday Findings"
         subtitle="Manage and analyze vulnerabilities imported from external testing tools into Faraday's environment."
-        stats={[
-          { label: 'All', value: findings.length.toString(), subtext: 'Total findings', active: severityFilter === 'all', onClick: () => setSeverityFilter('all') },
-          { label: 'Critical', value: findings.filter(f => f.severity === 'critical').length.toString(), subtext: 'Immediate action', active: severityFilter === 'critical', onClick: () => setSeverityFilter('critical') },
-          { label: 'High', value: findings.filter(f => f.severity === 'high').length.toString(), subtext: 'Needs review', active: severityFilter === 'high', onClick: () => setSeverityFilter('high') },
-          { label: 'Medium', value: findings.filter(f => f.severity === 'medium').length.toString(), subtext: 'Monitored', active: severityFilter === 'medium', onClick: () => setSeverityFilter('medium') },
-          { label: 'Low', value: findings.filter(f => f.severity === 'low').length.toString(), subtext: 'Low risk', active: severityFilter === 'low', onClick: () => setSeverityFilter('low') },
-          { label: 'Info', value: findings.filter(f => f.severity === 'info').length.toString(), subtext: 'Informational', active: severityFilter === 'info', onClick: () => setSeverityFilter('info') }
-        ]}
         actions={
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <button 
@@ -168,6 +152,14 @@ const FaradayFindings = ({ activeScanId, assignedDomains, selectedDomain, setSel
           </div>
         }
       />
+
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
 
       {/* Sync Status Banner */}
       {syncMsg && (
@@ -298,10 +290,20 @@ const FaradayFindings = ({ activeScanId, assignedDomains, selectedDomain, setSel
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            <select 
+              className="ff-filter-select" 
+              value={severityFilter}
+              onChange={(e) => setSeverityFilter(e.target.value)}
+            >
+              <option value="all">All Severities</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+              <option value="info">Info</option>
+            </select>
           </div>
         </div>
-
-
 
         <div className="global-page-container page-animate">
           <div style={{ overflowX: 'auto' }}>

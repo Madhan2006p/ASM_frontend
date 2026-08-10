@@ -128,14 +128,6 @@ const totalResults = stats?.total_results || 0;
   return (
     <div className="global-page-container page-animate" style={{ padding: '1rem', background: 'var(--bg-main)', minHeight: '100vh' }}>
       
-      <div style={{ marginBottom: '1.25rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       {/* Top Controls (Similar to image) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'var(--bg-card)', padding: '1rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 700 }}>
@@ -152,6 +144,12 @@ const totalResults = stats?.total_results || 0;
           <TopBlock title="UNIQUE OSINT MODULES" value={Object.keys(modules).length} color={COLORS.info} />
           <TopBlock title="UNIQUE DATA CATEGORIES" value={Object.keys(types).length} color="#8B5CF6" />
         </div>
+
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
 
         {/* ROW 2: Charts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', minHeight: '300px' }}>

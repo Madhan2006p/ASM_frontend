@@ -63,14 +63,6 @@ const AntiPhishing = ({ activeTarget, assignedDomains, selectedDomain, setSelect
   return (
     <div className="ap-container">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Phishing Domains"
@@ -81,6 +73,12 @@ const AntiPhishing = ({ activeTarget, assignedDomains, selectedDomain, setSelect
           { label: 'Live Resolution',  value: activeCount.toString(), subtext: 'A/MX records active' },
           { label: 'Clean / Inactive',  value: (totalCount - phishingCount).toString(), subtext: 'No risk detected' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Controls */}

@@ -91,17 +91,6 @@
   --shadow-glow: 0 0 24px var(--card-hover-glow, rgba(147, 197, 253, 0.4)); /* Light blue default */
 }
 
-/* Global table row border override for light mode */
-.light-mode td {
-  border-bottom: 1px solid #94A3B8 !important;
-}
-.light-mode th {
-  border-bottom: 1.5px solid #94A3B8 !important;
-}
-.light-mode tr:last-child td {
-  border-bottom: none !important;
-}
-
 /* Light mode body & layout */
 .light-mode,
 .light-mode .main-content,
@@ -153,11 +142,11 @@
 .light-mode th {
   background-color: #F1F5F9 !important;
   color: #475569 !important;
-  border-bottom: 1.5px solid #94A3B8 !important;
+  border-bottom-color: rgba(37,99,235,0.1) !important;
 }
 .light-mode td {
   color: #334155 !important;
-  border-bottom: 1px solid #94A3B8 !important;
+  border-bottom-color: rgba(37,99,235,0.07) !important;
 }
 .light-mode tr:hover td { background-color: #EFF6FF !important; color: #0F172A !important; }
 
@@ -372,7 +361,7 @@
 }
 .light-mode table td {
   color: #334155 !important;
-  border-bottom: 1px solid #94A3B8 !important;
+  border-bottom-color: rgba(37,99,235,0.07) !important;
 }
 .light-mode table tr:hover td {
   background-color: #EFF6FF !important;
@@ -435,11 +424,11 @@
 .light-mode table th {
   background-color: #F1F5F9 !important;
   color: #475569 !important;
-  border-bottom: 1.5px solid #94A3B8 !important;
+  border-bottom-color: rgba(37,99,235,0.1) !important;
 }
 .light-mode table td {
   color: #334155 !important;
-  border-bottom: 1px solid #94A3B8 !important;
+  border-bottom-color: rgba(37,99,235,0.07) !important;
 }
 .light-mode table tr:hover td { background-color: #EFF6FF !important; }
 

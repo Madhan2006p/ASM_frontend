@@ -8,7 +8,7 @@ import { api } from '../../utils/api';
 const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [portsList, setPortsList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [severityFilter, setSeverityFilter] = useState('All');
   const [toastMessage, setToastMessage] = useState('');
   const [selectedPort, setSelectedPort] = useState(null);
 
@@ -88,8 +88,8 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   }, [activeScanId]);
 
   const filteredData = portsList.filter(item => {
-    if (severityFilter === 'ALL') return true;
-    return item.severity === severityFilter;
+    if (severityFilter === 'All') return true;
+    return item.severity === severityFilter.toUpperCase();
   });
 
   const exportToCSV = () => {
@@ -122,30 +122,39 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     <div className="global-page-container">
       <div className="global-max-width">
         
-        {/* Active Scan Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
-
         <PageHeaderCard 
           badgeText="SECURITY"
           title="Open Ports"
           subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
           stats={[
-            { label: 'All', value: portsList.length.toString(), subtext: 'Total open ports', active: severityFilter === 'ALL', onClick: () => setSeverityFilter('ALL') },
-            { label: 'Critical', value: portsList.filter(p => p.severity === 'CRITICAL').length.toString(), subtext: 'Immediate action', active: severityFilter === 'CRITICAL', onClick: () => setSeverityFilter('CRITICAL') },
-            { label: 'High', value: portsList.filter(p => p.severity === 'HIGH').length.toString(), subtext: 'Needs review', active: severityFilter === 'HIGH', onClick: () => setSeverityFilter('HIGH') },
-            { label: 'Medium', value: portsList.filter(p => p.severity === 'MEDIUM').length.toString(), subtext: 'Monitored', active: severityFilter === 'MEDIUM', onClick: () => setSeverityFilter('MEDIUM') },
-            { label: 'Low', value: portsList.filter(p => p.severity === 'LOW').length.toString(), subtext: 'Low risk', active: severityFilter === 'LOW', onClick: () => setSeverityFilter('LOW') }
+            { label: 'Critical Ports', value: criticalCount.toString(), subtext: 'Requires immediate review' },
+            { label: 'High Risk Services', value: highCount.toString(), subtext: 'Elevated exposure' },
+            { label: 'Unique Hosts', value: uniqueHosts.toString(), subtext: 'With externally facing ports' },
+            { label: 'Open Services', value: totalOpen.toString(), subtext: 'Total detected' }
           ]}
         />
+
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+
+        {/* Severity Filters */}
+        <div className="global-filter-row">
+          {['All', 'Critical', 'High', 'Medium', 'Low'].map(sev => (
+            <div 
+              key={sev}
+              className={`global-filter-pill ${severityFilter === sev ? 'active' : ''}`}
+              onClick={() => setSeverityFilter(sev)}
+            >
+              {sev}
+            </div>
+          ))}
+        </div>
 
         {/* Table */}
         <div className="global-table-wrapper">
