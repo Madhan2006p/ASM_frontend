@@ -248,7 +248,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-                    <button className="recommendation-btn">Recommendation</button>
                   </>
                 )}
               </div>
@@ -279,7 +278,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-                    <button className="recommendation-btn">Recommendation</button>
                   </>
                 )}
               </div>
@@ -310,7 +308,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-                    <button className="recommendation-btn">Recommendation</button>
                   </>
                 )}
               </div>
