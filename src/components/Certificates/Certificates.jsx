@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import CertDashboard from './CertDashboard';
 import CertFindings from './CertFindings';
 import CertificatesTable from './CertificatesTable';
-import SSLAttacksTable from './SSLAttacksTable';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
 
@@ -104,8 +103,7 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             health,
             risk,
             sslGrade: isError ? '—' : (c.ssl_grade || 'A'),
-            isTrusted: isError ? true : c.is_trusted,
-            findings: Array.isArray(c.findings) ? c.findings : []
+            isTrusted: isError ? true : c.is_trusted
           };
         });
 
@@ -134,7 +132,6 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         />
         <CertFindings certs={certs} loading={loading} />
         <CertificatesTable certs={certs} loading={loading} />
-        <SSLAttacksTable certs={certs} loading={loading} />
       </div>
     </div>
   );

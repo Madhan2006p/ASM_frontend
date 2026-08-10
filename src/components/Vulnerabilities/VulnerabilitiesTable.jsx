@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { ExternalLink, Bug, RefreshCw, Shield, X, FileText, Wrench, Link as LinkIcon, Eye } from 'lucide-react';
 
 const getSeverityClass = (severity) => (severity || 'low').toLowerCase();
@@ -18,19 +19,44 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
   const openModal = (row) => setSelectedId(row.id);
   const closeModal = () => setSelectedId(null);
 
+  // Auto-close if the open finding disappears during the parent's live
+  // polling (row deleted by cleanup) — the modal must not stay locked invisible.
+  useEffect(() => {
+    if (selectedId != null && !selectedRow) setSelectedId(null);
+  }, [selectedId, selectedRow]);
+
   // Close on Escape + move focus into the dialog + lock background scroll
   useEffect(() => {
     if (selectedId == null) return;
-    const onKey = (e) => { if (e.key === 'Escape') closeModal(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { closeModal(); return; }
+      // Block keyboard page-scrolling behind the popup (arrow keys / Space /
+      // PageUp / PageDown can still scroll the background when focus leaves the
+      // modal) — only let typing/selection keys through.
+      if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)) {
+        if (!e.target.closest('.vuln-modal-body')) e.preventDefault();
+      }
+    };
     window.addEventListener('keydown', onKey);
     if (closeButtonRef.current) closeButtonRef.current.focus();
-    // Prevent the page behind the modal from scrolling (the modal body has
-    // its own scrollbar) — restore on close.
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+
+    // This app scrolls inside a child container (.main-content with
+    // overflow-y:auto), NOT on <body> — and the layout CSS explicitly avoids
+    // overflow:hidden on containers (it clips the position:fixed modal). So
+    // the reliable way to stop the page scrolling behind the popup is to
+    // intercept wheel/touch scroll events at the document level and only let
+    // them through when the cursor is over the modal's scrollable body.
+    const preventBackgroundScroll = (e) => {
+      if (!e.target.closest('.vuln-modal-body')) {
+        e.preventDefault();
+      }
+    };
+    document.addEventListener('wheel', preventBackgroundScroll, { passive: false });
+    document.addEventListener('touchmove', preventBackgroundScroll, { passive: false });
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
+      document.removeEventListener('wheel', preventBackgroundScroll);
+      document.removeEventListener('touchmove', preventBackgroundScroll);
     };
   }, [selectedId]);
 
@@ -162,7 +188,12 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
       </div>
 
       {/* ── Finding detail modal ── */}
-      {selectedRow && (
+      {/* Portal into document.body: the page container (.page-animate) keeps a
+          retained transform from its slide-in animation, which would otherwise
+          become the containing block for this position:fixed backdrop and clip
+          it to the content area. Mounting on <body> makes the popup overlay the
+          entire page (sidebar + header included). */}
+      {selectedRow && createPortal(
         <div className="vuln-modal-backdrop" onClick={closeModal}>
           <div
             className="vuln-modal"
@@ -303,7 +334,8 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

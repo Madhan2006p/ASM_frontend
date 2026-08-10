@@ -8,6 +8,7 @@ import {
   Activity, Lock, Code, Cpu
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
@@ -40,7 +41,7 @@ const CT = ({ label, value, color }) => (
 const dark = { background:'#1a1f2e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 12px', color:'#e2e8f0', fontSize:'0.78rem' };
 const gridLine = { stroke:'rgba(255,255,255,0.05)' };
 
-const MobileVAPTDashboard = () => {
+const MobileVAPTDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [db, setDb] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -115,6 +116,12 @@ const MobileVAPTDashboard = () => {
         title="Mobile VAPT Dashboard"
         subtitle="Enterprise mobile application security posture overview."
         
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {selectedGlobalCategory ? (

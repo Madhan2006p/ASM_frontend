@@ -5,6 +5,7 @@ import './Vulnerabilities.css';
 const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   return (
     <OWASPScanUI
+      activeScanId={activeScanId}
       assignedDomains={assignedDomains}
       selectedDomain={selectedDomain}
       setSelectedDomain={setSelectedDomain}
