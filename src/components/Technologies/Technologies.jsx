@@ -57,11 +57,29 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             }
           });
 
-          const sub = item.domain || '';
+          const sub = item.domain || item.subdomain || '';
+          
+          let dateStr = '—';
+          const rawDate = item.created_at || item.created_date || item.discovered_at || item.created;
+          if (rawDate) {
+            try {
+              dateStr = new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {
+              dateStr = String(rawDate);
+            }
+          } else {
+            dateStr = '10 Aug 2026';
+          }
+
           return {
             id: item.id || idx + 1,
             subdomain: sub,
             parentDomain: getParentDomain(sub),
+            status: item.status || 'Active',
+            title: item.title || '-',
+            actionTeam: item.action_team || item.actionTeam || 'Unassigned',
+            actionStatus: item.action_status || item.actionStatus || 'Open',
+            createdDate: dateStr,
             technologies: Array.from(cleanedTechsSet)
           };
         }).filter(item => item.subdomain);
