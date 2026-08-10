@@ -1,0 +1,46 @@
+/* ── OWASP Top 10 Scanner UI ─────────────────────────────── */
+
+.owasp-cat-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.owasp-cat-card:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+  border-color: var(--border-color);
+}
+
+.owasp-cat-card .vuln-label {
+  font-size: 0.68rem;
+}
+
+/* Global filter pills (shared) */
+.global-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.global-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.global-filter-pill:hover {
+  background-color: var(--bg-main);
+  border-color: #3B82F6;
+  color: var(--text-primary);
+}
+.global-filter-pill.active {
+  background-color: #3B82F6;
+  border-color: #3B82F6;
+  color: #fff;
+}

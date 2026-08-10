@@ -7,7 +7,6 @@ import {
   Wifi, Binary, BarChart2, Key, Hash
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
-import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
 
@@ -53,7 +52,7 @@ const CAT_ICON = {
 /* ═══════════════════════════════════════════════════════════
    MobileVAPT  — sidebar app list + detail panel
 ═══════════════════════════════════════════════════════════ */
-const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
+const MobileVAPT = () => {
   /* ── Top-level data ─────────────────────────────────────── */
   const [dashboard,      setDashboard]      = useState({ total_scans:0, completed_scans:0, total_findings:0, critical:0, high:0, medium:0, low:0 });
   const [history,        setHistory]        = useState([]);
@@ -246,14 +245,8 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
       {/* ── Page Header ───────────────────────────────────── */}
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
-        title="Mobile VAPT — MobSF Analysis"
+        title="Mobile Security"
         subtitle="Automated Static & Dynamic security analysis of iOS and Android binaries via MobSF."
-      />
-
-      <TargetDomainTabs
-        assignedDomains={assignedDomains}
-        selectedDomain={selectedDomain}
-        setSelectedDomain={setSelectedDomain}
       />
 
       {/* ── Findings Grouped by Category (Replaces old Stats) ── */}
