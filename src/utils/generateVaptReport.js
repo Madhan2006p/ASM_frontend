@@ -95,21 +95,21 @@ export function generateVaptReportHTML({
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
     <div class="cover-top" style="display:flex;justify-content:space-between;align-items:center">
-      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:12px">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:12px;background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.25);padding:8px 16px;border-radius:10px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:55px;max-width:160px;object-fit:contain;border-radius:4px"/>`
-          : `<div class="cover-shield" style="font-size:20pt">🎯</div>`}
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:48px;max-width:150px;object-fit:contain"/>`
+          : `<div class="cover-shield" style="font-size:22pt;color:#38bdf8">🎯</div>`}
         <div style="display:flex;flex-direction:column">
-          <span style="font-size:14pt;font-weight:900;color:#0f172a;letter-spacing:-0.02em">${escapeHtml(orgName || scope || 'Target Organization')}</span>
-          <span style="font-size:7.5pt;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Target Organization</span>
+          <span style="font-size:15pt;font-weight:900;color:#ffffff !important;letter-spacing:-0.01em;text-shadow:0 2px 4px rgba(0,0,0,0.8)">${escapeHtml(orgName || scope || 'Target Organization')}</span>
+          <span style="font-size:7.5pt;font-weight:800;color:#38bdf8 !important;text-transform:uppercase;letter-spacing:0.09em">Target Organization</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(59,130,246,0.15);border:0.75pt solid rgba(59,130,246,0.4);padding:6pt 14pt;border-radius:6pt">
+        <div style="font-size:16pt;color:#60a5fa">🛡️</div>
         <div style="display:flex;flex-direction:column;text-align:right">
-          <span style="font-size:13pt;font-weight:900;color:#1e40af;letter-spacing:-0.02em">HACKERS INFOTECH</span>
-          <span style="font-size:7pt;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
+          <span style="font-size:12.5pt;font-weight:900;color:#ffffff !important;letter-spacing:0.05em;white-space:nowrap">HACKERS INFOTECH</span>
+          <span style="font-size:7pt;font-weight:800;color:#93c5fd !important;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
         </div>
-        <div class="cover-confidential" style="margin-left:8px">CONFIDENTIAL</div>
       </div>
     </div>
 
@@ -487,13 +487,13 @@ export function generateVaptReportHTML({
 
   <div class="roadmap-grid">
     ${[
-      { icon:'🚨', label:'IMMEDIATE',  sub:'0 – 48 hours',  color:'#dc2626', bg:'#fee2e2', sev:'CRITICAL', cnt: countBySev.CRITICAL||0,
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`, label:'IMMEDIATE',  sub:'0 – 48 hours',  color:'#dc2626', bg:'#fee2e2', sev:'CRITICAL', cnt: countBySev.CRITICAL||0,
         desc:`Patch or take offline all Critical findings. These vulnerabilities are actively exploitable and pose an immediate risk to your organisation. Escalate to C-suite immediately.` },
-      { icon:'⚠️', label:'SHORT TERM', sub:'7 – 14 days',   color:'#ea580c', bg:'#ffedd5', sev:'HIGH',     cnt: countBySev.HIGH||0,
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, label:'SHORT TERM', sub:'7 – 14 days',   color:'#ea580c', bg:'#ffedd5', sev:'HIGH',     cnt: countBySev.HIGH||0,
         desc:`Schedule and deploy patches for all High severity findings. Implement interim compensating controls (WAF rules, access restrictions) where patching is delayed.` },
-      { icon:'🔶', label:'MEDIUM TERM',sub:'30 – 90 days',  color:'#ca8a04', bg:'#fef9c3', sev:'MEDIUM',   cnt: countBySev.MEDIUM||0,
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label:'MEDIUM TERM',sub:'30 – 90 days',  color:'#ca8a04', bg:'#fef9c3', sev:'MEDIUM',   cnt: countBySev.MEDIUM||0,
         desc:`Address Medium severity issues within the next development sprint or maintenance window. Track all items in your security backlog.` },
-      { icon:'📌', label:'LONG TERM',  sub:'3 – 6 months',  color:'#15803d', bg:'#dcfce7', sev:'LOW/INFO', cnt:(countBySev.LOW||0)+(countBySev.INFO||0),
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`, label:'LONG TERM',  sub:'3 – 6 months',  color:'#15803d', bg:'#dcfce7', sev:'LOW/INFO', cnt:(countBySev.LOW||0)+(countBySev.INFO||0),
         desc:`Document and address Low/Informational items during regular security reviews. Use findings to drive security hardening initiatives.` },
     ].map(item => `
       <div class="roadmap-card" style="border-left:5px solid ${item.color}">
@@ -512,18 +512,17 @@ export function generateVaptReportHTML({
   <h3 class="sub-heading" style="margin-top:20px">${mobileScans.length>0?'7':'6'}. General Security Recommendations</h3>
   <div class="rec-grid">
     ${[
-      { icon:'🔒', title:'Input Validation & Sanitisation',     desc:'Validate and sanitise all user-controlled inputs server-side. Use parameterised queries and ORM frameworks to prevent injection attacks.' },
-      { icon:'🔑', title:'Authentication & Session Management', desc:'Enforce multi-factor authentication (MFA). Use secure, randomly generated session tokens with HttpOnly and Secure cookie flags. Implement proper session expiry.' },
-      { icon:'🛡️', title:'Security Headers',                    desc:'Deploy HTTP security headers: Content-Security-Policy, X-Frame-Options, X-XSS-Protection, Strict-Transport-Security, and Referrer-Policy.' },
-      { icon:'📦', title:'Third-party Dependency Management',   desc:'Regularly audit and update third-party libraries. Subscribe to CVE feeds for critical components. Implement software composition analysis (SCA) in CI/CD.' },
-      { icon:'🔍', title:'Continuous Security Monitoring',      desc:'Deploy SIEM, WAF, and intrusion detection systems. Establish security baselines and alerting for anomalous activity.' },
-      { icon:'🔐', title:'Encryption & Data Protection',        desc:'Enforce TLS 1.2+ for all communications. Encrypt sensitive data at rest. Use strong, modern cryptographic algorithms (AES-256, RSA-4096).' },
-      { icon:'👩‍💻', title:'Security Development Lifecycle',     desc:'Integrate security into CI/CD pipelines via SAST/DAST tools. Conduct mandatory OWASP Top 10 training for all developers.' },
-      { icon:'📋', title:'Security Policy & Governance',        desc:'Establish and maintain security policies, incident response plans, and data classification frameworks. Conduct quarterly VAPT assessments.' },
+      { title:'Input Validation & Sanitisation',     desc:'Validate and sanitise all user-controlled inputs server-side. Use parameterised queries and ORM frameworks to prevent injection attacks.' },
+      { title:'Authentication & Session Management', desc:'Enforce multi-factor authentication (MFA). Use secure, randomly generated session tokens with HttpOnly and Secure cookie flags. Implement proper session expiry.' },
+      { title:'Security Headers',                    desc:'Deploy HTTP security headers: Content-Security-Policy, X-Frame-Options, X-XSS-Protection, Strict-Transport-Security, and Referrer-Policy.' },
+      { title:'Third-party Dependency Management',   desc:'Regularly audit and update third-party libraries. Subscribe to CVE feeds for critical components. Implement software composition analysis (SCA) in CI/CD.' },
+      { title:'Continuous Security Monitoring',      desc:'Deploy SIEM, WAF, and intrusion detection systems. Establish security baselines and alerting for anomalous activity.' },
+      { title:'Encryption & Data Protection',        desc:'Enforce TLS 1.2+ for all communications. Encrypt sensitive data at rest. Use strong, modern cryptographic algorithms (AES-256, RSA-4096).' },
+      { title:'Security Development Lifecycle',     desc:'Integrate security into CI/CD pipelines via SAST/DAST tools. Conduct mandatory OWASP Top 10 training for all developers.' },
+      { title:'Security Policy & Governance',        desc:'Establish and maintain security policies, incident response plans, and data classification frameworks. Conduct quarterly VAPT assessments.' },
     ].map(r => `
       <div class="rec-card">
-        <span class="rec-icon">${r.icon}</span>
-        <div><strong style="font-size:9pt">${escapeHtml(r.title)}</strong>
+        <div><strong style="font-size:9pt;color:#1e40af">${escapeHtml(r.title)}</strong>
         <p style="margin:3px 0 0;font-size:7.5pt;color:#475569;line-height:1.5">${escapeHtml(r.desc)}</p></div>
       </div>`).join('')}
   </div>
@@ -938,7 +937,30 @@ export function generateVaptReportHTML({
     .td-num   { font-weight: 800; color: #64748b; text-align: center; width: 22pt; }
     .td-title { font-weight: 600; }
     .td-cvss  { text-align: center; font-family: monospace; }
-    .td-asset { font-size: 7.5pt; max-width: 110pt; word-break: break-all; }
+    .td-asset { font-size: 7.5pt; width: 170pt; vertical-align: top; }
+    .asset-stack-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3pt;
+      padding: 1pt 0;
+    }
+    .asset-stack-item {
+      display: block;
+    }
+    .asset-stack-item code {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 0.75pt solid #bfdbfe;
+      border-radius: 3pt;
+      padding: 1.5pt 5pt;
+      font-family: 'Courier New', monospace;
+      font-size: 7.2pt;
+      font-weight: 600;
+      white-space: nowrap;
+      word-break: keep-all;
+      line-height: 1.25;
+    }
     .td-cve   { font-family: 'Courier New', monospace; font-size: 7pt; color: #64748b; }
 
     /* ══ DETAILED FINDINGS ═══════════════════════════════════ */

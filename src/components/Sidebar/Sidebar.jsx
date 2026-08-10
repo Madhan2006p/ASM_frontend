@@ -227,9 +227,10 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
               <div
                 className={`nav-item ${activePage === 'Executive Dashboard' ? 'active' : ''}`}
                 onClick={() => setActivePage('Executive Dashboard')}
+                style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 <span className="nav-icon"><Home size={16} /></span>
-                <span>Executive Dashboard</span>
+                <span>EXECUTIVE DASHBOARD</span>
               </div>
             </div>
 

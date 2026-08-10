@@ -30,13 +30,11 @@ const AntiPhishingScan = ({ activeTarget, assignedDomains, selectedDomain, setSe
 
   return (
     <div className="global-page-container page-animate">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="BRAND MONITORING"

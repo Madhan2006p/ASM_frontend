@@ -63,13 +63,11 @@ const AntiPhishing = ({ activeTarget, assignedDomains, selectedDomain, setSelect
   return (
     <div className="ap-container">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="BRAND MONITORING"

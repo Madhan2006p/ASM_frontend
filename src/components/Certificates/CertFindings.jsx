@@ -7,22 +7,39 @@ const CertFindings = ({ certs = [], loading }) => {
   const weakCount = certs.filter(c => ['C', 'D', 'E', 'F'].includes(c.sslGrade)).length;
   const expiringSoonCount = certs.filter(c => c.days > 0 && c.days <= 30).length;
 
+  const poodleCount = certs.filter(c => c.tls === 'SSLv3' || c.tls === 'SSL 3.0' || (c.cipher && c.cipher.includes('SSLv3'))).length;
+  const sweet32Count = certs.filter(c => c.cipher && (c.cipher.includes('3DES') || c.cipher.includes('DES-CBC3'))).length;
+  const beastCount = certs.filter(c => (c.tls === 'TLS 1.0' || c.tls === 'TLSv1.0') && c.cipher && c.cipher.includes('CBC')).length;
+  const lucky13Count = certs.filter(c => (c.tls === 'TLS 1.0' || c.tls === 'TLS 1.1' || c.tls === 'TLS 1.2') && c.cipher && c.cipher.includes('CBC')).length;
+
   const findingsData = [];
   let id = 1;
   if (expiredCount > 0) {
-    findingsData.push({ id: id++, finding: 'Expired Certificate', severity: 'CRITICAL', domains: expiredCount, status: 'Open' });
+    findingsData.push({ id: id++, finding: 'Expired Certificate', severity: 'CRITICAL', domains: expiredCount, status: 'Open', trigger: 'Certificate validity date passed' });
   }
   if (untrustedCount > 0) {
-    findingsData.push({ id: id++, finding: 'Self Signed or Untrusted Certificate', severity: 'HIGH', domains: untrustedCount, status: 'Open' });
+    findingsData.push({ id: id++, finding: 'Self Signed or Untrusted Certificate', severity: 'HIGH', domains: untrustedCount, status: 'Open', trigger: 'Self-signed CA or untrusted root' });
+  }
+  if (poodleCount > 0) {
+    findingsData.push({ id: id++, finding: 'POODLE SSLv3 / TLS CBC Vulnerability (CVE-2014-3566)', severity: 'HIGH', domains: poodleCount, status: 'Open', trigger: 'SSL 3.0 or legacy TLS with CBC ciphers' });
+  }
+  if (sweet32Count > 0) {
+    findingsData.push({ id: id++, finding: 'SWEET32 64-bit Block Cipher Attack (CVE-2016-2183)', severity: 'MEDIUM', domains: sweet32Count, status: 'Open', trigger: '3DES / DES-CBC3 64-bit block ciphers enabled' });
+  }
+  if (beastCount > 0) {
+    findingsData.push({ id: id++, finding: 'BEAST Attack via TLS 1.0 CBC Ciphers (CVE-2011-3389)', severity: 'MEDIUM', domains: beastCount, status: 'Open', trigger: 'TLS 1.0 protocol enabled with CBC mode ciphers' });
+  }
+  if (lucky13Count > 0) {
+    findingsData.push({ id: id++, finding: 'Lucky13 TLS CBC Timing Side-Channel (CVE-2013-0169)', severity: 'MEDIUM', domains: lucky13Count, status: 'Open', trigger: 'TLS 1.0/1.1/1.2 enabled with MAC-then-Encrypt CBC ciphers' });
   }
   if (weakCount > 0) {
-    findingsData.push({ id: id++, finding: 'Weak Cipher Suite or Grade', severity: 'HIGH', domains: weakCount, status: 'Open' });
+    findingsData.push({ id: id++, finding: 'Weak Cipher Suite or SSL Grade', severity: 'HIGH', domains: weakCount, status: 'Open', trigger: 'Depreciated ciphers or grade C/D/F' });
   }
   if (expiringSoonCount > 0) {
-    findingsData.push({ id: id++, finding: 'Certificate Expiring Soon', severity: 'MEDIUM', domains: expiringSoonCount, status: 'Open' });
+    findingsData.push({ id: id++, finding: 'Certificate Expiring Soon', severity: 'MEDIUM', domains: expiringSoonCount, status: 'Open', trigger: 'Expires in less than 30 days' });
   }
   if (certs.length > 0 && findingsData.length === 0) {
-    findingsData.push({ id: id++, finding: 'No SSL vulnerabilities or misconfigurations detected', severity: 'INFO', domains: 0, status: 'Closed' });
+    findingsData.push({ id: id++, finding: 'No SSL vulnerabilities or misconfigurations detected', severity: 'INFO', domains: 0, status: 'Closed', trigger: 'All checks passed' });
   }
 
   return (
@@ -37,6 +54,7 @@ const CertFindings = ({ certs = [], loading }) => {
           <thead>
             <tr>
               <th>Finding</th>
+              <th>Configuration Trigger</th>
               <th>Severity</th>
               <th>Affected Domains</th>
               <th>Status</th>
@@ -46,6 +64,7 @@ const CertFindings = ({ certs = [], loading }) => {
             {findingsData.map((row) => (
               <tr key={row.id}>
                 <td className="font-bold">{row.finding}</td>
+                <td className="text-slate-500 font-mono" style={{ fontSize: '0.8rem' }}>{row.trigger || '—'}</td>
                 <td>
                   <span className={`cert-pill uppercase pill-${row.severity.toLowerCase()}`}>
                     <span className="dot"></span>
@@ -62,7 +81,7 @@ const CertFindings = ({ certs = [], loading }) => {
             ))}
             {findingsData.length === 0 && (
               <tr>
-                <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   {loading ? 'Loading findings...' : 'No SSL findings. Start a scan to discover details.'}
                 </td>
               </tr>

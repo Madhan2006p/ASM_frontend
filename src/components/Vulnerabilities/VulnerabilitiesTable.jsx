@@ -14,14 +14,10 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
     }));
   };
 
-  const getCount = (sev) => {
-    if (!allData) return 0;
-    return allData.filter(d => (d.severity || '').toUpperCase() === sev.toUpperCase()).length;
-  };
-
   return (
-    <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
-      <table className="vuln-table">
+    <div className="global-page-container page-animate" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
+      <div className="card global-table-wrapper">
+        <table className="vuln-table">
           <thead>
             <tr>
               <th style={{ width: '40px' }}></th>
@@ -188,6 +184,7 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
           </tbody>
         </table>
       </div>
+    </div>
   );
 };
 

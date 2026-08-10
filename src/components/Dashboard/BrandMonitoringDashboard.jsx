@@ -98,13 +98,11 @@ const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelected
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
-      <div style={{ marginBottom: '1rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="BRAND MONITORING"
@@ -116,6 +114,7 @@ const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelected
           { label:'Impersonations Found', value: imp.toString() },
           { label:'Malicious Reports', value: mal.toString() },
         ]}
+        
       />
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'0.75rem'}}>

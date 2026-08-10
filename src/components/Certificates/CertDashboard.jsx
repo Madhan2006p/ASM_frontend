@@ -2,9 +2,8 @@ import React from 'react';
 import { Filter, ArrowRight } from 'lucide-react';
 import './CertDashboard.css';
 import PageHeaderCard from '../common/PageHeaderCard';
-import ScanSelector from '../common/ScanSelector';
 
-const CertDashboard = ({ certs = [], loading, assignedDomains, selectedDomain, setSelectedDomain, scansList, activeScanId, handleSelectScan, healthFilter, setHealthFilter }) => {
+const CertDashboard = ({ certs = [], loading }) => {
   const activeCount = certs.length;
   const expiringSoonCount = certs.filter(c => c.days !== null && c.days > 0 && c.days <= 30).length;
   const expiredCount = certs.filter(c => c.days === 0).length;
@@ -61,26 +60,15 @@ const CertDashboard = ({ certs = [], loading, assignedDomains, selectedDomain, s
   return (
     <div className="cert-dashboard-wrapper">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
-      </div>
-
       <PageHeaderCard 
         badgeText="SECURITY"
         title="SSL Certificates"
         subtitle="Monitor certificate health, expiration dates, issuers, encryption strength, and SSL security posture across your attack surface."
         stats={[
-          { label: 'All', value: certs.length.toString(), subtext: 'Total certificates', active: healthFilter === 'Health Status: All', onClick: () => setHealthFilter('Health Status: All') },
-          { label: 'Healthy', value: certs.filter(c => c.health === 'Healthy').length.toString(), subtext: 'Valid SSL certificates', active: healthFilter === 'Healthy', onClick: () => setHealthFilter('Healthy') },
-          { label: 'Expiring Soon', value: expiringSoonCount.toString(), subtext: 'Next 30 days', active: healthFilter === 'Expiring Soon', onClick: () => setHealthFilter('Expiring Soon') },
-          { label: 'Expired', value: expiredCount.toString(), subtext: 'Requires immediate action', active: healthFilter === 'Expired', onClick: () => setHealthFilter('Expired') }
+          { label: 'Active Certificates', value: activeCount.toString(), subtext: 'Monitored hostnames' },
+          { label: 'Expiring Soon', value: expiringSoonCount.toString(), subtext: 'Next 30 days' },
+          { label: 'Expired', value: expiredCount.toString(), subtext: 'Requires immediate action' },
+          { label: 'Weak Configurations', value: weakCount.toString(), subtext: 'Protocol or cipher issues' }
         ]}
       />
 

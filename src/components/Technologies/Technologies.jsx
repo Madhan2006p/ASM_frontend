@@ -13,21 +13,39 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   // Fetch tech stack results
   useEffect(() => {
     const loadTechnologies = async () => {
-      if (!activeScanId) {
-        setTechnologies([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        
+        let rawItems = [];
+        const seenDomains = new Set();
+
+        if (selectedDomain && activeScanId) {
+          // Specific domain: fetch from that scan only
+          const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.forEach(item => {
+            const domain = item.domain || '';
+            if (!seenDomains.has(domain)) { seenDomains.add(domain); rawItems.push(item); }
+          });
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains: fetch from ALL scans and combine
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/technologies/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(item => {
+                const domain = item.domain || '';
+                if (!seenDomains.has(domain)) { seenDomains.add(domain); rawItems.push(item); }
+              });
+            } catch (e) { /* skip failed */ }
+          }
+        }
+
         // Flatten domain -> technologies
         const techCounts = {};
         const techHosts = {};
         const techVersions = {};
 
-        list.forEach(item => {
+        rawItems.forEach(item => {
           const techs = Array.isArray(item.technologies) ? item.technologies : [];
           techs.forEach(tech => {
             let name = tech;
@@ -108,8 +126,20 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         setLoading(false);
       }
     };
+
+    if (!selectedDomain && (!scansList || scansList.length === 0)) {
+      setTechnologies([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedDomain && !activeScanId) {
+      setTechnologies([]);
+      setLoading(false);
+      return;
+    }
+
     loadTechnologies();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
   const handleExport = () => {
     if (filteredData.length === 0) {
@@ -134,16 +164,14 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
 
         <TechDashboard onExport={handleExport} technologies={technologies} loading={loading} />
 

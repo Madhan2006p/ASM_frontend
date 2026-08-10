@@ -40,49 +40,60 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
   }
 
 
-  // Load vulnerabilities — polls every 5s while deep scan is running
+  // Load vulnerabilities - polls every 5s while deep scan is running
   useEffect(() => {
     let mounted = true;
     let interval = null;
 
+    const mapVuln = (v) => {
+      const dateStr = v.discovered_at ? new Date(v.discovered_at).toLocaleDateString() : 'Recent';
+      let cvss = 3.0;
+      if (v.severity === 'CRITICAL') cvss = 9.5;
+      else if (v.severity === 'HIGH') cvss = 8.0;
+      else if (v.severity === 'MEDIUM') cvss = 5.5;
+
+      return {
+        id: v.id,
+        title: v.finding || v.vulnerability_id || 'Security Vulnerability',
+        cve: v.cve || '—',
+        cwe: v.cwe || '—',
+        description: v.description || 'No description provided.',
+        remediation: v.remediation || 'No remediation provided.',
+        reference: v.reference || '—',
+        severity: v.severity || 'LOW',
+        status: 'Open',
+        cvss,
+        asset: v.subdomain || v.domain || 'Target Scope',
+        age: dateStr,
+        source_tool: v.source_tool || 'Nuclei',
+        exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
+      };
+    };
+
     const loadVulns = async () => {
-      if (!activeScanId) {
-        setVulnerabilities([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
-        if (!mounted) return;
-        const list = Array.isArray(data) ? data : (data.results || []);
-        
-        const mapped = list.map(v => {
-          const dateStr = v.discovered_at ? new Date(v.discovered_at).toLocaleDateString() : 'Recent';
-          let cvss = 3.0;
-          if (v.severity === 'CRITICAL') cvss = 9.5;
-          else if (v.severity === 'HIGH') cvss = 8.0;
-          else if (v.severity === 'MEDIUM') cvss = 5.5;
+        let allMapped = [];
+        const seenIds = new Set();
 
-          return {
-            id: v.id,
-            title: v.finding || v.vulnerability_id || 'Security Vulnerability',
-            cve: v.cve || '—',
-            cwe: v.cwe || '—',
-            description: v.description || 'No description provided.',
-            remediation: v.remediation || 'No remediation provided.',
-            reference: v.reference || '—',
-            severity: v.severity || 'LOW',
-            status: 'Open',
-            cvss,
-            affected_assets: v.affected_assets || [v.subdomain || v.domain || 'Target Scope'],
-            age: dateStr,
-            source_tool: v.source_tool || 'Nuclei',
-            exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
-          };
-        });
+        if (selectedDomain && activeScanId) {
+          // Specific domain: fetch from that scan only
+          const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.forEach(v => { if (!seenIds.has(v.id)) { seenIds.add(v.id); allMapped.push(mapVuln(v)); } });
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains: fetch from ALL scans and combine
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(v => { if (!seenIds.has(v.id)) { seenIds.add(v.id); allMapped.push(mapVuln(v)); } });
+            } catch (e) { /* skip failed */ }
+          }
+        }
 
-        mapped.sort((a, b) => b.cvss - a.cvss);
-        if (mounted) setVulnerabilities(mapped);
+        allMapped.sort((a, b) => b.cvss - a.cvss);
+        if (mounted) setVulnerabilities(allMapped);
       } catch (e) {
         console.error("Failed to load vulnerabilities", e);
         if (mounted) setVulnerabilities([]);
@@ -90,6 +101,17 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
         if (mounted) setLoading(false);
       }
     };
+
+    if (!selectedDomain && (!scansList || scansList.length === 0)) {
+      setVulnerabilities([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedDomain && !activeScanId) {
+      setVulnerabilities([]);
+      setLoading(false);
+      return;
+    }
 
     loadVulns();
 
@@ -102,7 +124,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
       mounted = false;
       if (interval) clearInterval(interval);
     };
-  }, [activeScanId, isVulnScanRunning]);
+  }, [activeScanId, selectedDomain, scansList, isVulnScanRunning]);
 
   const filteredData = vulnerabilities.filter(item => {
     if (activeFilter === 'All') return true;
@@ -111,9 +133,9 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,CVE,Severity,Status,CVSS,Affected Assets,Age,Exploit\n"
+      + "Title,CVE,Severity,Status,CVSS,Asset,Age,Exploit\n"
       + filteredData.map(row => 
-          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${(row.affected_assets || []).join(', ')}","${row.age}",${row.exploit}`
+          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${row.asset}","${row.age}",${row.exploit}`
         ).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -131,13 +153,17 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
     if (counts[sev] !== undefined) counts[sev]++;
   });
 
-
+  const localVulnStats = [
+    { label: 'Critical Severity', value: counts.critical, bgClass: 'bg-red-light', colorClass: 'text-red', bar: 'bar-red', icon: <ShieldAlert size={16} /> },
+    { label: 'High Severity', value: counts.high, bgClass: 'bg-orange-light', colorClass: 'text-orange', bar: 'bar-orange', icon: <AlertTriangle size={16} /> },
+    { label: 'Medium Severity', value: counts.medium, bgClass: 'bg-yellow-light', colorClass: 'text-yellow', bar: 'bar-yellow', icon: <Shield size={16} /> },
+    { label: 'Low Severity', value: counts.low, bgClass: 'bg-blue-light', colorClass: 'text-blue', bar: 'bar-blue', icon: <Info size={16} /> },
+  ];
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
         
-        {/* Active Scan Selector */}
         <div style={{ marginBottom: '1.5rem' }}>
           <ScanSelector 
             assignedDomains={assignedDomains}
@@ -154,11 +180,11 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           title="Vulnerability Management"
           subtitle="Track, triage and remediate findings across your attack surface."
           stats={[
-            { label: 'All', value: vulnerabilities.length.toString(), subtext: 'Total findings', active: activeFilter === 'All', onClick: () => setActiveFilter('All') },
-            { label: 'Critical', value: counts.critical.toString(), subtext: 'Immediate action', active: activeFilter === 'Critical', onClick: () => setActiveFilter('Critical') },
-            { label: 'High', value: counts.high.toString(), subtext: 'Needs review', active: activeFilter === 'High', onClick: () => setActiveFilter('High') },
-            { label: 'Medium', value: counts.medium.toString(), subtext: 'Monitored', active: activeFilter === 'Medium', onClick: () => setActiveFilter('Medium') },
-            { label: 'Low', value: counts.low.toString(), subtext: 'Low risk', active: activeFilter === 'Low', onClick: () => setActiveFilter('Low') }
+            { label: 'ALL', value: vulnerabilities.length.toString(), subtext: 'Total findings', isActive: activeFilter === 'All', onClick: () => setActiveFilter('All') },
+            { label: 'CRITICAL', value: counts.critical.toString(), subtext: 'Immediate action', isActive: activeFilter === 'Critical', onClick: () => setActiveFilter('Critical') },
+            { label: 'HIGH', value: counts.high.toString(), subtext: 'Priority fix', isActive: activeFilter === 'High', onClick: () => setActiveFilter('High') },
+            { label: 'MEDIUM', value: counts.medium.toString(), subtext: 'Scheduled patch', isActive: activeFilter === 'Medium', onClick: () => setActiveFilter('Medium') },
+            { label: 'LOW', value: counts.low.toString(), subtext: 'Monitor', isActive: activeFilter === 'Low', onClick: () => setActiveFilter('Low') },
           ]}
         />
 
@@ -171,7 +197,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500' }}>
               <RefreshCw className="spin" size={18} />
-              <span>Vulnerability scanning is currently running — findings appear below in real time.</span>
+              <span>Deep vulnerability scanning is currently running ΓÇö findings appear below in real time.</span>
               {vulnerabilities.length > 0 && (
                 <span style={{ marginLeft: 'auto', background: 'rgba(34,211,238,0.2)', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700' }}>
                   {vulnerabilities.length} found
@@ -193,7 +219,27 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           </div>
         )}
 
-
+        {/* Vulnerability Breakdown */}
+        <div className="vuln-breakdown-section">
+          <div className="vuln-section-header">
+            <TrendingUp size={16} />
+            <span>Vulnerability Breakdown</span>
+          </div>
+          <div className="vuln-stats-grid">
+            {localVulnStats.map((vuln, idx) => (
+              <div key={idx} className={`vuln-card ${vuln.bgClass}`}>
+                <div className="vuln-top-row">
+                  <div className="vuln-icon-wrapper" style={{ padding: '0.25rem', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>{vuln.icon}</div>
+                  <span className={`vuln-value ${vuln.colorClass}`}>{vuln.value}</span>
+                </div>
+                <span className="vuln-label">{vuln.label}</span>
+                <div className="vuln-progress-bar">
+                  <div className={`vuln-progress-fill ${vuln.bar}`} style={{ width: vulnerabilities.length > 0 ? `${(vuln.value / vulnerabilities.length) * 100}%` : '0%' }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
         <VulnerabilitiesTable
           data={filteredData}

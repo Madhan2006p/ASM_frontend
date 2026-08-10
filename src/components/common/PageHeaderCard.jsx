@@ -41,15 +41,9 @@ const getStatColor = (label = '', subtext = '', index = 0) => {
 const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
   return (
     <div className="phc-container">
-      <div className="phc-badge">
-        <div className="dot"></div>
-        {badgeText}
-      </div>
-
       <div className="phc-header-row">
         <div>
           <h1 className="phc-title">{title}</h1>
-          <p className="phc-subtitle">{subtitle}</p>
         </div>
         {actions && (
           <div className="phc-actions">
@@ -65,7 +59,7 @@ const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
             return (
               <div 
                 key={index} 
-                className={`card phc-stat-card ${stat.active ? 'active' : ''}`}
+                className={`card phc-stat-card${stat.isActive ? ' phc-stat-card--active' : ''}`}
                 onClick={stat.onClick}
                 style={{
                   '--card-border': colorInfo.border,
