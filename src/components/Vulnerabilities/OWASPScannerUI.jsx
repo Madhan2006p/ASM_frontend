@@ -112,10 +112,10 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
   const filteredRows = useMemo(() => vulnerabilities, [vulnerabilities]);
 
   const exportCsv = () => {
-    const header = 'OWASP Category,Title,CVE,CWE,Severity,CVSS,Affected Assets,Age,Source';
+    const header = 'OWASP Category,Title,CVE,CWE,Severity,CVSS,Affected Assets,Source';
     const rows = filteredRows.map(r => {
       const cat = r.owasp_rank ? `A${String(r.owasp_rank).padStart(2, '0')}` : 'Uncategorized';
-      return `"${cat}","${r.title}","${r.cve}","${r.cwe}","${r.severity}",${r.cvss},"${(r.affected_assets || []).join(', ')}","${r.age}","${r.source_tool}"`;
+      return `"${cat}","${r.title}","${r.cve}","${r.cwe}","${r.severity}",${r.cvss},"${(r.affected_assets || []).join(', ')}","${r.source_tool}"`;
     });
     const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);

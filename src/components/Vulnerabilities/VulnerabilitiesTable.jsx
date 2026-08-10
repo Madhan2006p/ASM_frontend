@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { ExternalLink, Bug, RefreshCw, Shield, X, FileText, Wrench, Link as LinkIcon, Eye } from 'lucide-react';
 
 const getSeverityClass = (severity) => (severity || 'low').toLowerCase();
-const getStatusClass = (status) => (status || 'open').toLowerCase();
 
 const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunning }) => {
   // Store the row id, not a snapshot: the parent re-polls every ~5s during a
@@ -71,15 +70,13 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
               <th>TITLE</th>
               <th>CVE</th>
               <th>SEVERITY</th>
-              <th>STATUS</th>
               <th>CVSS</th>
-              <th>AGE</th>
             </tr>
           </thead>
           <tbody>
             {(loading && (!data || data.length === 0)) ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                   Loading vulnerabilities list...
                 </td>
@@ -145,22 +142,16 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
                     </span>
                   </td>
                   <td>
-                    <span className={`status-badge stat-${getStatusClass(row.status)}`}>
-                      <span className="badge-dot"></span> {row.status}
-                    </span>
-                  </td>
-                  <td>
                     <div className="cvss-cell">
                       <div className={`cvss-bar cvss-${getSeverityClass(row.severity)}`}></div>
                       <span className="cvss-score">{row.cvss.toFixed(1)}</span>
                     </div>
                   </td>
-                  <td className="text-secondary">{row.age}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '4rem 2rem', color: '#64748B' }}>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '4rem 2rem', color: '#64748B' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
                     <div style={{ background: showScanningState ? 'rgba(34, 211, 238, 0.1)' : 'rgba(34, 197, 94, 0.1)', padding: '1rem', borderRadius: '50%' }}>
                       {showScanningState ? (
@@ -225,8 +216,6 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
               )}
               <span className="vuln-modal-meta-item"><strong>CVSS:</strong> {selectedRow.cvss.toFixed(1)}</span>
               <span className="vuln-modal-meta-item"><strong>CVE:</strong> {selectedRow.cve && selectedRow.cve !== '—' ? selectedRow.cve : '—'}</span>
-              <span className="vuln-modal-meta-item"><strong>Status:</strong> {selectedRow.status}</span>
-              <span className="vuln-modal-meta-item"><strong>Age:</strong> {selectedRow.age}</span>
               {selectedRow.source_tool && (
                 <span className="vuln-modal-meta-item"><strong>Source:</strong> {selectedRow.source_tool}</span>
               )}
