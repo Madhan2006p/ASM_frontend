@@ -227,7 +227,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
       {(showCreateUser || showCreateOrg) && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {showCreateOrg && (
-            <div style={{ background: 'var(--bg-main)', borderRadius: '16px', padding: '2rem', width: '420px', border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ background: 'var(--bg-main)', borderRadius: '16px', padding: '2rem', width: '420px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building size={20} color="#3B82F6" /> New Organization</h3>
                 <button onClick={() => setShowCreateOrg(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>
@@ -254,7 +254,7 @@ const SuperAdminDashboard = ({ currentUser }) => {
             </div>
           )}
           {showCreateUser && (
-            <div style={{ background: 'var(--bg-main)', borderRadius: '16px', padding: '2rem', width: '420px', border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+            <div style={{ background: 'var(--bg-main)', borderRadius: '16px', padding: '2rem', width: '420px', maxWidth: '92vw', maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border-color)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><User size={20} color="#10B981" /> New User</h3>
                 <button onClick={() => setShowCreateUser(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>

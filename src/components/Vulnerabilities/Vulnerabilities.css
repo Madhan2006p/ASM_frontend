@@ -363,3 +363,256 @@
   color: var(--text-primary);
 }
 
+/* ── Asset + OWASP badge column ──────────────────────────── */
+.vuln-row-click {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.vuln-row-click:hover td {
+  background-color: rgba(59, 130, 246, 0.04);
+}
+.vuln-row-icon {
+  color: var(--text-muted);
+  opacity: 0.5;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.vuln-row-click:hover .vuln-row-icon {
+  opacity: 1;
+  color: #3B82F6;
+}
+
+.vuln-asset-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.vuln-asset-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.owasp-badge {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: default;
+}
+
+/* ── Vulnerability popup modal ───────────────────────────── */
+.vuln-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(6px);
+  animation: vuln-modal-fade 0.18s ease;
+}
+.vuln-modal {
+  width: min(720px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  animation: vuln-modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.vuln-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.vuln-modal-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.vuln-modal-title {
+  margin: 0;
+  flex: 1 1 100%;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.vuln-modal-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 1px solid var(--border-color);
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.vuln-modal-close:hover {
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.vuln-modal-owasp {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.25rem 1.75rem 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: var(--bg-main);
+}
+.vuln-modal-owasp-name {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.vuln-modal-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin: 1.25rem 1.75rem 0;
+}
+.vuln-modal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+.vuln-modal-meta-label {
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.vuln-modal-meta-value {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+.vuln-modal-asset {
+  grid-column: 1 / -1;
+}
+.vuln-modal-asset-value {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.8rem;
+}
+
+.vuln-modal-block {
+  margin: 1.25rem 1.75rem 0;
+  padding: 1.25rem 1.4rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent);
+  border-radius: 10px;
+}
+.vuln-modal-remediation {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+.vuln-modal-block-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.7rem 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+.vuln-modal-remediation .vuln-modal-block-title { color: #10b981; }
+.vuln-modal-block-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+.vuln-modal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--bg-card);
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid var(--border-color);
+  transition: all 0.2s;
+}
+.vuln-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 1.25rem 1.75rem 1.5rem;
+}
+.vuln-modal-done {
+  padding: 0.55rem 1.75rem;
+  border: none;
+  background: #3B82F6;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.vuln-modal-done:hover {
+  background: #1D4ED8;
+}
+
+@keyframes vuln-modal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes vuln-modal-pop {
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Light mode tweaks for the modal overlay */
+.light-mode .vuln-modal-overlay {
+  background: rgba(15, 23, 42, 0.45);
+}
+
+@media (max-width: 640px) {
+  .vuln-modal-overlay { padding: 0.75rem; align-items: flex-end; }
+  .vuln-modal { border-radius: 14px 14px 0 0; max-height: 92vh; }
+  .vuln-modal-header, .vuln-modal-owasp, .vuln-modal-meta, .vuln-modal-block { margin-left: 1rem; margin-right: 1rem; }
+}
+
