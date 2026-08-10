@@ -17,12 +17,18 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   let currentAttemptText = "Initializing...";
   let timeoutExplanation = "";
-  if (activeScan?.vuln_scan_phase === 'running_nuclei') {
-    currentAttemptText = "Phase 1: Nuclei Fast Scan";
-    timeoutExplanation = "Sending thousands of optimized exploit payloads to discover misconfigurations, CVEs, and exposures. This phase is heavily optimized for speed.";
+  if (activeScan?.vuln_scan_phase === 'running_basic') {
+    currentAttemptText = "Phase 1: Basic Vulnerability Scan (Fast Nuclei)";
+    timeoutExplanation = "Scanning for critical misconfigurations, exposures, and default logins using optimized Nuclei templates.";
+  } else if (activeScan?.vuln_scan_phase === 'running_deep') {
+    currentAttemptText = "Phase 2: Deep Vulnerability Scan (Deep Nuclei)";
+    timeoutExplanation = "Running deep checks across extensive vulnerability signature databases (CVEs, CNVDs, DNS exposure, and infrastructure weaknesses).";
   } else if (activeScan?.vuln_scan_phase === 'running_wapiti') {
-    currentAttemptText = "Phase 2: Wapiti Application Fuzzing (60s total)";
+    currentAttemptText = "Phase 3: Wapiti Application Fuzzing (60s total)";
     timeoutExplanation = "Crawling the application and injecting SQL/XSS payloads into forms. This takes exactly 60 seconds.";
+  } else if (activeScan?.vuln_scan_phase === 'running_arjun') {
+    currentAttemptText = "Phase 4: Arjun Parameter Discovery";
+    timeoutExplanation = "Scanning HTTP endpoints to detect hidden, undocumented HTTP query parameters and form fields.";
   } else if (activeScan?.vuln_scan_phase && activeScan.vuln_scan_phase.startsWith('phase_')) {
     // deep nuclei phase e.g. "phase_3_of_10_cnvd"
     const parts = activeScan.vuln_scan_phase.split('_');
@@ -125,46 +131,14 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
     if (counts[sev] !== undefined) counts[sev]++;
   });
 
-  const localVulnStats = [
-    { label: 'Critical Severity', value: counts.critical, bgClass: 'bg-red-light', colorClass: 'text-red', bar: 'bar-red', icon: <ShieldAlert size={16} /> },
-    { label: 'High Severity', value: counts.high, bgClass: 'bg-orange-light', colorClass: 'text-orange', bar: 'bar-orange', icon: <AlertTriangle size={16} /> },
-    { label: 'Medium Severity', value: counts.medium, bgClass: 'bg-yellow-light', colorClass: 'text-yellow', bar: 'bar-yellow', icon: <Shield size={16} /> },
-    { label: 'Low Severity', value: counts.low, bgClass: 'bg-blue-light', colorClass: 'text-blue', bar: 'bar-blue', icon: <Info size={16} /> },
-  ];
+
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
         
-        <PageHeaderCard 
-          badgeText="SECURITY"
-          title="Vulnerability Management"
-          subtitle="Track, triage and remediate findings across your attack surface."
-        />
-
-        {/* Vulnerability Breakdown */}
-        <div className="vuln-breakdown-section">
-          <div className="vuln-section-header">
-            <TrendingUp size={16} />
-            <span>Vulnerability Breakdown</span>
-          </div>
-          <div className="vuln-stats-grid">
-            {localVulnStats.map((vuln, idx) => (
-              <div key={idx} className={`vuln-card ${vuln.bgClass}`}>
-                <div className="vuln-top-row">
-                  <div className="vuln-icon-wrapper" style={{ padding: '0.25rem', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>{vuln.icon}</div>
-                  <span className={`vuln-value ${vuln.colorClass}`}>{vuln.value}</span>
-                </div>
-                <span className="vuln-label">{vuln.label}</span>
-                <div className="vuln-progress-bar">
-                  <div className={`vuln-progress-fill ${vuln.bar}`} style={{ width: vulnerabilities.length > 0 ? `${(vuln.value / vulnerabilities.length) * 100}%` : '0%' }}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        {/* Active Scan Selector */}
+        <div style={{ marginBottom: '1.5rem' }}>
           <ScanSelector 
             assignedDomains={assignedDomains}
             selectedDomain={selectedDomain}
@@ -174,6 +148,19 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
             handleSelectScan={handleSelectScan}
           />
         </div>
+
+        <PageHeaderCard 
+          badgeText="SECURITY"
+          title="Vulnerability Management"
+          subtitle="Track, triage and remediate findings across your attack surface."
+          stats={[
+            { label: 'All', value: vulnerabilities.length.toString(), subtext: 'Total findings', active: activeFilter === 'All', onClick: () => setActiveFilter('All') },
+            { label: 'Critical', value: counts.critical.toString(), subtext: 'Immediate action', active: activeFilter === 'Critical', onClick: () => setActiveFilter('Critical') },
+            { label: 'High', value: counts.high.toString(), subtext: 'Needs review', active: activeFilter === 'High', onClick: () => setActiveFilter('High') },
+            { label: 'Medium', value: counts.medium.toString(), subtext: 'Monitored', active: activeFilter === 'Medium', onClick: () => setActiveFilter('Medium') },
+            { label: 'Low', value: counts.low.toString(), subtext: 'Low risk', active: activeFilter === 'Low', onClick: () => setActiveFilter('Low') }
+          ]}
+        />
 
         {isVulnScanRunning && (
           <div style={{ 

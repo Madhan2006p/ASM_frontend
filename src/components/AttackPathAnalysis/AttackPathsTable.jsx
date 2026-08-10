@@ -25,21 +25,7 @@ const AttackPathsTable = ({ attackPaths, onHighlightPath, onExportPath }) => {
   return (
     <div className="apa-paths-container">
       {/* ── Filter bar ────────────────────────────────────── */}
-      <div className="vapt-filters no-print">
-        <div className="vapt-filter-group">
-          <label>Risk Level</label>
-          <div className="vapt-filter-pills">
-            {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM'].map((sev) => (
-              <button
-                key={sev}
-                className={`vapt-pill ${filterSeverity === sev ? 'active' : ''}`}
-                onClick={() => setFilterSeverity(sev)}
-              >
-                {sev}
-              </button>
-            ))}
-          </div>
-        </div>
+      <div className="vapt-filters no-print" style={{ justifyContent: 'flex-end', marginBottom: '1rem' }}>
         <span className="vapt-filter-count">{filteredPaths.length} attack paths</span>
       </div>
 

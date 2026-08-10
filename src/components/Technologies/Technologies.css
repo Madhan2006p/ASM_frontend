@@ -378,52 +378,32 @@
 .tech-custom-dropdown-item.active { background-color: rgba(59, 130, 246, 0.08); color: #60A5FA; font-weight: 600; }
 
 /* Tables */
-.tech-table-responsive-wrapper {
-  width: 100%;
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  background-color: var(--bg-card);
-  margin-bottom: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  scrollbar-width: thin;
-}
-
 .tech-table {
   width: 100%;
-  min-width: 650px;
   border-collapse: collapse;
   text-align: left;
 }
 
 .tech-table th {
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.5rem;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-secondary);
   background-color: var(--bg-main);
   border-bottom: 1px solid var(--border-color);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  position: sticky;
-  top: 0;
-  z-index: 2;
 }
 
 .tech-table td {
-  padding: 0.85rem 1.25rem;
+  padding: 1rem 1.5rem;
   font-size: 0.875rem;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
-}
-
-.tech-table tr:last-child td {
-  border-bottom: none;
 }
 
 .tech-table tr:hover td {
-  background-color: rgba(59, 130, 246, 0.04) !important;
+  background-color: var(--bg-hover) !important;
 }
 
 .font-bold { font-weight: 700; }

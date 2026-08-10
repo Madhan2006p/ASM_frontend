@@ -30,6 +30,14 @@ const AntiPhishingScan = ({ activeTarget, assignedDomains, selectedDomain, setSe
 
   return (
     <div className="global-page-container page-animate">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
+
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Anti Phishing Analysis"
@@ -39,12 +47,6 @@ const AntiPhishingScan = ({ activeTarget, assignedDomains, selectedDomain, setSe
           { label: 'Malicious', value: reports.filter(r => r.classification?.toLowerCase() === 'malicious' || r.ecosystem_classification?.toLowerCase().includes('malicious')).length.toString() },
           { label: 'Suspicious', value: reports.filter(r => r.classification?.toLowerCase() === 'suspicious' || r.ecosystem_classification?.toLowerCase().includes('suspicious')).length.toString() },
         ]}
-      />
-
-      <TargetDomainTabs
-        assignedDomains={assignedDomains}
-        selectedDomain={selectedDomain}
-        setSelectedDomain={setSelectedDomain}
       />
 
       <div className="card global-table-wrapper" style={{ marginTop: '2rem' }}>

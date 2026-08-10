@@ -20,42 +20,8 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
   };
 
   return (
-    <div className="global-page-container page-animate" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
-      <div className="global-filter-row">
-        <div 
-          className={`global-filter-pill ${activeFilter === 'All' ? 'active' : ''}`}
-          onClick={() => setActiveFilter('All')}
-        >
-          All ({allData?.length || 0})
-        </div>
-        <div 
-          className={`global-filter-pill ${activeFilter === 'Critical' ? 'active' : ''}`}
-          onClick={() => setActiveFilter('Critical')}
-        >
-          Critical ({getCount('Critical')})
-        </div>
-        <div 
-          className={`global-filter-pill ${activeFilter === 'High' ? 'active' : ''}`}
-          onClick={() => setActiveFilter('High')}
-        >
-          High ({getCount('High')})
-        </div>
-        <div 
-          className={`global-filter-pill ${activeFilter === 'Medium' ? 'active' : ''}`}
-          onClick={() => setActiveFilter('Medium')}
-        >
-          Medium ({getCount('Medium')})
-        </div>
-        <div 
-          className={`global-filter-pill ${activeFilter === 'Low' ? 'active' : ''}`}
-          onClick={() => setActiveFilter('Low')}
-        >
-          Low ({getCount('Low')})
-        </div>
-      </div>
-
-      <div className="card global-table-wrapper">
-        <table className="vuln-table">
+    <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
+      <table className="vuln-table">
           <thead>
             <tr>
               <th style={{ width: '40px' }}></th>
@@ -222,7 +188,6 @@ const VulnerabilitiesTable = ({ data, activeFilter, setActiveFilter, allData, lo
           </tbody>
         </table>
       </div>
-    </div>
   );
 };
 

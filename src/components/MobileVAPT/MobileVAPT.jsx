@@ -243,17 +243,19 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   return (
     <div className="global-page-container page-animate mv-root">
 
+      <div style={{ marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
+
       {/* ── Page Header ───────────────────────────────────── */}
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
         title="Mobile VAPT — MobSF Analysis"
         subtitle="Automated Static & Dynamic security analysis of iOS and Android binaries via MobSF."
-      />
-
-      <TargetDomainTabs
-        assignedDomains={assignedDomains}
-        selectedDomain={selectedDomain}
-        setSelectedDomain={setSelectedDomain}
       />
 
       {/* ── Findings Grouped by Category (Replaces old Stats) ── */}

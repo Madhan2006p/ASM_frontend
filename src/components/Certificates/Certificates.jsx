@@ -8,6 +8,7 @@ import { api } from '../../utils/api';
 const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [certs, setCerts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [healthFilter, setHealthFilter] = useState('Health Status: All');
 
   useEffect(() => {
     const fetchCerts = async () => {
@@ -129,9 +130,11 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           scansList={scansList}
           activeScanId={activeScanId}
           handleSelectScan={handleSelectScan}
+          healthFilter={healthFilter}
+          setHealthFilter={setHealthFilter}
         />
         <CertFindings certs={certs} loading={loading} />
-        <CertificatesTable certs={certs} loading={loading} />
+        <CertificatesTable certs={certs} loading={loading} healthFilter={healthFilter} setHealthFilter={setHealthFilter} />
       </div>
     </div>
   );

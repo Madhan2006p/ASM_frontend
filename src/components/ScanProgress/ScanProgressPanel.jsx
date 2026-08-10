@@ -110,8 +110,10 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
 
           if (prev.vuln_scan_phase !== data.vuln_scan_phase) {
             const phaseLabels = {
-              running_nuclei: '🔍 Nuclei fast scan started',
+              running_basic:  '🔍 Basic vulnerability scan started',
+              running_deep:   '🛡️ Deep vulnerability scan started',
               running_wapiti: '🕷️ Wapiti web fuzzing started',
+              running_arjun:  '🧩 Arjun parameter fuzzing started',
               complete:       '✓ Vulnerability scan complete',
             };
             const label = phaseLabels[data.vuln_scan_phase];
