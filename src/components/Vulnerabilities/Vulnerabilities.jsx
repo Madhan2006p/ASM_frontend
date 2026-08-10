@@ -5,11 +5,13 @@ import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { TrendingUp, ShieldAlert, Shield, AlertTriangle, Info, RefreshCw } from 'lucide-react';
 import { api } from '../../utils/api';
+import OWASPScannerUI from './OWASPScannerUI';
 
 const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [vulnerabilities, setVulnerabilities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('asm'); // 'asm' or 'owasp'
 
   const activeScan = scansList?.find(s => s.id === Number(activeScanId));
   const isVulnScanRunning = activeScan && (activeScan.vuln_scan_phase === 'running' || activeScan.vuln_scan_phase?.startsWith('running_') || (activeScan.vuln_scan_phase && activeScan.vuln_scan_phase !== 'pending' && activeScan.vuln_scan_phase !== 'complete' && activeScan.status === 'running'));
@@ -33,20 +35,20 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
     timeoutExplanation = "Running nuclei templates across multiple vulnerability databases (CVE, CNVD, exposures, misconfigurations, IoT, DNS). New findings appear below as they are discovered.";
   }
 
-
   // Load vulnerabilities — polls every 5s while deep scan is running
   useEffect(() => {
     let mounted = true;
     let interval = null;
 
     const loadVulns = async () => {
-      if (!activeScanId) {
+      const targetScanId = activeScanId || (scansList && scansList.length > 0 ? scansList[0].id : null);
+      if (!targetScanId) {
         setVulnerabilities([]);
         return;
       }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
+        const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${targetScanId}`);
         if (!mounted) return;
         const list = Array.isArray(data) ? data : (data.results || []);
         
@@ -96,27 +98,12 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
       mounted = false;
       if (interval) clearInterval(interval);
     };
-  }, [activeScanId, isVulnScanRunning]);
+  }, [activeScanId, isVulnScanRunning, scansList]);
 
   const filteredData = vulnerabilities.filter(item => {
     if (activeFilter === 'All') return true;
     return item.severity === activeFilter.toUpperCase();
   });
-
-  const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,CVE,Severity,Status,CVSS,Affected Assets,Age,Exploit\n"
-      + filteredData.map(row => 
-          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${(row.affected_assets || []).join(', ')}","${row.age}",${row.exploit}`
-        ).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "vulnerabilities_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
 
   // Staggered local vuln stats calculation
   const counts = { critical: 0, high: 0, medium: 0, low: 0 };
@@ -132,6 +119,37 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
     { label: 'Low Severity', value: counts.low, bgClass: 'bg-blue-light', colorClass: 'text-blue', bar: 'bar-blue', icon: <Info size={16} /> },
   ];
 
+  if (activeTab === 'owasp') {
+    return (
+      <div className="global-page-container">
+        <div className="global-max-width">
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            <button 
+              onClick={() => setActiveTab('asm')} 
+              style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Attack Surface Vulnerabilities ({vulnerabilities.length})
+            </button>
+            <button 
+              onClick={() => setActiveTab('owasp')} 
+              style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--accent)', background: 'var(--accent)', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+            >
+              OWASP Top 10 Dynamic Scanner
+            </button>
+          </div>
+          <OWASPScannerUI 
+            activeScanId={activeScanId} 
+            assignedDomains={assignedDomains} 
+            selectedDomain={selectedDomain} 
+            setSelectedDomain={setSelectedDomain} 
+            scansList={scansList} 
+            handleSelectScan={handleSelectScan} 
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="global-page-container">
       <div className="global-max-width">
@@ -142,7 +160,22 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
           subtitle="Track, triage and remediate findings across your attack surface."
         />
 
-        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', marginBottom: '1rem' }}>
+          <button 
+            onClick={() => setActiveTab('asm')} 
+            style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--accent)', background: 'var(--accent)', color: '#fff', fontWeight: '600', cursor: 'pointer' }}
+          >
+            Attack Surface Vulnerabilities ({vulnerabilities.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('owasp')} 
+            style={{ padding: '0.6rem 1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-secondary)', fontWeight: '600', cursor: 'pointer' }}
+          >
+            OWASP Top 10 Dynamic Scanner
+          </button>
+        </div>
+
+        <div style={{ marginTop: '1rem', marginBottom: '1.5rem' }}>
           <ScanSelector 
             assignedDomains={assignedDomains}
             selectedDomain={selectedDomain}

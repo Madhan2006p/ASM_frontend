@@ -53,6 +53,58 @@ const SSLDetailModal = ({ cert, onClose }) => {
     san.toLowerCase().includes(sanSearch.toLowerCase())
   );
 
+  const tlsVersion = cert.tls || 'TLS 1.3';
+  const cipherSuite = cert.cipher || '';
+  const isCbcMode = cipherSuite.includes('CBC');
+  const is3Des = cipherSuite.includes('3DES') || cipherSuite.includes('DES-CBC3');
+  const isSslv3 = tlsVersion === 'SSLv3' || tlsVersion === 'SSL 3.0';
+  const isTls10 = tlsVersion === 'TLS 1.0' || tlsVersion === 'TLSv1.0' || tlsVersion === 'TLSv1';
+  const isTls11 = tlsVersion === 'TLS 1.1' || tlsVersion === 'TLSv1.1';
+  const isLegacyTls = isTls10 || isTls11 || tlsVersion === 'TLS 1.2';
+
+  const potentialVulns = [
+    {
+      id: 'poodle',
+      name: 'POODLE Attack',
+      cve: 'CVE-2014-3566',
+      severity: 'HIGH',
+      status: isSslv3 ? 'Vulnerable' : (isCbcMode && (isTls10 || isTls11) ? 'Potential (TLS CBC)' : 'Not Vulnerable'),
+      trigger: 'SSL 3.0 enabled, or TLS 1.0/1.1 with CBC mode ciphers',
+      desc: 'Allows Man-in-the-Middle attackers to decrypt ciphertext bytes by exploiting SSL 3.0 padding oracle vulnerability.',
+      remediation: 'Disable SSL 3.0 and TLS 1.0/1.1; enforce TLS 1.2 or TLS 1.3.'
+    },
+    {
+      id: 'sweet32',
+      name: 'SWEET32 Birthday Attack',
+      cve: 'CVE-2016-2183',
+      severity: 'MEDIUM',
+      status: is3Des ? 'Vulnerable' : 'Not Vulnerable',
+      trigger: '64-bit block size ciphers enabled (3DES / Triple-DES / DES-CBC3)',
+      desc: 'Allows recovery of HTTPS session tokens on connections transferring >32 GB of data due to 64-bit cipher block collision.',
+      remediation: 'Disable 3DES and DES-CBC3 cipher suites; enforce AES-128, AES-256, or ChaCha20.'
+    },
+    {
+      id: 'beast',
+      name: 'BEAST Attack',
+      cve: 'CVE-2011-3389',
+      severity: 'MEDIUM',
+      status: isTls10 && isCbcMode ? 'Vulnerable' : 'Not Vulnerable',
+      trigger: 'TLS 1.0 enabled with CBC (Cipher Block Chaining) ciphers',
+      desc: 'Exploits predictable initialization vectors in TLS 1.0 CBC mode to decrypt authentication headers.',
+      remediation: 'Disable TLS 1.0 protocol support; enforce TLS 1.2+.'
+    },
+    {
+      id: 'lucky13',
+      name: 'Lucky13 Timing Attack',
+      cve: 'CVE-2013-0169',
+      severity: 'MEDIUM',
+      status: isLegacyTls && isCbcMode ? 'Vulnerable (Config Dependent)' : 'Not Vulnerable',
+      trigger: 'TLS 1.0 - TLS 1.2 enabled with MAC-then-Encrypt CBC ciphers',
+      desc: 'Side-channel timing attack on TLS MAC check calculations during CBC padding parsing.',
+      remediation: 'Prefer AEAD cipher suites (AES-GCM, CHACHA20-POLY1305) and disable CBC mode ciphers.'
+    }
+  ];
+
   const rootOrg = issuer.includes("DigiCert") ? "DigiCert Inc" : (issuer.includes("Google") ? "Google Trust Services LLC" : "Internet Security Research Group");
   const rootCn = issuer.includes("DigiCert") ? "DigiCert Global Root CA" : (issuer.includes("Google") ? "GTS Root R1" : "ISRG Root X1");
   const interCn = issuer.includes("DigiCert") ? "DigiCert TLS RSA SHA256 2020 CA1" : (issuer.includes("Google") ? "GTS CA 1C3" : "R3");
@@ -276,6 +328,48 @@ const SSLDetailModal = ({ cert, onClose }) => {
                   <span className="ssl-pro-dns-key">SSL Protocol / Cipher</span>
                   <span className="ssl-pro-dns-val font-mono">{cert.cipher || 'TLS_AES_256_GCM_SHA384 (TLS 1.3)'}</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Potential SSL Vulnerabilities & Configuration Audit */}
+            <div className="ssl-pro-panel">
+              <div className="ssl-pro-panel-header">
+                <AlertTriangle size={18} className="icon-amber" />
+                <span>Potential SSL/TLS Vulnerabilities & Configuration Audit</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+                {potentialVulns.map((v) => (
+                  <div 
+                    key={v.id} 
+                    style={{ 
+                      padding: '0.85rem 1rem', 
+                      borderRadius: '8px', 
+                      background: v.status === 'Not Vulnerable' ? '#F8FAFC' : (v.severity === 'HIGH' ? '#FEF2F2' : '#FFFBEB'),
+                      border: `1px solid ${v.status === 'Not Vulnerable' ? '#E2E8F0' : (v.severity === 'HIGH' ? '#FECACA' : '#FDE68A')}`
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#1E293B' }}>{v.name}</span>
+                        {v.cve && <span className="font-mono text-slate-500" style={{ fontSize: '0.75rem', background: '#E2E8F0', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>{v.cve}</span>}
+                      </div>
+                      <span className={`cert-pill pill-${v.status === 'Not Vulnerable' ? 'healthy' : v.severity.toLowerCase()}`}>
+                        {v.status}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#475569', marginBottom: '0.25rem' }}>
+                      <strong>Trigger:</strong> <code style={{ color: '#0EA5E9', background: '#F0F9FF', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>{v.trigger}</code>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748B', lineHeight: '1.4' }}>
+                      {v.desc}
+                    </div>
+                    {v.status !== 'Not Vulnerable' && (
+                      <div style={{ fontSize: '0.78rem', color: '#B45309', marginTop: '0.35rem', fontWeight: '600' }}>
+                        <strong>Remediation:</strong> {v.remediation}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 

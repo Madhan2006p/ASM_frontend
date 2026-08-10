@@ -293,7 +293,7 @@ function App() {
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
-          {activePage === 'Vulnerabilities'       && <OWASPScannerUI activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
