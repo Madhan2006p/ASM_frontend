@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RefreshCw, X, Filter, ArrowUpDown, CheckCircle2 } from 'lucide-react';
+import { Search, RefreshCw, X, ArrowUpDown } from 'lucide-react';
 import './Technologies.css';
 
 const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '' }) => {
@@ -81,7 +81,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
       </div>
 
       {/* 8-Column Reference Table */}
-      <div className="card global-table-wrapper" style={{ padding: '0', background: '#ffffff', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+      <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
             <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
@@ -170,7 +170,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                         {index + 1}
                       </td>
                       <td>
-                        <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: '0.875rem', fontWeight: '600', color: '#1e293b' }}>
+                        <span className="tech-subdomain-text">
                           {row.subdomain}
                         </span>
                       </td>
@@ -245,15 +245,15 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
         >
           <div 
             style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              border: '1px solid var(--border-color, #e2e8f0)',
               borderRadius: '12px',
               width: '100%',
               maxWidth: '520px',
               maxHeight: '85vh',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
               overflow: 'hidden'
             }}
             onClick={(e) => e.stopPropagation()}
@@ -261,17 +261,17 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
             {/* Modal Header */}
             <div style={{
               padding: '1.25rem 1.5rem',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border-color, #e2e8f0)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              background: '#f8fafc'
+              background: 'var(--bg-main, #f8fafc)'
             }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>
+                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary, #0f172a)' }}>
                   Technologies
                 </h3>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#2563eb', fontWeight: '600', display: 'block', marginTop: '0.25rem' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#3b82f6', fontWeight: '600', display: 'block', marginTop: '0.25rem' }}>
                   {selectedSubdomainModal.subdomain}
                 </span>
               </div>
@@ -280,7 +280,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#64748b',
+                  color: 'var(--text-secondary, #64748b)',
                   cursor: 'pointer',
                   padding: '0.25rem',
                   borderRadius: '4px',
@@ -295,7 +295,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
 
             {/* Modal Body */}
             <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
-              <div style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', marginBottom: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 All Detected Technologies ({selectedSubdomainModal.technologies?.length || 0})
               </div>
               
@@ -304,9 +304,9 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                   <div key={idx} style={{
                     padding: '0.6rem 0.85rem',
                     borderRadius: '8px',
-                    background: 'rgba(59, 130, 246, 0.08)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
-                    color: '#1e293b',
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                    color: 'var(--text-primary, #1e293b)',
                     fontSize: '0.875rem',
                     fontWeight: '700',
                     display: 'flex',
@@ -323,10 +323,10 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
             {/* Modal Footer */}
             <div style={{
               padding: '1rem 1.5rem',
-              borderTop: '1px solid #e2e8f0',
+              borderTop: '1px solid var(--border-color, #e2e8f0)',
               display: 'flex',
               justifyContent: 'flex-end',
-              background: '#f8fafc'
+              background: 'var(--bg-main, #f8fafc)'
             }}>
               <button
                 onClick={() => setSelectedSubdomainModal(null)}
