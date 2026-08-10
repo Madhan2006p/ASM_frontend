@@ -85,7 +85,7 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
         </div>
       </div>
 
-      {/* Grouped Category Boxes */}
+      {/* Grouped Category Tables */}
       <div className="card global-table-wrapper" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
@@ -97,7 +97,7 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
             No technologies found for this scan.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '0.5rem' }}>
             {Object.entries(
               filteredData.reduce((acc, tech) => {
                 if (!acc[tech.category]) acc[tech.category] = [];
@@ -107,82 +107,92 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
             ).map(([category, techs]) => (
               <div key={category}>
                 <h3 style={{ 
-                  fontSize: '1.2rem', 
+                  fontSize: '1.1rem', 
                   fontWeight: '700', 
                   color: 'var(--text-primary)', 
-                  marginBottom: '1.5rem', 
-                  paddingBottom: '0.75rem', 
-                  borderBottom: '2px solid var(--border-color)', 
+                  marginBottom: '1rem', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  gap: '0.75rem' 
+                  gap: '0.65rem' 
                 }}>
-                  <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#3b82f6' }}></div>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: '#3b82f6' }}></div>
                   {category}
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', marginLeft: 'auto', fontWeight: '600' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '0.15rem 0.6rem', borderRadius: '12px', marginLeft: 'auto', fontWeight: '600' }}>
                     {techs.length} item{techs.length !== 1 ? 's' : ''}
                   </span>
                 </h3>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem' }}>
-                  {techs.map((tech, idx) => {
-                    const char = tech.name ? tech.name.charAt(0).toUpperCase() : '?';
-                    const hues = [210, 280, 150, 320, 40, 190];
-                    const hue = hues[idx % hues.length];
-                    
-                    return (
-                      <div key={tech.id} style={{ 
-                        background: 'var(--bg-card)', 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: '16px', 
-                        padding: '1.25rem', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '1.2rem',
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = `hsl(${hue}, 80%, 50%)`; e.currentTarget.style.boxShadow = `0 8px 24px hsla(${hue}, 80%, 50%, 0.15)`; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                            <div style={{ 
-                              width: '44px', height: '44px', 
-                              borderRadius: '12px', 
-                              background: `linear-gradient(135deg, hsla(${hue}, 80%, 60%, 0.15) 0%, hsla(${hue}, 80%, 60%, 0.05) 100%)`,
-                              border: `1px solid hsla(${hue}, 80%, 60%, 0.2)`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: `hsl(${hue}, 80%, 60%)`, fontWeight: '800', fontSize: '1.3rem'
-                            }}>
-                              {char}
-                            </div>
-                            <div>
-                              <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>{tech.name}</h4>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{tech.category}</span>
-                            </div>
-                          </div>
-                        </div>
+
+                <div className="tech-table-responsive-wrapper">
+                  <table className="tech-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '25%' }}>Technology</th>
+                        <th style={{ width: '20%' }}>Category</th>
+                        <th style={{ width: '18%' }}>Version</th>
+                        <th style={{ width: '17%' }}>Status</th>
+                        <th style={{ width: '20%' }}>Domain</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {techs.flatMap((tech) => {
+                        const domainHosts = (Array.isArray(tech.hosts) && tech.hosts.length > 0)
+                          ? tech.hosts
+                          : ['—'];
                         
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Version:</span>
-                            {tech.version && tech.version !== '—' ? (
-                               <span style={{ background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-                                 v{tech.version}
-                               </span>
-                            ) : (
-                               <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Unknown</span>
-                            )}
-                          </div>
-                          
-                          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: tech.eol !== 'Supported' ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem', background: tech.eol !== 'Supported' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                            {tech.eol === 'Supported' ? 'Active' : 'EOL'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                        return domainHosts.map((host, hostIdx) => (
+                          <tr key={`${tech.id}-${hostIdx}`}>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{
+                                  width: '32px', height: '32px', borderRadius: '8px',
+                                  background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)',
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  color: '#3b82f6', fontWeight: '800', fontSize: '0.9rem', flexShrink: 0
+                                }}>
+                                  {tech.name ? tech.name.charAt(0).toUpperCase() : '?'}
+                                </div>
+                                <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.875rem' }}>
+                                  {tech.name}
+                                </span>
+                              </div>
+                            </td>
+                            <td>
+                              <span className="tech-pill pill-category">{category}</span>
+                            </td>
+                            <td>
+                              {tech.version && tech.version !== '—' ? (
+                                <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)', background: 'var(--bg-main)', padding: '0.2rem 0.55rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                                  v{tech.version}
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                                  Unknown
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              {tech.eol === 'Supported' ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.25rem 0.65rem', borderRadius: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.25)', fontSize: '0.75rem', fontWeight: '700' }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
+                                  Active
+                                </span>
+                              ) : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.25rem 0.65rem', borderRadius: '4px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.25)', fontSize: '0.75rem', fontWeight: '700' }}>
+                                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }}></span>
+                                  EOL
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <span style={{ fontFamily: 'ui-monospace, SFMono-Regular, monospace', fontSize: '0.82rem', color: 'var(--text-primary)', fontWeight: '600' }}>
+                                {host}
+                              </span>
+                            </td>
+                          </tr>
+                        ));
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ))}
