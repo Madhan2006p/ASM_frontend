@@ -94,7 +94,6 @@ const Settings = ({ user, setUser }) => {
       try {
         const res = await api.delete('/api/attacksurface/clear-db/');
         alert(res.message || 'Database cleared successfully.');
-        window.location.reload();
       } catch (err) {
         console.error("Failed to clear database", err);
         alert(err.message || 'Failed to clear database.');

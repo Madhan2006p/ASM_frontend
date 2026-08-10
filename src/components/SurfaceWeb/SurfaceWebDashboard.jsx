@@ -70,7 +70,9 @@ const Widget = ({ title, children, style = {}, colSpan = 1 }) => (
 const darkTheme = { background: '#1a1f2e', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 4, padding: '8px', color: '#e2e8f0', fontSize: '0.75rem' };
 const gridLine = { stroke: 'rgba(255,255,255,0.05)' };
 
-const SurfaceWebDashboard = () => {
+import TargetDomainTabs from '../common/TargetDomainTabs';
+
+const SurfaceWebDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [stats, setStats] = useState(null);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -142,6 +144,12 @@ const totalResults = stats?.total_results || 0;
           <TopBlock title="UNIQUE OSINT MODULES" value={Object.keys(modules).length} color={COLORS.info} />
           <TopBlock title="UNIQUE DATA CATEGORIES" value={Object.keys(types).length} color="#8B5CF6" />
         </div>
+
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
 
         {/* ROW 2: Charts */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', minHeight: '300px' }}>

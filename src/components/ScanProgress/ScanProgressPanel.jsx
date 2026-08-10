@@ -141,15 +141,9 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
     };
 
     fetchStatus();
-    const interval = setInterval(() => {
-      if (scanData && (scanData.status === 'completed' || scanData.status === 'failed')) {
-        clearInterval(interval);
-        return;
-      }
-      fetchStatus();
-    }, 3000);
+    const interval = setInterval(fetchStatus, 3000);
     return () => { mounted = false; clearInterval(interval); };
-  }, [activeScanId, scanData?.status]);
+  }, [activeScanId]);
 
   // Poll nuclei deep scan state every 5s when vuln phase is running
   useEffect(() => {
@@ -169,7 +163,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
           // Log phase transitions
           if (prev && prev.phase_name !== data.phase_name && data.phase_name) {
             setLog(prevLog => [...prevLog, {
-              phase: `🛡️ OWASP Top 10 Scanner: ${data.phase_name}`,
+              phase: `🐍 Python Scanner: ${data.phase_name}`,
               status: 'running',
               time: new Date().toISOString()
             }]);
@@ -195,10 +189,8 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
     }
   }, [activeScan?.id, activeScan?.status]);
 
-  // Reset and auto-show on scan change or when scan is running
+  // Reset on scan change
   useEffect(() => {
-    setVisible(true);
-    setCollapsed(false);
     setLog([]);
     setNucleiState(null);
     prevVulnPhaseRef.current = null;
@@ -213,7 +205,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const target = scanData?.target ?? activeScan?.target ?? '';
 
   const vulnPhase = scanData?.vuln_scan_phase;
-  const vulnBadge = isDeepScanRunning || (vulnPhase && vulnPhase !== 'pending' && vulnPhase !== 'complete') ? '🛡️ OWASP Top 10 Scanner' : null;
+  const vulnBadge = isDeepScanRunning || (vulnPhase && vulnPhase !== 'pending' && vulnPhase !== 'complete') ? '🐍 Python Scanner' : null;
 
   if (!activeScanId) return null;
   if (!visible) return null;
@@ -306,7 +298,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             <div className="spp-nuclei-panel">
               <div className="spp-nuclei-header">
                 <Shield size={13} />
-                <span>OWASP Top 10 Security Scanner</span>
+                <span>Python Vulnerability Scanner</span>
                 <span className="spp-nuclei-found">
                   {nucleiState.total_found} vuln{nucleiState.total_found !== 1 ? 's' : ''} found
                 </span>

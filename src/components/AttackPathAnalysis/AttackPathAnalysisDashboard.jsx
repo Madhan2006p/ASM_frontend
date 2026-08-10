@@ -101,17 +101,6 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
         subtitle="Visualize how attackers could chain existing vulnerabilities to breach your critical assets."
       />
 
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
-      </div>
-
       {loading ? (
         <div className="card" style={{ marginTop: '1.5rem', padding: '3rem', display: 'flex', justifyContent: 'center', color: 'var(--text-secondary)' }}>
           <RefreshCw className="spin" size={24} style={{ marginRight: '0.5rem' }} /> Mapping attack paths from real-time data...
@@ -147,6 +136,17 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
                 <div className="card-value">{stats.pathComplexity}</div>
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+            <ScanSelector 
+              assignedDomains={assignedDomains}
+              selectedDomain={selectedDomain}
+              setSelectedDomain={setSelectedDomain}
+              scansList={scansList}
+              activeScanId={activeScanId}
+              handleSelectScan={handleSelectScan}
+            />
           </div>
           
           <div className="data-section-premium" style={{ marginTop: '1.5rem' }}>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Server, ShieldAlert, Cpu, HardDrive, Wifi, Network } from 'lucide-react';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './InternalDashboard.css';
 
-const InternalDashboard = () => {
+const InternalDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [loading, setLoading] = useState(true);
 
   const [assets, setAssets] = useState([]);
@@ -63,6 +64,14 @@ const InternalDashboard = () => {
             <div className="card-value">{loading ? '...' : assets.reduce((acc, a) => acc + (a.risk_score >= 10 ? 1 : 0), 0)}</div>
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
       </div>
 
       <div className="data-section-premium">

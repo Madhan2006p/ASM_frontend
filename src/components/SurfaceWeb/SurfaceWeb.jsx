@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './SurfaceWeb.css';
 import { api } from '../../utils/api';
 
@@ -272,7 +273,7 @@ const RenderDomainName = ({ domain }) => {
 };
 
 
-const SurfaceWeb = ({ activeTarget }) => {
+const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const renderDiscoveredValue = (item) => {
     const type = item.data_type ? item.data_type.toLowerCase() : '';
     const val = item.data_value;
@@ -408,6 +409,12 @@ const SurfaceWeb = ({ activeTarget }) => {
         badgeText="SURFACE WEB OSINT"
         title="Spiderfoot Passive Intelligence Scan"
         subtitle="Leverage passive OSINT to map internet names, IP addresses, domains, and leak intelligence."
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
 

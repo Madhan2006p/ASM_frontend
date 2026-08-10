@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, SearchX, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './FaradayFindings.css';
 import { api } from '../../utils/api';
 
-const FaradayFindings = ({ activeScanId }) => {
+const FaradayFindings = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [findings, setFindings] = useState([]);
   const [connected, setConnected] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
@@ -151,6 +152,14 @@ const FaradayFindings = ({ activeScanId }) => {
           </div>
         }
       />
+
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
 
       {/* Sync Status Banner */}
       {syncMsg && (

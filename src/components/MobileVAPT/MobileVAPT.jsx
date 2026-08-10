@@ -7,6 +7,7 @@ import {
   Wifi, Binary, BarChart2, Key, Hash
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
 
@@ -52,7 +53,7 @@ const CAT_ICON = {
 /* ═══════════════════════════════════════════════════════════
    MobileVAPT  — sidebar app list + detail panel
 ═══════════════════════════════════════════════════════════ */
-const MobileVAPT = () => {
+const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   /* ── Top-level data ─────────────────────────────────────── */
   const [dashboard,      setDashboard]      = useState({ total_scans:0, completed_scans:0, total_findings:0, critical:0, high:0, medium:0, low:0 });
   const [history,        setHistory]        = useState([]);
@@ -92,7 +93,7 @@ const MobileVAPT = () => {
       setHistory(list);
       // Auto-select first completed app if none selected
       if (!selectedApp) {
-        const first = list.find(s => ['completed', 'vt_completed'].includes(s.status));
+        const first = list.find(s => s.status === 'completed');
         if (first) fetchDetail(first);
       }
     } catch (e) { console.error(e); }
@@ -107,7 +108,7 @@ const MobileVAPT = () => {
     const id = setInterval(async () => {
       try {
         const d = await api.get(`/api/mobile-vapt/scan-status/${activePollId}/`);
-        if (['completed','vt_completed','scan_failed','report_failed'].includes(d.status)) {
+        if (['completed','scan_failed','report_failed'].includes(d.status)) {
           setActivePollId(null);
           loadDashboard(); loadHistory();
         } else {
@@ -119,7 +120,7 @@ const MobileVAPT = () => {
   }, [activePollId]);
 
   useEffect(() => {
-    const active = history.find(s => ['uploaded','uploaded_to_mobsf','scanning','vt_scanning'].includes(s.status));
+    const active = history.find(s => ['uploaded','uploaded_to_mobsf','scanning'].includes(s.status));
     if (active) setActivePollId(active.id);
   }, [history]);
 
@@ -245,8 +246,14 @@ const MobileVAPT = () => {
       {/* ── Page Header ───────────────────────────────────── */}
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
-        title="Mobile Security"
+        title="Mobile VAPT — MobSF Analysis"
         subtitle="Automated Static & Dynamic security analysis of iOS and Android binaries via MobSF."
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* ── Findings Grouped by Category (Replaces old Stats) ── */}
@@ -468,8 +475,7 @@ const MobileVAPT = () => {
               const isActive  = selectedApp?.id === scan.id;
               const score     = parseInt(scan.score || 50);
               const sc        = scoreColor(score);
-              const isPending = !['completed','vt_completed','scan_failed','report_failed'].includes(scan.status);
-              const isCompleted = ['completed','vt_completed'].includes(scan.status);
+              const isPending = !['completed','scan_failed','report_failed'].includes(scan.status);
               return (
                 <div
                   key={scan.id}
@@ -491,7 +497,7 @@ const MobileVAPT = () => {
                       <span className="mv-app-item-status pending">
                         <RefreshCw size={9} className="mv-spin"/> {scan.status}
                       </span>
-                    ) : isCompleted ? (
+                    ) : scan.status === 'completed' ? (
                       <span className="mv-app-item-score" style={{color:sc}}>
                         Score: {score}/100
                       </span>
@@ -500,7 +506,7 @@ const MobileVAPT = () => {
                     )}
                   </div>
                   <div className="mv-app-item-actions">
-                    {isCompleted && (
+                    {scan.status === 'completed' && (
                       <ChevronRight size={14} style={{color: isActive ? 'var(--brand-primary)' : 'var(--text-muted)', flexShrink:0}}/>
                     )}
                     <button className="mv-delete-btn" onClick={(e) => handleDelete(scan.id, e)} title="Delete">
@@ -549,7 +555,7 @@ const MobileVAPT = () => {
                     <span>{selectedApp.source === 'ios' ? 'iOS' : 'Android'}</span>
                   </div>
                 </div>
-                {['completed', 'vt_completed'].includes(selectedApp.status) && detail && (
+                {selectedApp.status === 'completed' && detail && (
                   <div className="mv-detail-score-wrap" style={{marginLeft:'auto'}}>
                     <div className="mv-detail-score-circle" style={{borderColor:scoreColor(parseInt(scan.score||50))}}>
                       <span style={{color:scoreColor(parseInt(scan.score||50))}}>

@@ -199,14 +199,11 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
     // Initial load
     loadOverviewData();
 
-    // Poll every 5 seconds only while a scan is actively running
-    const hasRunning = scansList.some(s => s.status === 'running' || s.status === 'pending');
-    let interval = null;
-    if (hasRunning || activeScan?.status === 'running') {
-      interval = setInterval(loadOverviewData, 5000);
-    }
-    return () => { if (interval) clearInterval(interval); };
-  }, [activeScanId, activeScan?.status]);
+    // Poll every 5 seconds while activeScanId is set — updates counters in real time
+    // regardless of whether the scan is already in scansList (handles fresh scans)
+    const interval = setInterval(loadOverviewData, 5000);
+    return () => clearInterval(interval);
+  }, [activeScanId]);
 
   // Fetch monitored domains independently — always show assigned domains
   useEffect(() => {

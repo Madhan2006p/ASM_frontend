@@ -23,7 +23,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell 
 } from 'recharts';
-import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './ExecutiveDashboard.css';
 
 // SVG Continent Path outline for world map visualization
@@ -170,30 +170,6 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
   return (
     <div className="global-page-container page-animate">
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>Executive Security Dashboard</h1>
-          <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>Comprehensive risk posture across discovery, mobile, email, and brand monitoring</p>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Domain Filter:
-          </span>
-          <select
-            value={selectedDomain || ''}
-            onChange={(e) => setSelectedDomain && setSelectedDomain(e.target.value)}
-            className="exec-dropdown-select"
-          >
-            <option value="">All Scanned Domains</option>
-            {assignedDomains.map(domain => (
-              <option key={domain} value={domain}>{domain}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
       {/* Top Row: 6 Metric Tiles */}
       <div className="exec-metrics-grid">
         <div className="exec-metric-tile tile-red-surface">
@@ -227,6 +203,15 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
         </div>
       </div>
 
+      {/* Target Domain Tabs Switcher */}
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
+
       {/* SECTION: ASSET DISCOVERY (ROW 2) */}
       <div className="exec-widgets-grid-3">
         {/* Externally Exposed Assets trend chart */}
@@ -253,7 +238,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
           <div style={{ flex: 1, minHeight: '180px' }}>
             {trends.length > 0 ? (
-              <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trends} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorAssets" x1="0" y1="0" x2="0" y2="1">
@@ -335,7 +320,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">MANAGED VS UNMANAGED</div>
           
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={managedChartData}
@@ -386,7 +371,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">VULNERABILITIES BY RISK SCORE</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={riskChartData}
@@ -457,7 +442,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">DOMAIN ASSETS DISTRIBUTION</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={domainChartData}
@@ -558,7 +543,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">MOBILE FINDINGS BY SEVERITY</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={mobileFindingsChartData}
@@ -659,7 +644,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">VIRUSTOTAL REPUTATION SHIELD</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height={200} minWidth={0} minHeight={180}>
+            <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={vtChartData}
