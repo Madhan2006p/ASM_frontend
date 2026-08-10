@@ -317,7 +317,7 @@ const OWASPScanUI = ({ assignedDomains, selectedDomain, setSelectedDomain, scans
                 >
                   {sessionsList.map(s => (
                     <option key={s.id} value={s.id}>
-                      {s.target_url} — {s.status} ({s.progress_percent}%)
+                      {s.target_url} — {s.status} ({Math.round(s.progress_percent || 0)}%)
                     </option>
                   ))}
                 </select>
@@ -325,7 +325,146 @@ const OWASPScanUI = ({ assignedDomains, selectedDomain, setSelectedDomain, scans
             )}
           </div>
 
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {activeSession && (activeSession.status === 'RUNNING' || activeSession.status === 'PENDING') ? (
+              <button
+                onClick={handleCancelScan}
+                disabled={cancellingScan}
+                style={{
+                  background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #EF4444', color: '#EF4444',
+                  padding: '0.55rem 1.1rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.85rem',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer'
+                }}
+              >
+                <XCircle size={16} />
+                {cancellingScan ? 'Cancelling...' : 'Cancel Active Scan'}
+              </button>
+            ) : (
+              <button
+                onClick={handleManualStart}
+                disabled={startingScan || !selectedDomain}
+                style={{
+                  background: 'linear-gradient(135deg, #0EA5E9 0%, #2563EB 100%)', border: 'none', color: '#FFF',
+                  padding: '0.55rem 1.25rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.85rem',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: selectedDomain ? 'pointer' : 'not-allowed',
+                  boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                }}
+              >
+                {startingScan ? <RefreshCw size={16} className="spin" /> : <Play size={16} />}
+                {startingScan ? 'Starting Scan...' : 'Start OWASP Top 10 Audit'}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Real-Time Scan Progress & OWASP Execution Monitor (Replaces Terminal) */}
+        {activeSession && (
+          <div style={{ 
+            background: 'linear-gradient(180deg, #1E293B 0%, #0F172A 100%)', 
+            borderRadius: '14px', 
+            border: activeSession.status === 'RUNNING' ? '1px solid #0EA5E9' : '1px solid #334155',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            boxShadow: activeSession.status === 'RUNNING' ? '0 0 20px rgba(14, 165, 233, 0.2)' : 'none'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#F8FAFC' }}>
+                    OWASP Top 10 Scan Progress
+                  </h3>
+                  <span style={{
+                    padding: '0.2rem 0.65rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '800',
+                    background: activeSession.status === 'RUNNING' ? 'rgba(14, 165, 233, 0.2)' : activeSession.status === 'COMPLETED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(100, 116, 139, 0.2)',
+                    border: `1px solid ${activeSession.status === 'RUNNING' ? '#0EA5E9' : activeSession.status === 'COMPLETED' ? '#10B981' : '#64748B'}`,
+                    color: activeSession.status === 'RUNNING' ? '#38BDF8' : activeSession.status === 'COMPLETED' ? '#34D399' : '#94A3B8',
+                    display: 'flex', alignItems: 'center', gap: '0.35rem'
+                  }}>
+                    {activeSession.status === 'RUNNING' && <RefreshCw size={12} className="spin" />}
+                    {activeSession.status}
+                  </span>
+                </div>
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94A3B8' }}>
+                  Target Scope: <strong style={{ color: '#F8FAFC' }}>{activeSession.target_url}</strong>
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: '700' }}>PROGRESS</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#38BDF8' }}>
+                    {Math.round(activeSession.progress_percent || 0)}%
+                  </div>
+                </div>
+                {activeSession.status === 'RUNNING' && (
+                  <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.5rem 0.85rem', borderRadius: '8px', textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.7rem', color: '#38BDF8', fontWeight: '700' }}>JUST-IN-TIME FINDINGS</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.35rem' }}>
+                      <Sparkles size={16} color="#38BDF8" className="spin" />
+                      {findings.length} Discovered
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div style={{ width: '100%', height: '10px', background: '#0F172A', borderRadius: '5px', overflow: 'hidden', border: '1px solid #334155', marginBottom: '1rem' }}>
+              <div style={{ 
+                width: `${Math.min(100, Math.max(0, activeSession.progress_percent || 0))}%`, 
+                height: '100%', 
+                background: 'linear-gradient(90deg, #38BDF8 0%, #2563EB 50%, #10B981 100%)',
+                borderRadius: '5px',
+                transition: 'width 0.4s ease'
+              }} />
+            </div>
+
+            {/* Active Phase & Current Activity Ticker */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', background: '#0F172A', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid #334155' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#F8FAFC' }}>
+                <Activity size={16} color="#38BDF8" className={activeSession.status === 'RUNNING' ? 'spin' : ''} />
+                <span>Current Activity:</span>
+                <span style={{ color: '#38BDF8', fontWeight: '700' }}>
+                  {activeSession.current_phase || 'Initializing scan suite...'}
+                </span>
+              </div>
+              <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                {activeSession.status === 'RUNNING' ? 'Auto-refreshing every 2s • Findings update in real-time' : 'Scan execution finished'}
+              </span>
+            </div>
+
+            {/* OWASP Top 10 Category Execution Grid */}
+            <div style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.6rem' }}>
+              {OWASP_CATEGORIES.map((cat) => {
+                const isCurrentCategory = activeSession.current_phase?.includes(cat.id) || activeSession.current_phase?.includes(cat.name.split(':')[1]?.trim());
+                const isCompleted = activeSession.status === 'COMPLETED' || (activeSession.progress_percent > 80);
+                return (
+                  <div key={cat.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '0.45rem 0.75rem', borderRadius: '6px',
+                    background: isCurrentCategory ? 'rgba(56, 189, 248, 0.15)' : '#0F172A',
+                    border: `1px solid ${isCurrentCategory ? '#38BDF8' : '#334155'}`,
+                    fontSize: '0.75rem', fontWeight: '600', color: '#F8FAFC'
+                  }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', truncate: 'true' }}>
+                      <span style={{ color: cat.color, fontWeight: '800' }}>{cat.id}</span>
+                      <span style={{ opacity: 0.9 }}>{cat.name.split(':')[1]}</span>
+                    </span>
+                    {isCurrentCategory ? (
+                      <span style={{ color: '#38BDF8', fontSize: '0.65rem', fontWeight: '800', background: 'rgba(56, 189, 248, 0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                        AUDITING
+                      </span>
+                    ) : isCompleted ? (
+                      <CheckCircle2 size={14} color="#10B981" />
+                    ) : (
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#475569' }}></span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Severity Metrics */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -435,6 +574,11 @@ const OWASPScanUI = ({ assignedDomains, selectedDomain, setSelectedDomain, scans
                           <td style={{ padding: '0.75rem', fontWeight: '600', color: '#F8FAFC' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                               <span>{f.name}</span>
+                              {activeSession?.status === 'RUNNING' && (
+                                <span style={{ background: 'rgba(56, 189, 248, 0.2)', color: '#38BDF8', border: '1px solid #38BDF8', padding: '0.1rem 0.45rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '800', display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                                  <Sparkles size={11} className="spin" /> JUST DISCOVERED
+                                </span>
+                              )}
                               {f.exploit_available && (
                                 <span style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#EF4444', padding: '0.1rem 0.4rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: '700' }}>
                                   Exploit Available
