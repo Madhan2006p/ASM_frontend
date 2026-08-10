@@ -8,7 +8,7 @@ import { api } from '../../utils/api';
 const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [portsList, setPortsList] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [severityFilter, setSeverityFilter] = useState('All');
   const [toastMessage, setToastMessage] = useState('');
   const [selectedPort, setSelectedPort] = useState(null);
 
@@ -35,48 +35,67 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     return 3.0;
   };
 
-  // Fetch open ports on activeScanId change
+  // Fetch open ports on activeScanId/selectedDomain change
   useEffect(() => {
-    const loadPorts = async () => {
-      if (!activeScanId) {
-        setPortsList([]);
-        return;
-      }
-      try {
-        setLoading(true);
-        const data = await api.get(`/api/attacksurface/open-ports/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        
-        // Flatten domain -> ports list
-        const flat = [];
-        list.forEach((item) => {
-          const ports = Array.isArray(item.ports) ? item.ports : [];
-          ports.forEach((p, idx) => {
-            // Check if p is integer or dict
-            const portNum = typeof p === 'object' ? p.port : p;
-            const proto = typeof p === 'object' ? p.protocol : 'tcp';
-            const service = typeof p === 'object' ? p.service : 'unknown';
-            const product = typeof p === 'object' ? p.product : '';
-            const version = typeof p === 'object' ? p.version : '';
-            
-            flat.push({
-              id: `${item.id}-${idx}`,
-              host: item.domain,
-              ip: '-', // backend model does not explicitly store IP on PortResult, default to dash
-              port: portNum,
-              protocol: `/${(proto || 'tcp').toUpperCase()}`,
-              service: service || 'unknown',
-              product: product || '',
-              version: version || '',
-              severity: mapSeverity(portNum),
-              risk: mapRiskScore(portNum),
-              status: 'Open',
-              lastSeen: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'Recent'
-            });
+    const flattenPorts = (list) => {
+      const flat = [];
+      list.forEach((item) => {
+        const ports = Array.isArray(item.ports) ? item.ports : [];
+        ports.forEach((p, idx) => {
+          const portNum = typeof p === 'object' ? p.port : p;
+          const proto = typeof p === 'object' ? p.protocol : 'tcp';
+          const service = typeof p === 'object' ? p.service : 'unknown';
+          const product = typeof p === 'object' ? p.product : '';
+          const version = typeof p === 'object' ? p.version : '';
+          flat.push({
+            id: `${item.id}-${idx}`,
+            host: item.domain,
+            ip: '-',
+            port: portNum,
+            protocol: `/${(proto || 'tcp').toUpperCase()}`,
+            service: service || 'unknown',
+            product: product || '',
+            version: version || '',
+            severity: mapSeverity(portNum),
+            risk: mapRiskScore(portNum),
+            status: 'Open',
+            lastSeen: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'Recent'
           });
         });
-        flat.sort((a, b) => b.risk - a.risk);
-        setPortsList(flat);
+      });
+      return flat;
+    };
+
+    const loadPorts = async () => {
+      try {
+        setLoading(true);
+        if (selectedDomain && activeScanId) {
+          const data = await api.get(`/api/attacksurface/open-ports/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          const flat = flattenPorts(list);
+          flat.sort((a, b) => b.risk - a.risk);
+          setPortsList(flat);
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          const allPorts = [];
+          const seenKeys = new Set();
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/open-ports/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              flattenPorts(list).forEach(p => {
+                const key = `${p.host}-${p.port}-${p.protocol}`;
+                if (!seenKeys.has(key)) {
+                  seenKeys.add(key);
+                  allPorts.push(p);
+                }
+              });
+            } catch (e) {}
+          }
+          allPorts.sort((a, b) => b.risk - a.risk);
+          setPortsList(allPorts);
+        } else {
+          setPortsList([]);
+        }
       } catch (e) {
         console.error("Failed to load open ports", e);
         setPortsList([]);
@@ -85,11 +104,11 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       }
     };
     loadPorts();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
   const filteredData = portsList.filter(item => {
-    if (severityFilter === 'ALL') return true;
-    return item.severity === severityFilter;
+    if (severityFilter === 'All') return true;
+    return item.severity === severityFilter.toUpperCase();
   });
 
   const exportToCSV = () => {
@@ -112,40 +131,53 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     triggerToast(`Successfully exported ${filteredData.length} open ports to CSV.`);
   };
 
-  // Stats calculation
+  // ── CHANGE 2: Counts derived from portsList (same data source as table) ──
+  const allCount      = portsList.length;
   const criticalCount = portsList.filter(p => p.severity === 'CRITICAL').length;
-  const highCount = portsList.filter(p => p.severity === 'HIGH').length;
-  const uniqueHosts = [...new Set(portsList.map(p => p.host))].length;
-  const totalOpen = portsList.length;
+  const highCount     = portsList.filter(p => p.severity === 'HIGH').length;
+  const mediumCount   = portsList.filter(p => p.severity === 'MEDIUM').length;
+  const lowCount      = portsList.filter(p => p.severity === 'LOW').length;
+
+  // Filter categories wired to existing setSeverityFilter — exactly matches the existing filter values
+  const filterCategories = [
+    { label: 'ALL',      value: 'All',      count: allCount,      subtext: 'Total open ports' },
+    { label: 'CRITICAL', value: 'Critical', count: criticalCount, subtext: 'Requires immediate review' },
+    { label: 'HIGH',     value: 'High',     count: highCount,     subtext: 'Elevated exposure' },
+    { label: 'MEDIUM',   value: 'Medium',   count: mediumCount,   subtext: 'Moderate risk' },
+    { label: 'LOW',      value: 'Low',      count: lowCount,      subtext: 'Low exposure' },
+  ];
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        
-        {/* Active Scan Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
 
+        {/* CHANGE 1: ScanSelector (Target Domain) is now ABOVE the PageHeaderCard/hero */}
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+
+        {/* CHANGE 2: PageHeaderCard stats now represent the existing severity filter categories.
+            Each card's onClick calls the existing setSeverityFilter with the matching value.
+            Active card is indicated by the 'active' class on phc-stat-card. */}
         <PageHeaderCard 
           badgeText="SECURITY"
           title="Open Ports"
           subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
-          stats={[
-            { label: 'All', value: portsList.length.toString(), subtext: 'Total open ports', active: severityFilter === 'ALL', onClick: () => setSeverityFilter('ALL') },
-            { label: 'Critical', value: portsList.filter(p => p.severity === 'CRITICAL').length.toString(), subtext: 'Immediate action', active: severityFilter === 'CRITICAL', onClick: () => setSeverityFilter('CRITICAL') },
-            { label: 'High', value: portsList.filter(p => p.severity === 'HIGH').length.toString(), subtext: 'Needs review', active: severityFilter === 'HIGH', onClick: () => setSeverityFilter('HIGH') },
-            { label: 'Medium', value: portsList.filter(p => p.severity === 'MEDIUM').length.toString(), subtext: 'Monitored', active: severityFilter === 'MEDIUM', onClick: () => setSeverityFilter('MEDIUM') },
-            { label: 'Low', value: portsList.filter(p => p.severity === 'LOW').length.toString(), subtext: 'Low risk', active: severityFilter === 'LOW', onClick: () => setSeverityFilter('LOW') }
-          ]}
+          stats={filterCategories.map((cat) => ({
+            label: cat.label,
+            value: cat.count.toString(),
+            subtext: cat.subtext,
+            isActive: severityFilter === cat.value,
+            onClick: () => setSeverityFilter(cat.value),
+          }))}
         />
+
+        {/* CHANGE 2: Redundant filter-button row removed — cards above now control the filter */}
 
         {/* Table */}
         <div className="global-table-wrapper">
@@ -171,7 +203,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                   </td>
                 </tr>
               ) : filteredData.map(item => (
-                <tr key={item.id}>
+                <tr key={item.id} className="op-table-row">
                   <td className="op-host">{item.host}</td>
                   <td className="op-ip">{item.ip}</td>
                   <td>

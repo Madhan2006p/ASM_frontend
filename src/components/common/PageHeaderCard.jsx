@@ -59,7 +59,7 @@ const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
             return (
               <div 
                 key={index} 
-                className={`card phc-stat-card ${stat.active ? 'active' : ''}`}
+                className={`card phc-stat-card${stat.isActive ? ' phc-stat-card--active' : ''}`}
                 onClick={stat.onClick}
                 style={{
                   '--card-border': colorInfo.border,

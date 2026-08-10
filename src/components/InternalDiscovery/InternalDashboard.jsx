@@ -25,14 +25,6 @@ const InternalDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain 
 
   return (
     <div className="global-page-container page-animate">
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       <div className="dashboard-header-modern">
         <div className="header-icon-wrapper">
           <Network size={28} className="pulse-icon" />
@@ -72,6 +64,14 @@ const InternalDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain 
             <div className="card-value">{loading ? '...' : assets.reduce((acc, a) => acc + (a.risk_score >= 10 ? 1 : 0), 0)}</div>
           </div>
         </div>
+      </div>
+
+      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
       </div>
 
       <div className="data-section-premium">

@@ -403,36 +403,66 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
   // Extract unique data types from results for local filtering
   const uniqueTypes = Array.from(new Set(results.map(r => r.data_type)));
 
-  const getDataTypeCount = (type) => {
-    if (!type) return results.length;
-    return results.filter(r => r.data_type === type).length;
-  };
-
   return (
     <div className="surface-web-container" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="SURFACE WEB OSINT"
         title="Spiderfoot Passive Intelligence Scan"
         subtitle="Leverage passive OSINT to map internet names, IP addresses, domains, and leak intelligence."
-        stats={[
-          { label: 'All OSINT', value: getDataTypeCount('').toString(), subtext: 'Total findings', active: selectedTypeFilter === '', onClick: () => setSelectedTypeFilter('') },
-          ...uniqueTypes.map(type => ({
-            label: type,
-            value: getDataTypeCount(type).toString(),
-            subtext: 'OSINT type findings',
-            active: selectedTypeFilter === type,
-            onClick: () => setSelectedTypeFilter(type)
-          }))
-        ]}
       />
+
+
+
+      {/* Stats Summary Panel */}
+      {stats && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+              <Globe size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.total_scans}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Total OSINT Targets</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+              <Database size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.total_results}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Discovered OSINT Values</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
+              <Activity size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{Object.keys(stats.type_counts || {}).length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Unique OSINT Types</div>
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+            <div style={{ padding: '0.75rem', borderRadius: '6px', background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7' }}>
+              <Terminal size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{Object.keys(stats.module_counts || {}).length}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: '0.25rem' }}>Spiderfoot Modules</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Layout Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(480px, 2fr)', gap: '1.5rem', alignItems: 'flex-start' }}>
@@ -512,8 +542,6 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
                 </div>
               </div>
 
-
-
               {/* Filtering / Search Bar */}
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
                 <div style={{ flex: 1, position: 'relative', minWidth: '180px' }}>
@@ -530,6 +558,21 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
                     }}
                   />
                 </div>
+
+                <select
+                  value={selectedTypeFilter}
+                  onChange={(e) => setSelectedTypeFilter(e.target.value)}
+                  style={{
+                    height: '36px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                    background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '0 1rem',
+                    fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', outline: 'none'
+                  }}
+                >
+                  <option value="">All Data Types</option>
+                  {uniqueTypes.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Findings Table */}

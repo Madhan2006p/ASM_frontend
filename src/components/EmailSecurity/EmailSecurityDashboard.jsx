@@ -107,15 +107,10 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
-      <div style={{ marginBottom: '1rem' }}>
-        <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-          assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-      </div>
-
       <PageHeaderCard
-        badgeText="DOMAIN SECURITY"
-        title="Email Authentication & Compliance Dashboard"
-        subtitle="Organizations domain email authentication standards metrics overview."
+        badgeText="EMAIL SECURITY"
+        title="Email Security Dashboard"
+        subtitle="Domain impersonation protection and email authentication overview."
         stats={[
           { label:'Domains Checked', value: data.length.toString() },
           { label:'SPF Pass Rate',   value: `${Math.round((spf/total)*100)}%` },
@@ -130,6 +125,9 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
         <CT label="DMARC Protected" value={dmarc} sub={`/ ${data.length}`} good={dmarc>0 && dmarc===data.length} />
         <CT label="Fully Protected" value={full}  sub={`/ ${data.length}`} good={full>0 && full===data.length} />
       </div>
+
+      <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
         <W title={<><Mail size={12}/> Email Authentication Overview</>}>

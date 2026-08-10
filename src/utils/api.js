@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+const BASE_URL = import.meta.env.VITE_API_URL || '';
 
 class ApiClient {
   constructor() {
@@ -34,13 +34,15 @@ class ApiClient {
       });
       if (res.ok) {
         const data = await res.json();
-        this.setTokens(data.access);
+        this.setTokens(data.access, data.refresh || this.refreshToken);
         return data.access;
+      }
+      if (res.status === 401 || res.status === 400) {
+        this.setTokens(null, null);
       }
     } catch (e) {
       console.error('Failed to refresh token', e);
     }
-    this.setTokens(null, null);
     return null;
   }
 

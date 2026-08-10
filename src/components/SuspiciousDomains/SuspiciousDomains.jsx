@@ -81,13 +81,11 @@ const SuspiciousDomains = ({ assignedDomains, selectedDomain, setSelectedDomain 
   return (
     <div className="sd-container">
       
-      <div style={{ marginBottom: '1.5rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="BRAND MONITORING"

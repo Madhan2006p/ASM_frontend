@@ -111,18 +111,17 @@ const MobileVAPTDashboard = ({ assignedDomains, selectedDomain, setSelectedDomai
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
-      <div style={{ marginBottom: '1rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
         title="Mobile VAPT Dashboard"
         subtitle="Enterprise mobile application security posture overview."
+        
       />
 
       {selectedGlobalCategory ? (

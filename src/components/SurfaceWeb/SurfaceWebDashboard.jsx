@@ -128,13 +128,11 @@ const totalResults = stats?.total_results || 0;
   return (
     <div className="global-page-container page-animate" style={{ padding: '1rem', background: 'var(--bg-main)', minHeight: '100vh' }}>
       
-      <div style={{ marginBottom: '1.25rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       {/* Top Controls (Similar to image) */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', background: 'var(--bg-card)', padding: '1rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)' }}>

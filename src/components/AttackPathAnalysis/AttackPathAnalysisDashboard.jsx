@@ -137,7 +137,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
               <div className="card-icon purple"><Target size={24} /></div>
               <div className="card-info">
                 <h4>Exposed Crown Jewels</h4>
-                <div className="card-value">{stats.exposedCrownJewewls || stats.exposedCrownJewels}</div>
+                <div className="card-value">{stats.exposedCrownJewels}</div>
               </div>
             </div>
             <div className="metric-card-premium">
@@ -148,7 +148,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
               </div>
             </div>
           </div>
-          
+
           <div className="data-section-premium" style={{ marginTop: '1.5rem' }}>
             <div className="section-header">
               <h3>Attack Path Visualizations & Mitigation</h3>

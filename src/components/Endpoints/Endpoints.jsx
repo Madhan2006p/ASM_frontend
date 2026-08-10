@@ -19,19 +19,41 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const [selectedEndpoint, setSelectedEndpoint] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Fetch endpoints on mount and when activeScanId changes
+  // Fetch endpoints on mount and when activeScanId/selectedDomain changes
   useEffect(() => {
     const loadEndpoints = async () => {
-      if (!activeScanId) {
-        setEndpoints([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
-        setEndpoints(list);
+        
+        if (selectedDomain && activeScanId) {
+          // Specific domain selected — fetch from that scan only
+          const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
+          setEndpoints(list);
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains — fetch from ALL scans and combine
+          const allEndpoints = [];
+          const seenIds = new Set();
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/endpoints/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(ep => {
+                if (!seenIds.has(ep.id)) {
+                  seenIds.add(ep.id);
+                  allEndpoints.push(ep);
+                }
+              });
+            } catch (e) {
+              // Skip failed scan fetches
+            }
+          }
+          allEndpoints.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
+          setEndpoints(allEndpoints);
+        } else {
+          setEndpoints([]);
+        }
       } catch (e) {
         console.error("Failed to load endpoints", e);
         setEndpoints([]);
@@ -40,7 +62,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       }
     };
     loadEndpoints();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
   const getPathFromUrl = (urlStr) => {
     try {
@@ -132,37 +154,35 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const methodOptions = ['All Methods', 'GET', 'POST', 'PUT', 'DELETE'];
   const riskOptions = ['All Risks', 'Critical', 'High', 'Medium', 'Low'];
 
-  const getRiskCount = (risk) => {
-    if (risk === 'All Risks') return endpoints.length;
-    return endpoints.filter(ep => mapRisk(ep.threat_count) === risk.toUpperCase()).length;
-  };
+  // Stats calculation
+  const totalRoutes = endpoints.length;
+  const unauthHigh = endpoints.filter(ep => mapAuth(ep.http_status) === 'Unauthenticated' && ep.threat_count > 0).length;
+  const exposedConfigs = endpoints.filter(ep => ep.http_url.includes('config') || ep.http_url.includes('env') || ep.http_url.includes('.git')).length;
+  const failedRequests = endpoints.filter(ep => ep.http_status >= 400).length;
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
         
-        {/* Active Scan Selector */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
 
         <PageHeaderCard 
           badgeText="ENDPOINTS"
           title="Endpoints"
           subtitle="Discovered API endpoints and web routes across your assets."
           stats={[
-            { label: 'All Risks', value: getRiskCount('All Risks').toString(), subtext: 'Total cataloged', active: riskFilter === 'All Risks', onClick: () => setRiskFilter('All Risks') },
-            { label: 'Critical', value: getRiskCount('Critical').toString(), subtext: 'Immediate action', active: riskFilter === 'Critical', onClick: () => setRiskFilter('Critical') },
-            { label: 'High', value: getRiskCount('High').toString(), subtext: 'Elevated threat', active: riskFilter === 'High', onClick: () => setRiskFilter('High') },
-            { label: 'Medium', value: getRiskCount('Medium').toString(), subtext: 'Needs review', active: riskFilter === 'Medium', onClick: () => setRiskFilter('Medium') },
-            { label: 'Low', value: getRiskCount('Low').toString(), subtext: 'Low exposure', active: riskFilter === 'Low', onClick: () => setRiskFilter('Low') }
+            { label: 'ALL', value: endpoints.length.toString(), subtext: 'Total endpoints', isActive: riskFilter === 'All Risks', onClick: () => setRiskFilter('All Risks') },
+            { label: 'CRITICAL', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'CRITICAL').length.toString(), subtext: 'Immediate review', isActive: riskFilter === 'Critical', onClick: () => setRiskFilter('Critical') },
+            { label: 'HIGH', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'HIGH').length.toString(), subtext: 'Elevated exposure', isActive: riskFilter === 'High', onClick: () => setRiskFilter('High') },
+            { label: 'MEDIUM', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'MEDIUM').length.toString(), subtext: 'Moderate risk', isActive: riskFilter === 'Medium', onClick: () => setRiskFilter('Medium') },
+            { label: 'LOW', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'LOW').length.toString(), subtext: 'Low exposure', isActive: riskFilter === 'Low', onClick: () => setRiskFilter('Low') },
           ]}
         />
 
@@ -181,19 +201,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           </div>
           
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              style={{
-                height: '36px', borderRadius: '8px', border: '1px solid var(--border-color)',
-                background: 'var(--bg-card)', color: 'var(--text-primary)', padding: '0 1rem',
-                fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', outline: 'none'
-              }}
-            >
-              {methodOptions.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
           </div>
         </div>
 
