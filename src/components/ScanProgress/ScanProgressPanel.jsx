@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, Clock, Loader2 } from 'lucide-react';
+import { Terminal, ChevronDown, ChevronUp, X, CheckCircle2, AlertCircle, Clock, Loader2, Shield } from 'lucide-react';
 import { api } from '../../utils/api';
 import './ScanProgressPanel.css';
 
@@ -12,8 +12,7 @@ const PHASES = [
   { key: 'directories',    label: 'Directory Enumeration',           field: 'directories_done',progressStart: 45,  progressEnd: 55   },
   { key: 'technologies',   label: 'Technology Fingerprinting',       field: 'technologies_done',progressStart: 55, progressEnd: 65   },
   { key: 'email',          label: 'Email Security (SPF/DMARC)',      field: 'email_done',      progressStart: 65,  progressEnd: 70   },
-  { key: 'vuln_basic',     label: 'Basic Vulnerability Scan',        field: 'vuln_scan_phase', progressStart: 70,  progressEnd: 80,  phaseValue: 'basic' },
-  { key: 'vuln_deep',      label: 'Deep Vulnerability Scan (Nuclei)',field: 'vuln_scan_phase', progressStart: 80,  progressEnd: 85,  phaseValue: 'complete' },
+  { key: 'vulnerabilities',label: 'Vulnerability Scan',             field: 'vulnerabilities_done',progressStart: 70, progressEnd: 85 },
   { key: 'ssl',            label: 'SSL/TLS Certificate Audit',       field: 'ssl_done',        progressStart: 85,  progressEnd: 90   },
   { key: 'antimalware',    label: 'Anti-Malware & VirusTotal Check', field: 'malware_done',    progressStart: 90,  progressEnd: 100  },
 ];
@@ -33,14 +32,6 @@ function getPhaseStatus(phase, scanData) {
 
   if (phase.field === null) {
     return progress > 0 ? 'done' : (scanData.status === 'running' ? 'running' : 'pending');
-  }
-
-  if (phase.field === 'vuln_scan_phase') {
-    if (scanData.vuln_scan_phase === phase.phaseValue) return 'running';
-    if (phase.phaseValue === 'basic' && (scanData.vuln_scan_phase === 'basic' || scanData.vuln_scan_phase === 'complete')) return 'done';
-    if (phase.phaseValue === 'complete' && scanData.vuln_scan_phase === 'complete') return 'running';
-    if (phase.phaseValue === 'basic' && scanData.vuln_scan_phase && scanData.vuln_scan_phase !== 'pending') return 'done';
-    return 'pending';
   }
 
   if (scanData[phase.field] === true) return 'done';
@@ -79,11 +70,13 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const [log, setLog] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const [visible, setVisible] = useState(true);
+  const [nucleiState, setNucleiState] = useState(null);
   const logEndRef = useRef(null);
 
   // Find the active scan from scansList
   const activeScan = scansList.find(s => s.id === Number(activeScanId));
   const isRunning = activeScan?.status === 'running' || scanData?.status === 'running';
+  const isDeepScanRunning = nucleiState && nucleiState.status === 'running';
 
   const prevVulnPhaseRef = useRef(null);
   useEffect(() => {
@@ -106,7 +99,6 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
         setScanData(prev => {
           if (!prev) return data;
 
-          // Detect phase changes and add log entries
           const phasesChanged = [];
           for (const phase of PHASES) {
             const oldStatus = getPhaseStatus(phase, prev);
@@ -116,7 +108,6 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             }
           }
 
-          // Vulnerability phase transitions — granular log
           if (prev.vuln_scan_phase !== data.vuln_scan_phase) {
             const phaseLabels = {
               running_nuclei: '🔍 Nuclei fast scan started',
@@ -127,7 +118,6 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             if (label) phasesChanged.push({ phase: label, status: data.vuln_scan_phase === 'complete' ? 'done' : 'running', time: new Date().toISOString() });
           }
 
-          // Detect when scan completes or fails
           const justCompleted = prev.status === 'running' && data.status === 'completed';
           const justFailed = prev.status === 'running' && data.status === 'failed';
           if (justCompleted) {
@@ -150,17 +140,49 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
       }
     };
 
-    // Initial fetch
     fetchStatus();
+    const interval = setInterval(() => {
+      if (scanData && (scanData.status === 'completed' || scanData.status === 'failed')) {
+        clearInterval(interval);
+        return;
+      }
+      fetchStatus();
+    }, 3000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, [activeScanId, scanData?.status]);
 
-    // Poll every 3 seconds while running
-    const interval = setInterval(fetchStatus, 3000);
+  // Poll nuclei deep scan state every 5s when vuln phase is running
+  useEffect(() => {
+    if (!activeScanId) { setNucleiState(null); return; }
 
-    return () => {
-      mounted = false;
-      clearInterval(interval);
+    let mounted = true;
+    const vuln_phase = scanData?.vuln_scan_phase || '';
+    // Poll if scan is running and vuln phase has started (not pending/basic only)
+    const shouldPoll = isRunning || (vuln_phase && vuln_phase !== 'pending' && vuln_phase !== 'complete');
+    if (!shouldPoll) return;
+
+    const fetchNucleiState = async () => {
+      try {
+        const data = await api.get(`/api/attacksurface/scan/${activeScanId}/nuclei-state/`);
+        if (!mounted) return;
+        setNucleiState(prev => {
+          // Log phase transitions
+          if (prev && prev.phase_name !== data.phase_name && data.phase_name) {
+            setLog(prevLog => [...prevLog, {
+              phase: `🛡️ OWASP Top 10 Scanner: ${data.phase_name}`,
+              status: 'running',
+              time: new Date().toISOString()
+            }]);
+          }
+          return data;
+        });
+      } catch (e) { /* ignore */ }
     };
-  }, [activeScanId]);
+
+    fetchNucleiState();
+    const interval = setInterval(fetchNucleiState, 5000);
+    return () => { mounted = false; clearInterval(interval); };
+  }, [activeScanId, isRunning, scanData?.vuln_scan_phase]);
 
   // Add initial log entries when scan starts
   useEffect(() => {
@@ -173,9 +195,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
     }
   }, [activeScan?.id, activeScan?.status]);
 
-  // Reset log on scan change
+  // Reset and auto-show on scan change or when scan is running
   useEffect(() => {
+    setVisible(true);
+    setCollapsed(false);
     setLog([]);
+    setNucleiState(null);
     prevVulnPhaseRef.current = null;
   }, [activeScanId]);
 
@@ -187,16 +212,20 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const progress = scanData?.progress ?? activeScan?.progress ?? 0;
   const target = scanData?.target ?? activeScan?.target ?? '';
 
-  // Vuln scan status text for header badge
   const vulnPhase = scanData?.vuln_scan_phase;
-  const vulnBadge =
-    vulnPhase === 'running_nuclei' ? '🔍 Nuclei' :
-    vulnPhase === 'running_wapiti' ? '🕷️ Wapiti' :
-    vulnPhase === 'complete' ? null : null;
+  const vulnBadge = isDeepScanRunning || (vulnPhase && vulnPhase !== 'pending' && vulnPhase !== 'complete') ? '🛡️ OWASP Top 10 Scanner' : null;
 
-  // Guard: must be after all hooks to comply with Rules of Hooks
   if (!activeScanId) return null;
   if (!visible) return null;
+
+  // Time estimate helpers
+  const fmtTime = (hours) => {
+    if (!hours) return '';
+    if (hours < 1) return `~${Math.round(hours * 60)}m`;
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return m > 0 ? `~${h}h ${m}m` : `~${h}h`;
+  };
 
   return (
     <div className={`spp-container ${collapsed ? 'spp-collapsed' : ''} ${isRunning ? 'spp-running-state' : ''}`}>
@@ -212,42 +241,23 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
                 {vulnBadge && <span className="spp-vuln-badge">{vulnBadge}</span>}
               </>
             ) : scanData?.status === 'completed' ? (
-              <>
-                <CheckCircle2 size={13} className="spp-done-icon" />
-                Scan Complete — {target}
-              </>
+              <><CheckCircle2 size={13} className="spp-done-icon" />Scan Complete — {target}</>
             ) : scanData?.status === 'failed' ? (
-              <>
-                <AlertCircle size={13} className="spp-failed-icon" />
-                Scan Failed — {target}
-              </>
+              <><AlertCircle size={13} className="spp-failed-icon" />Scan Failed — {target}</>
             ) : (
-              <>
-                <Clock size={13} className="spp-pending-icon" />
-                Scan — {target}
-              </>
+              <><Clock size={13} className="spp-pending-icon" />Scan — {target}</>
             )}
           </span>
         </div>
         <div className="spp-header-right">
           {!isRunning && scanData?.status && (
-            <span className={`spp-status-badge spp-status-${scanData.status}`}>
-              {scanData.status}
-            </span>
+            <span className={`spp-status-badge spp-status-${scanData.status}`}>{scanData.status}</span>
           )}
-          <button
-            className="spp-pin-btn"
-            onClick={(e) => { e.stopPropagation(); }}
-            title="Scan progress panel"
-          >
+          <button className="spp-pin-btn" onClick={(e) => e.stopPropagation()} title="Scan progress panel">
             <span className="spp-pin-icon spp-pinned">⬡</span>
           </button>
           {!isRunning && (
-            <button
-              className="spp-close-btn"
-              onClick={(e) => { e.stopPropagation(); setVisible(false); }}
-              title="Dismiss"
-            >
+            <button className="spp-close-btn" onClick={(e) => { e.stopPropagation(); setVisible(false); }} title="Dismiss">
               <X size={12} />
             </button>
           )}
@@ -255,7 +265,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
         </div>
       </div>
 
-      {/* Body — Progress only */}
+      {/* Body */}
       {!collapsed && (
         <div className="spp-body">
           {/* Progress bar */}
@@ -269,8 +279,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
                 className={`spp-progress-fill ${scanData?.status === 'failed' ? 'spp-progress-failed' : ''}`}
                 style={{ width: `${progress}%` }}
               />
-              {/* Phase markers on progress bar */}
-              {PHASES.filter(p => p.progressEnd < 100).map((phase, i) => (
+              {PHASES.filter(p => p.progressEnd < 100).map((phase) => (
                 <div
                   key={phase.key}
                   className={`spp-progress-marker ${getPhaseStatus(phase, scanData || activeScan) === 'done' ? 'spp-marker-done' : ''}`}
@@ -280,7 +289,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               ))}
             </div>
             <div className="spp-progress-phases">
-              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vuln_basic').map(phase => {
+              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vulnerabilities').map(phase => {
                 const st = getPhaseStatus(phase, scanData || activeScan);
                 return (
                   <span key={phase.key} className={`spp-phase-label ${st}`}>
@@ -291,6 +300,38 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               })}
             </div>
           </div>
+
+          {/* Deep scan panel — shown when deep scan is active or done */}
+          {nucleiState && nucleiState.phases && nucleiState.phases.length > 0 && (
+            <div className="spp-nuclei-panel">
+              <div className="spp-nuclei-header">
+                <Shield size={13} />
+                <span>OWASP Top 10 Security Scanner</span>
+                <span className="spp-nuclei-found">
+                  {nucleiState.total_found} vuln{nucleiState.total_found !== 1 ? 's' : ''} found
+                </span>
+                {nucleiState.status === 'running' && nucleiState.remaining_est_hours > 0 && (
+                  <span className="spp-nuclei-eta">
+                    {fmtTime(nucleiState.remaining_est_hours)} remaining
+                  </span>
+                )}
+                {nucleiState.status === 'complete' && (
+                  <span className="spp-nuclei-complete">✓ Complete</span>
+                )}
+              </div>
+              <div className="spp-nuclei-phases">
+                {nucleiState.phases.map((p) => (
+                  <div key={p.id} className={`spp-nuclei-phase spp-nuclei-phase-${p.status}`}>
+                    <span className="spp-nuclei-phase-icon">
+                      {p.status === 'done' ? '✓' : p.status === 'running' ? <Loader2 size={9} className="spin" /> : '○'}
+                    </span>
+                    <span className="spp-nuclei-phase-name">{p.name}</span>
+                    <span className="spp-nuclei-phase-est">{fmtTime(p.est_hours)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Terminal log */}
           <div className="spp-terminal">

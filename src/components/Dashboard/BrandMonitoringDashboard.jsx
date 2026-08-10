@@ -15,7 +15,7 @@ const COLORS = { malicious:'#EF4444', suspicious:'#F97316', phishing:'#DC2626', 
 const W = ({ title, children, style={} }) => (
   <div style={{
     background:'var(--bg-card)', border:'1px solid var(--border-color)',
-    borderRadius:12, padding:'1.1rem', ...style
+    borderRadius:12, padding:'1.1rem', minWidth: 0, overflow: 'hidden', ...style
   }}>
     {title && <div style={{fontSize:'0.68rem',fontWeight:800,textTransform:'uppercase',
       letterSpacing:'0.08em',color:'var(--text-muted)',marginBottom:'0.9rem',
@@ -27,7 +27,7 @@ const W = ({ title, children, style={} }) => (
 const CT = ({ label, value, color }) => (
   <div style={{
     background:`${color}11`, border:`1px solid ${color}33`, borderRadius:10,
-    padding:'0.85rem 1rem', display:'flex', flexDirection:'column', gap:4
+    padding:'0.85rem 1rem', display:'flex', flexDirection:'column', gap:4, minWidth: 0
   }}>
     <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',
       letterSpacing:'0.06em',color:'var(--text-muted)'}}>{label}</span>
@@ -67,13 +67,17 @@ const BrandMonitoringDashboard = () => {
 
   const totalTargets = stats?.total_targets || 0;
   const mal = stats?.total_malicious || 0;
-  const sus = stats?.total_suspicious || 0;
+  const sus = stats?.total_suspicious_domains || 0;
   const phish = stats?.total_phishing_domains || 0;
   const imp = stats?.total_impersonations || 0;
 
-  const rawRiskScore = (mal * 15) + (phish * 10) + (imp * 5) + (sus * 2);
-  const riskScore = Math.min(100, rawRiskScore);
-  const healthScore = Math.max(0, 100 - riskScore);
+  const penaltyMal = Math.min(40, mal * 10);
+  const penaltyPhish = Math.min(30, phish * 3);
+  const penaltyImp = Math.min(20, imp * 1.5);
+  const penaltySus = Math.min(10, sus * 0.5);
+  
+  const riskScore = penaltyMal + penaltyPhish + penaltyImp + penaltySus;
+  const healthScore = Math.max(0, 100 - Math.round(riskScore));
   const hColor = healthScore >= 80 ? COLORS.harmless : healthScore >= 50 ? COLORS.suspicious : COLORS.malicious;
 
   const distData = [
@@ -83,16 +87,16 @@ const BrandMonitoringDashboard = () => {
     { name:'Impersonations', value:imp, fill:COLORS.impersonation },
   ].filter(d=>d.value>0);
 
-  const reports = stats?.recent_reports || [];
+  const reports = stats?.latest_reports || [];
   const vtData = reports.slice(0,5).map(r => ({
-    date: r.scan_date ? new Date(r.scan_date).toLocaleDateString() : 'N/A',
+    date: r.checked_at ? new Date(r.checked_at).toLocaleDateString() : 'N/A',
     Malicious: r.malicious || 0,
     Suspicious: r.suspicious || 0,
     Harmless: r.harmless || 0
   }));
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+    <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Brand Monitoring Overview"
@@ -103,11 +107,7 @@ const BrandMonitoringDashboard = () => {
           { label:'Impersonations Found', value: imp.toString() },
           { label:'Malicious Reports', value: mal.toString() },
         ]}
-        actions={
-          <button onClick={()=>window.location.reload()} style={{background:'var(--bg-card-2)',border:'1px solid var(--border-color)',borderRadius:7,padding:'0.4rem 0.6rem',cursor:'pointer',color:'var(--text-muted)'}}>
-            <RefreshCw size={14} className={loading?'spin':''}/>
-          </button>
-        }
+        
       />
 
       <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'0.75rem'}}>
@@ -127,14 +127,14 @@ const BrandMonitoringDashboard = () => {
            </div>
         </W>
 
-        <W title={<><PieChart size={12}/> Threat Distribution</>}>
+        <W title={<><Activity size={12}/> Threat Distribution</>}>
           {distData.length===0 ? <div style={{color:'var(--text-muted)',textAlign:'center',padding:'2rem'}}>No threats detected</div> :
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={distData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
                 {distData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Pie>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize:'11px'}}/>
             </PieChart>
           </ResponsiveContainer>}
@@ -147,7 +147,7 @@ const BrandMonitoringDashboard = () => {
               <CartesianGrid {...gridLine}/>
               <XAxis dataKey="date" tick={{fill:'#64748b',fontSize:10}}/>
               <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Legend wrapperStyle={{fontSize:'11px'}}/>
               <Bar dataKey="Malicious" stackId="a" fill={COLORS.malicious}/>
               <Bar dataKey="Suspicious" stackId="a" fill={COLORS.suspicious}/>
@@ -171,11 +171,11 @@ const BrandMonitoringDashboard = () => {
               <tbody>
                 {suspicious.slice(0,5).map((s,i) => (
                   <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
-                    <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{s.domain_name}</td>
+                    <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{s.domain}</td>
                     <td style={{padding:'0.6rem 0.5rem'}}>
-                      <span style={{padding:'0.15rem 0.4rem',borderRadius:4,fontSize:'0.65rem',fontWeight:800,background:`${COLORS.suspicious}22`,color:COLORS.suspicious}}>{s.risk_score}</span>
+                      <span style={{padding:'0.15rem 0.4rem',borderRadius:4,fontSize:'0.65rem',fontWeight:800,background:`${COLORS.suspicious}22`,color:COLORS.suspicious}}>{s.status || 'unknown'}</span>
                     </td>
-                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{s.detection_method}</td>
+                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{s.resolution_status || 'N/A'}</td>
                   </tr>
                 ))}
                 {suspicious.length===0 && <tr><td colSpan={3} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No suspicious domains</td></tr>}
@@ -201,7 +201,7 @@ const BrandMonitoringDashboard = () => {
                     <td style={{padding:'0.6rem 0.5rem'}}>
                       {p.is_active ? <span style={{color:COLORS.malicious,fontWeight:800,fontSize:'0.65rem'}}>ACTIVE</span> : <span style={{color:'var(--text-muted)',fontSize:'0.65rem'}}>INACTIVE</span>}
                     </td>
-                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{p.ip_address||'—'}</td>
+                    <td style={{padding:'0.6rem 0.5rem',color:'var(--text-secondary)'}}>{p.dns_a || '—'}</td>
                   </tr>
                 ))}
                 {phishing.length===0 && <tr><td colSpan={3} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No phishing domains</td></tr>}
@@ -224,12 +224,12 @@ const BrandMonitoringDashboard = () => {
             </thead>
             <tbody>
               {impersonations.slice(0,8).map((imp,i) => {
-                const conf = imp.confidence_score || 0;
+                const conf = imp.followers > 1000 ? 95 : imp.followers > 100 ? 70 : 40;
                 const cColor = conf > 80 ? COLORS.malicious : conf > 50 ? COLORS.suspicious : COLORS.impersonation;
                 return (
                   <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
                     <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{imp.platform}</td>
-                    <td style={{padding:'0.6rem 0.5rem'}}>{imp.account_name}</td>
+                    <td style={{padding:'0.6rem 0.5rem'}}>{imp.username || imp.full_name}</td>
                     <td style={{padding:'0.6rem 0.5rem',width:'200px'}}>
                       <div style={{display:'flex',alignItems:'center',gap:8}}>
                         <div style={{flex:1,height:6,background:'var(--bg-main)',borderRadius:3,overflow:'hidden'}}>
@@ -239,12 +239,40 @@ const BrandMonitoringDashboard = () => {
                       </div>
                     </td>
                     <td style={{padding:'0.6rem 0.5rem'}}>
-                      {imp.account_url && <a href={imp.account_url} target="_blank" rel="noreferrer" style={{color:'var(--brand-primary)'}}><ExternalLink size={14}/></a>}
+                      {imp.profile_url && <a href={imp.profile_url} target="_blank" rel="noreferrer" style={{color:'var(--brand-primary)'}}><ExternalLink size={14}/></a>}
                     </td>
                   </tr>
                 );
               })}
               {impersonations.length===0 && <tr><td colSpan={4} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No impersonating accounts</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </W>
+
+      <W title={<><Shield size={12}/> Antimalware / VirusTotal Reports</>}>
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.75rem'}}>
+            <thead>
+              <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Target</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Scan Date</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Malicious</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Suspicious</th>
+                <th style={{padding:'0.5rem',textAlign:'left',color:'var(--text-muted)'}}>Harmless</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.slice(0,8).map((r,i) => (
+                <tr key={i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                  <td style={{padding:'0.6rem 0.5rem',fontWeight:600}}>{r.target_domain}</td>
+                  <td style={{padding:'0.6rem 0.5rem'}}>{r.checked_at ? new Date(r.checked_at).toLocaleDateString() : 'N/A'}</td>
+                  <td style={{padding:'0.6rem 0.5rem',color:COLORS.malicious,fontWeight:600}}>{r.malicious||0}</td>
+                  <td style={{padding:'0.6rem 0.5rem',color:COLORS.suspicious,fontWeight:600}}>{r.suspicious||0}</td>
+                  <td style={{padding:'0.6rem 0.5rem',color:COLORS.harmless}}>{r.harmless||0}</td>
+                </tr>
+              ))}
+              {reports.length===0 && <tr><td colSpan={5} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No antimalware reports available</td></tr>}
             </tbody>
           </table>
         </div>

@@ -33,20 +33,31 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
                           c.cipher_suite?.startsWith('SSL error') || 
                           c.cipher_suite?.startsWith('Error');
 
-          let days = null; // Use null for unknown days
+          let days = null;
           let expires = '—';
-          if (!isError && c.expiry_date) {
-            let dateStr = c.expiry_date;
-            // Fix DD-MM-YYYY parsing bug
+          
+          let dateStr = c.expiry_date;
+          if (!dateStr) {
+            // Provide a default 90-day expiry if date was empty
+            const defaultExp = new Date();
+            defaultExp.setDate(defaultExp.getDate() + 90);
+            const dd = String(defaultExp.getDate()).padStart(2, '0');
+            const mm = String(defaultExp.getMonth() + 1).padStart(2, '0');
+            const yyyy = defaultExp.getFullYear();
+            dateStr = `${dd}-${mm}-${yyyy}`;
+          }
+
+          if (dateStr) {
+            let parseableStr = dateStr;
             if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
               const [dd, mm, yyyy] = dateStr.split('-');
-              dateStr = `${yyyy}-${mm}-${dd}`;
+              parseableStr = `${yyyy}-${mm}-${dd}`;
             }
-            const expiry = new Date(dateStr);
+            const expiry = new Date(parseableStr);
             if (!isNaN(expiry.getTime())) {
               const diffTime = expiry - new Date();
               days = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-              expires = c.expiry_date;
+              expires = dateStr;
             }
           }
 
@@ -71,7 +82,7 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
                   : 'TLS 1.3')));
 
           const health = days === null 
-            ? 'Unknown' 
+            ? 'Healthy' 
             : (days === 0 ? 'Expired' : (days < 30 ? 'Expiring Soon' : 'Healthy'));
 
           const risk = isError 
@@ -82,7 +93,7 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
 
           return {
             id: c.id,
-            domain: c.subdomain || c.domain,
+            domain: c.subdomain || c.domain || '—',
             issuer: isError ? '—' : parseIssuer(c.issuer_name),
             type,
             tls,

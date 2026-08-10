@@ -204,3 +204,711 @@
   color: #1D4ED8;
 }
 
+/* SSL Certificate Inspector Modal - Sleek Dark Cybersecurity Theme */
+.ssl-pro-backdrop {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(8, 12, 22, 0.88) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 999999 !important;
+  padding: 1.5rem !important;
+  animation: sslProFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  overflow-y: auto !important;
+}
+
+@keyframes sslProFadeIn {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ssl-pro-container {
+  background: #0B1120 !important;
+  border: 1px solid rgba(56, 189, 248, 0.3) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.2) !important;
+  border-radius: 16px !important;
+  width: 100% !important;
+  max-width: 1060px !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  color: #F8FAFC !important;
+  overflow: hidden !important;
+  margin: auto !important;
+  position: relative !important;
+  z-index: 1000000 !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Header */
+.ssl-pro-header {
+  padding: 1.25rem 1.75rem;
+  background: linear-gradient(180deg, #111827 0%, #0B1120 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ssl-pro-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ssl-pro-shield-halo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ssl-pro-shield-icon {
+  color: #10B981;
+}
+
+.ssl-pro-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.2rem;
+}
+
+.ssl-pro-tag-cyan {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #38BDF8;
+  text-transform: uppercase;
+}
+
+.ssl-pro-grade-pill {
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.ssl-pro-grade-pill.grade-a {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.ssl-pro-grade-pill.grade-b {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.ssl-pro-grade-pill.grade-f {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.ssl-pro-domain-title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  margin: 0;
+  background: linear-gradient(135deg, #FFFFFF 0%, #CBD5E1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.ssl-pro-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0.45rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.ssl-pro-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Hero KPI Summary Tiles */
+.ssl-pro-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1.25rem 1.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 860px) {
+  .ssl-pro-hero-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.ssl-pro-kpi-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.ssl-pro-kpi-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ssl-pro-kpi-icon-wrapper.cyan { background: rgba(56, 189, 248, 0.15); color: #38BDF8; }
+.ssl-pro-kpi-icon-wrapper.indigo { background: rgba(99, 102, 241, 0.15); color: #818CF8; }
+.ssl-pro-kpi-icon-wrapper.emerald { background: rgba(16, 185, 129, 0.15); color: #34D399; }
+.ssl-pro-kpi-icon-wrapper.sky { background: rgba(14, 165, 233, 0.15); color: #38BDF8; }
+
+.ssl-pro-kpi-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+}
+
+.ssl-pro-kpi-value {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  margin-top: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ssl-pro-kpi-sub {
+  font-size: 0.72rem;
+  color: #64748B;
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.ssl-pro-kpi-sub.green { color: #34D399; }
+.emerald-text { color: #34D399 !important; }
+.cyan-text { color: #38BDF8 !important; }
+.green-text { color: #4ADE80 !important; }
+
+.ssl-pro-progress-bg {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+  margin-top: 0.35rem;
+  overflow: hidden;
+}
+
+.ssl-pro-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.ssl-pro-progress-fill.healthy {
+  background: linear-gradient(90deg, #10B981, #34D399);
+}
+
+.ssl-pro-progress-fill.warning {
+  background: linear-gradient(90deg, #F59E0B, #FBBF24);
+}
+
+/* Main Body Layout Grid (Left / Right split) */
+.ssl-pro-body-grid {
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+@media (max-width: 920px) {
+  .ssl-pro-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ssl-pro-left-col, .ssl-pro-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ssl-pro-panel {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.ssl-pro-panel-header {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ssl-pro-panel-header-between {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #F1F5F9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.icon-emerald { color: #34D399; }
+.icon-cyan { color: #38BDF8; }
+.icon-indigo { color: #818CF8; }
+
+.ssl-pro-badge-count {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38BDF8;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Alert Box */
+.ssl-pro-alert-card {
+  display: flex;
+  gap: 0.85rem;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.ssl-pro-alert-card.success {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.ssl-pro-alert-icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.ssl-pro-alert-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #34D399;
+}
+
+.ssl-pro-alert-desc {
+  font-size: 0.78rem;
+  color: #94A3B8;
+  margin-top: 0.2rem;
+  line-height: 1.45;
+}
+
+.ssl-pro-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ssl-pro-info-tile {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.ssl-pro-tile-label {
+  font-size: 0.68rem;
+  color: #64748B;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.ssl-pro-tile-val {
+  font-size: 0.82rem;
+  color: #E2E8F0;
+  font-weight: 600;
+  margin-top: 0.15rem;
+}
+
+/* SANs Filter & Grid */
+.ssl-pro-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+}
+
+.ssl-pro-search-box input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #F8FAFC;
+  font-size: 0.75rem;
+  width: 110px;
+}
+
+.ssl-pro-sans-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.ssl-pro-san-chip {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #CBD5E1;
+  font-size: 0.76rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.ssl-pro-san-chip:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38BDF8;
+}
+
+.ssl-pro-san-chip.active-target {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34D399;
+}
+
+.ssl-pro-san-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38BDF8;
+}
+
+.ssl-pro-san-chip.active-target .ssl-pro-san-dot {
+  background: #34D399;
+}
+
+.ssl-pro-empty-sans {
+  font-size: 0.78rem;
+  color: #64748B;
+  padding: 1rem;
+  text-align: center;
+  width: 100%;
+}
+
+/* DNS Info Box */
+.ssl-pro-dns-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.ssl-pro-dns-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.ssl-pro-dns-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.ssl-pro-dns-key {
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.ssl-pro-dns-val {
+  color: #F1F5F9;
+  font-weight: 600;
+}
+
+/* Trust Chain Timeline Tree */
+.ssl-pro-chain-intro {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.76rem;
+  color: #34D399;
+  margin-bottom: 1.25rem;
+}
+
+.ssl-pro-chain-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.ssl-pro-chain-tree::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  left: 21px;
+  width: 2px;
+  background: linear-gradient(180deg, #10B981 0%, #38BDF8 50%, #818CF8 100%);
+  z-index: 1;
+}
+
+.ssl-pro-chain-item {
+  display: flex;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 2;
+}
+
+.ssl-pro-tree-node {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 0.6rem;
+}
+
+.ssl-pro-tree-node.root {
+  background: #10B981;
+  color: #064E3B;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.ssl-pro-tree-node.inter {
+  background: #0EA5E9;
+  color: #0C4A6E;
+  box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+}
+
+.ssl-pro-tree-node.leaf {
+  background: #6366F1;
+  color: #312E81;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+.ssl-pro-node-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  flex: 1;
+  transition: all 0.15s ease;
+}
+
+.ssl-pro-node-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(30, 41, 59, 0.7);
+}
+
+.ssl-pro-node-card.is-leaf {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.ssl-pro-node-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.ssl-pro-node-type {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #38BDF8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+}
+
+.ssl-pro-node-cn {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #F8FAFC;
+  margin: 0.1rem 0 0 0;
+}
+
+.ssl-pro-node-status {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #34D399;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.ssl-pro-node-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+.ssl-pro-node-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.ssl-pro-node-field.full-width {
+  grid-column: span 2;
+  margin-top: 0.2rem;
+}
+
+.ssl-pro-node-field .lbl {
+  font-size: 0.65rem;
+  color: #64748B;
+  font-weight: 500;
+}
+
+.ssl-pro-node-field .val {
+  color: #CBD5E1;
+  font-weight: 600;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ssl-pro-serial-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+.ssl-pro-node-field .val.serial {
+  font-size: 0.72rem;
+  color: #38BDF8;
+  background: rgba(56, 189, 248, 0.08);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.ssl-pro-copy-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94A3B8;
+  padding: 0.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ssl-pro-copy-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38BDF8;
+}
+
+/* Footer */
+.ssl-pro-footer {
+  padding: 1.1rem 1.75rem;
+  background: linear-gradient(180deg, #0B1120 0%, #070B14 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ssl-pro-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #94A3B8;
+}
+
+.ssl-pro-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 10px #10B981;
+  animation: sslPulse 2s infinite;
+}
+
+@keyframes sslPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.ssl-pro-btn-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #F8FAFC;
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ssl-pro-btn-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+
+

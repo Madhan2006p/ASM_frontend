@@ -169,13 +169,17 @@ const AntiPhishing = ({ activeTarget }) => {
                     </span>
                   </td>
                   <td style={{ textAlign: 'right', paddingRight: '2rem' }}>
-                    <button 
-                      className="sw-btn-outline-blue" 
-                      style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
-                      onClick={() => setSelectedReport(row)}
-                    >
-                      <Eye size={12} /> Details
-                    </button>
+                    {row.is_active ? (
+                      <button 
+                        className="sw-btn-outline-blue" 
+                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                        onClick={() => setSelectedReport(row)}
+                      >
+                        <Eye size={12} /> Details
+                      </button>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)' }}>-</span>
+                    )}
                   </td>
                 </tr>
               ))}

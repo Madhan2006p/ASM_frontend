@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import {
   Server, Shield, AlertTriangle, Globe, Lock, TrendingUp,
-  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye
+  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye, Folder, Code, Award
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
@@ -67,15 +67,19 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
     load();
   }, [activeScanId, selectedDomain]);
 
-  const vs     = exec?.vuln_severity || {};
-  const total  = exec?.total_assets  || 0;
-  const subs   = exec?.subdomains_count || 0;
-  const eps    = exec?.endpoints_count  || 0;
-  const ports  = exec?.ports_count      || 0;
-  const tvulns = exec?.total_vulns      || 0;
-  const mgd    = exec?.managed_count    || 0;
-  const unmgd  = exec?.unmanaged_count  || 0;
-  const sslExpiring = exec?.ssl_expiring_soon || 0;
+  const vs     = exec?.risk_score_distribution || {};
+  const metrics = exec?.metrics || {};
+  const total  = metrics.total_assets  || 0;
+  const subs   = metrics.subdomains_count || 0;
+  
+  const eps    = metrics.endpoints_count || 0;
+  const ports  = metrics.ports_count || 0;
+  const dirs   = metrics.directories_count || 0;
+  const techsCount  = metrics.technologies_count || 0;
+  const tvulns = metrics.vulnerabilities_count || 0;
+  const mgd    = exec?.managed_vs_unmanaged?.managed || 0;
+  const unmgd  = exec?.managed_vs_unmanaged?.unmanaged || 0;
+  const sslExpiring = metrics.ssl_expiring_soon || 0;
 
   const vulnBarData = [
     { name:'Critical', value: vs.critical||0, fill: COLORS.critical },
@@ -94,6 +98,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
   const domains = exec?.domain_distribution||[];
   const trends  = exec?.trends||[];
+  const chartTrends = trends.length > 1 ? trends : trends.length === 1 ? [trends[0], trends[0]] : [{date:'',assets:total,vulns:tvulns}, {date:'',assets:total,vulns:tvulns}];
 
   const sslValid   = ssl.filter(s=>!s.is_expired).length;
   const sslExpired = ssl.filter(s=>s.is_expired).length;
@@ -106,7 +111,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const scans = exec?.recent_scans_detail || scansList.slice(0,8);
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+    <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
         badgeText="ASSET DISCOVERY"
         title="Asset Discovery Dashboard"
@@ -121,20 +126,19 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
           <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
             <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
               assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-            <button onClick={()=>window.location.reload()} style={{background:'var(--bg-card-2)',border:'1px solid var(--border-color)',borderRadius:7,padding:'0.4rem 0.6rem',cursor:'pointer',color:'var(--text-muted)'}}>
-              <RefreshCw size={14} className={loading?'spin':''}/>
-            </button>
           </div>
         }
       />
 
       {/* KPI Strip */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'0.75rem'}}>
-        <CT label="Subdomains"  value={subs}   color="#3B82F6" icon={<Globe size={16}/>}    sub="discovered"/>
-        <CT label="Endpoints"   value={eps}    color="#8B5CF6" icon={<Server size={16}/>}   sub="mapped"/>
-        <CT label="Open Ports"  value={ports}  color="#F97316" icon={<Activity size={16}/>} sub="exposed"/>
-        <CT label="Total Vulns" value={tvulns} color="#EF4444" icon={<Shield size={16}/>}   sub="all severity"/>
-        <CT label="Managed"     value={mgd}    color="#22C55E" icon={<CheckCircle size={16}/>} sub={`of ${subs} assets`}/>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))',gap:'0.75rem'}}>
+        <CT label="Subdomains"   value={subs}   color="#3B82F6" icon={<Globe size={16}/>}    sub="discovered"/>
+        <CT label="Endpoints"    value={eps}    color="#8B5CF6" icon={<Server size={16}/>}   sub="mapped"/>
+        <CT label="Open Ports"   value={ports}  color="#F97316" icon={<Activity size={16}/>} sub="exposed"/>
+        <CT label="Directories"  value={dirs}   color="#10B981" icon={<Folder size={16}/>}   sub="found"/>
+        <CT label="Technologies" value={techsCount}  color="#06B6D4" icon={<Code size={16}/>}     sub="identified"/>
+        <CT label="Total Vulns"  value={tvulns} color="#EF4444" icon={<Shield size={16}/>}   sub="all severity"/>
+        <CT label="Expiring SSL" value={sslExpiring} color="#F59E0B" icon={<Award size={16}/>}   sub="within 90 days"/>
       </div>
 
       {/* Row 1: asset panels + risk distribution */}
@@ -153,7 +157,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
             ))}
           </div>
           <ResponsiveContainer width="100%" height={55}>
-            <AreaChart data={trends.length>0?trends:[{date:'',assets:total,vulns:tvulns}]} margin={{top:0,right:0,bottom:0,left:0}}>
+            <AreaChart data={chartTrends} margin={{top:0,right:0,bottom:0,left:0}}>
               <defs><linearGradient id="adag" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#3B82F6" stopOpacity={0.4}/>
                 <stop offset="100%" stopColor="#3B82F6" stopOpacity={0}/>
@@ -178,7 +182,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
             ))}
           </div>
           <ResponsiveContainer width="100%" height={55}>
-            <AreaChart data={trends.length>0?trends:[{date:'',assets:total,vulns:tvulns}]} margin={{top:0,right:0,bottom:0,left:0}}>
+            <AreaChart data={chartTrends} margin={{top:0,right:0,bottom:0,left:0}}>
               <defs><linearGradient id="hrg" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#EF4444" stopOpacity={0.4}/>
                 <stop offset="100%" stopColor="#EF4444" stopOpacity={0}/>
@@ -219,7 +223,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
               <CartesianGrid {...gridLine}/>
               <XAxis dataKey="name" tick={{fill:'#64748b',fontSize:11}}/>
               <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Bar dataKey="value" radius={[4,4,0,0]}>
                 {vulnBarData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Bar>
@@ -235,7 +239,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                 <CartesianGrid {...gridLine}/>
                 <XAxis type="number" tick={{fill:'#64748b',fontSize:11}}/>
                 <YAxis dataKey="service" type="category" tick={{fill:'#64748b',fontSize:11}} width={50}/>
-                <Tooltip contentStyle={dark}/>
+                <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
                 <Bar dataKey="count" fill="#3B82F6" radius={[0,4,4,0]}/>
               </BarChart>
             </ResponsiveContainer>}
@@ -250,7 +254,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                   <Pie data={techData} cx={70} cy={70} innerRadius={38} outerRadius={60} paddingAngle={2} dataKey="value">
                     {techData.map((_,i)=><Cell key={i} fill={PIE_COLORS[i%PIE_COLORS.length]}/>)}
                   </Pie>
-                  <Tooltip contentStyle={dark}/>
+                  <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
                 </PieChart>
               </div>
               <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:4}}>
@@ -276,7 +280,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
               <CartesianGrid {...gridLine}/>
               <XAxis dataKey="name" tick={{fill:'#64748b',fontSize:11}}/>
               <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Bar dataKey="value" radius={[4,4,0,0]}>
                 {sslData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Bar>
@@ -292,7 +296,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                 <CartesianGrid {...gridLine}/>
                 <XAxis dataKey="domain" tick={{fill:'#64748b',fontSize:10}} angle={-15} textAnchor="end" height={36}/>
                 <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-                <Tooltip contentStyle={dark}/>
+                <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
                 <Bar dataKey="count" fill="#8B5CF6" radius={[4,4,0,0]}/>
               </BarChart>
             </ResponsiveContainer>}

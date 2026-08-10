@@ -48,7 +48,8 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         return urlStr;
       }
       const urlObj = new URL(urlStr);
-      return urlObj.pathname + urlObj.search;
+      const fullPath = urlObj.pathname + urlObj.search;
+      return (fullPath === '/' || !fullPath) ? urlStr : fullPath;
     } catch (e) {
       return urlStr;
     }
@@ -177,47 +178,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           </div>
           
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            {/* Method Dropdown */}
-            <div className="global-custom-select">
-              <div className="global-custom-select-btn" onClick={() => setShowMethodMenu(!showMethodMenu)}>
-                {methodFilter} <ChevronDown size={14} />
-              </div>
-              {showMethodMenu && (
-                <div className="global-custom-dropdown-menu" style={{ width: '150px' }}>
-                  {methodOptions.map(opt => (
-                    <div 
-                      key={opt}
-                      className={`global-custom-dropdown-item ${methodFilter === opt ? 'active' : ''}`}
-                      onClick={() => { setMethodFilter(opt); setShowMethodMenu(false); }}
-                    >
-                      <span>{opt}</span>
-                      {methodFilter === opt && <Check size={14} color="#2563EB" />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Risk Dropdown */}
-            <div className="global-custom-select">
-              <div className="global-custom-select-btn" onClick={() => setShowRiskMenu(!showRiskMenu)}>
-                {riskFilter} <ChevronDown size={14} />
-              </div>
-              {showRiskMenu && (
-                <div className="global-custom-dropdown-menu" style={{ width: '150px' }}>
-                  {riskOptions.map(opt => (
-                    <div 
-                      key={opt}
-                      className={`global-custom-dropdown-item ${riskFilter === opt ? 'active' : ''}`}
-                      onClick={() => { setRiskFilter(opt); setShowRiskMenu(false); }}
-                    >
-                      <span>{opt}</span>
-                      {riskFilter === opt && <Check size={14} color="#2563EB" />}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </div>
 

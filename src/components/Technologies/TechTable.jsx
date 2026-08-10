@@ -68,7 +68,7 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
   }, [searchQuery, categoryFilter, eolFilter, riskFilter, technologies]);
 
   return (
-    <div className="tech-table-card">
+    <div className="card tech-table-card">
       
       {/* Top Controls */}
       <div className="global-controls-row">
@@ -83,96 +83,21 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
             />
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '0.75rem' }}>
-          
-          {/* Custom Category Dropdown */}
-          <div className="global-custom-select" ref={categoryRef}>
-            <button 
-              className="global-custom-select-btn" 
-              onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-            >
-              {categoryFilter} <ChevronDown size={16} color="#94A3B8" />
-            </button>
-            {showCategoryMenu && (
-              <div className="global-custom-dropdown-menu">
-                {categories.map(cat => (
-                  <div 
-                    key={cat}
-                    className={`global-custom-dropdown-item ${categoryFilter === cat ? 'active' : ''}`}
-                    onClick={() => { setCategoryFilter(cat); setShowCategoryMenu(false); }}
-                  >
-                    {cat} {categoryFilter === cat && <Check size={14} />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Custom EOL Dropdown */}
-          <div className="global-custom-select" ref={eolRef}>
-            <button 
-              className="global-custom-select-btn" 
-              onClick={() => setShowEolMenu(!showEolMenu)}
-              style={{ minWidth: '150px', justifyContent: 'space-between' }}
-            >
-              {eolFilter} <ChevronDown size={16} color="#94A3B8" />
-            </button>
-            {showEolMenu && (
-              <div className="global-custom-dropdown-menu">
-                {eolStatuses.map(status => (
-                  <div 
-                    key={status}
-                    className={`global-custom-dropdown-item ${eolFilter === status ? 'active' : ''}`}
-                    onClick={() => { setEolFilter(status); setShowEolMenu(false); }}
-                  >
-                    {status} {eolFilter === status && <Check size={14} />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Custom Risk Dropdown */}
-          <div className="global-custom-select" ref={riskRef}>
-            <button 
-              className="global-custom-select-btn" 
-              onClick={() => setShowRiskMenu(!showRiskMenu)}
-              style={{ minWidth: '130px', justifyContent: 'space-between' }}
-            >
-              {riskFilter} <ChevronDown size={16} color="#94A3B8" />
-            </button>
-            {showRiskMenu && (
-              <div className="global-custom-dropdown-menu">
-                {risks.map(r => (
-                  <div 
-                    key={r}
-                    className={`global-custom-dropdown-item ${riskFilter === r ? 'active' : ''}`}
-                    onClick={() => { setRiskFilter(r); setShowRiskMenu(false); }}
-                  >
-                    {r} {riskFilter === r && <Check size={14} />}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
       </div>
 
       {/* Grouped Category Boxes */}
-      <div className="global-table-wrapper" style={{ padding: '1.5rem', background: '#f8fafc', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+      <div className="card global-table-wrapper" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
             <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
             Loading stack inventory from database...
           </div>
         ) : filteredData.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
             No technologies found for this scan.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem' }}>
             {Object.entries(
               filteredData.reduce((acc, tech) => {
                 if (!acc[tech.category]) acc[tech.category] = [];
@@ -180,25 +105,85 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
                 return acc;
               }, {})
             ).map(([category, techs]) => (
-              <div key={category} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1e293b', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '2px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6' }}></div>
+              <div key={category}>
+                <h3 style={{ 
+                  fontSize: '1.2rem', 
+                  fontWeight: '700', 
+                  color: 'var(--text-primary)', 
+                  marginBottom: '1.5rem', 
+                  paddingBottom: '0.75rem', 
+                  borderBottom: '2px solid var(--border-color)', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '0.75rem' 
+                }}>
+                  <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#3b82f6' }}></div>
                   {category}
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', marginLeft: 'auto', fontWeight: '600' }}>
+                    {techs.length} item{techs.length !== 1 ? 's' : ''}
+                  </span>
                 </h3>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-                  {techs.map(tech => (
-                    <li key={tech.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35rem' }}>
-                        <span style={{ fontWeight: '600', color: '#334155', fontSize: '0.95rem' }}>{tech.name}</span>
-                        {tech.version && (
-                          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '400' }}>
-                            {tech.version}
-                          </span>
-                        )}
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem' }}>
+                  {techs.map((tech, idx) => {
+                    const char = tech.name ? tech.name.charAt(0).toUpperCase() : '?';
+                    const hues = [210, 280, 150, 320, 40, 190];
+                    const hue = hues[idx % hues.length];
+                    
+                    return (
+                      <div key={tech.id} style={{ 
+                        background: 'var(--bg-card)', 
+                        border: '1px solid var(--border-color)', 
+                        borderRadius: '16px', 
+                        padding: '1.25rem', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        gap: '1.2rem',
+                        transition: 'all 0.2s ease',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = `hsl(${hue}, 80%, 50%)`; e.currentTarget.style.boxShadow = `0 8px 24px hsla(${hue}, 80%, 50%, 0.15)`; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                            <div style={{ 
+                              width: '44px', height: '44px', 
+                              borderRadius: '12px', 
+                              background: `linear-gradient(135deg, hsla(${hue}, 80%, 60%, 0.15) 0%, hsla(${hue}, 80%, 60%, 0.05) 100%)`,
+                              border: `1px solid hsla(${hue}, 80%, 60%, 0.2)`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: `hsl(${hue}, 80%, 60%)`, fontWeight: '800', fontSize: '1.3rem'
+                            }}>
+                              {char}
+                            </div>
+                            <div>
+                              <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>{tech.name}</h4>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{tech.category}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Version:</span>
+                            {tech.version && tech.version !== '—' ? (
+                               <span style={{ background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+                                 v{tech.version}
+                               </span>
+                            ) : (
+                               <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Unknown</span>
+                            )}
+                          </div>
+                          
+                          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: tech.eol !== 'Supported' ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem', background: tech.eol !== 'Supported' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                            {tech.eol === 'Supported' ? 'Active' : 'EOL'}
+                          </div>
+                        </div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </div>

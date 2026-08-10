@@ -286,7 +286,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
 
   /* ═════════════════ RENDER ═════════════════ */
   return (
-    <div className="vapt-report-container">
+    <div className="global-page-container page-animate">
 
       {/* ── Page Header ──────────────────────── */}
       <PageHeaderCard
@@ -320,17 +320,13 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             <button className="vapt-btn vapt-btn-primary" onClick={handleGenerateReport}>
               <Download size={14} /> Export Report PDF
             </button>
-            <button className="vapt-btn vapt-btn-primary" onClick={loadData} disabled={loading}>
-              <RefreshCw size={14} className={loading ? 'spin' : ''} />
-              {loading ? 'Loading…' : 'Refresh'}
-            </button>
           </div>
         }
       />
 
       {/* ── Settings panel ──────────────────── */}
       {showSettings && (
-        <div className="vapt-settings-panel no-print">
+        <div className="card vapt-settings-panel no-print">
           <div className="vapt-settings-header">
             <h3><FileText size={15} /> Report Configuration</h3>
             <button className="vapt-close-btn" onClick={() => setShowSettings(false)}><X size={15} /></button>
@@ -434,7 +430,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
           {/* Top row: gauge + stats + pie */}
           <div className="vapt-exec-top">
             {/* Risk gauge */}
-            <div className="vapt-risk-card">
+            <div className="card vapt-risk-card">
               <div className="vapt-risk-gauge" style={{'--risk-color': riskCol}}>
                 <svg viewBox="0 0 120 70" className="vapt-gauge-svg">
                   <path d="M10,65 A55,55 0 0,1 110,65" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="12" strokeLinecap="round"/>
@@ -464,7 +460,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             </div>
 
             {/* Pie chart */}
-            <div className="vapt-pie-card">
+            <div className="card vapt-pie-card">
               {pieData.length > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height={140}>
@@ -554,22 +550,22 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
             <h2>2. Scope &amp; Methodology</h2>
           </div>
           <div className="vapt-scope-grid">
-            <div className="vapt-scope-card">
+            <div className="card vapt-scope-card">
               <h4><Globe size={14}/> Web / ASM Scope</h4>
               <table className="vapt-meta-table"><tbody>
                 <tr><td>Target</td><td>{scope||(scanMeta?.target||'—')}</td></tr>
                 <tr><td>Scan ID</td><td>{localScanId||activeScanId||'—'}</td></tr>
                 <tr><td>Web Findings</td><td>{webVulns.length}</td></tr>
-                <tr><td>Tools</td><td>Nuclei, Wapiti, Nmap, Subfinder</td></tr>
+                <tr><td>Engine</td><td>Enterprise ASM & VAPT Engine</td></tr>
                 <tr><td>Date</td><td>{scanMeta?.created_at ? new Date(scanMeta.created_at).toLocaleDateString() : reportDate}</td></tr>
               </tbody></table>
             </div>
-            <div className="vapt-scope-card">
+            <div className="card vapt-scope-card">
               <h4><Smartphone size={14}/> Mobile VAPT Scope</h4>
               <table className="vapt-meta-table"><tbody>
                 <tr><td>Apps Audited</td><td>{mobileScans.filter(s=>s.status==='completed').length}</td></tr>
                 <tr><td>Mobile Findings</td><td>{mobileFindings.length}</td></tr>
-                <tr><td>Tool</td><td>MobSF (Mobile Security Framework)</td></tr>
+                <tr><td>Engine</td><td>Mobile Security Analyzer</td></tr>
                 <tr><td>Analysis Type</td><td>SAST / DAST</td></tr>
                 <tr><td>Platforms</td><td>
                   {[mobileScans.some(s=>s.source==='android')&&'Android', mobileScans.some(s=>s.source==='ios')&&'iOS']
@@ -577,14 +573,14 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                 </td></tr>
               </tbody></table>
             </div>
-            <div className="vapt-scope-card vapt-scope-full">
+            <div className="card vapt-scope-card vapt-scope-full">
               <h4><Cpu size={14}/> Testing Methodology</h4>
               <p className="vapt-methodology-text">{methodology}</p>
               <div className="vapt-methodology-phases">
                 {[
                   { icon:'🔍', phase:'Reconnaissance',         desc:'Subdomain enumeration, port scanning, technology fingerprinting.' },
-                  { icon:'🕵️', phase:'Vulnerability Discovery', desc:'Automated scanning with Nuclei, web fuzzing with Wapiti, certificate analysis.' },
-                  { icon:'📱', phase:'Mobile Analysis',         desc:'SAST/DAST of Android/iOS binaries via MobSF.' },
+                  { icon:'🕵️', phase:'Vulnerability Discovery', desc:'Automated vulnerability signature scanning, web application fuzzing, certificate analysis.' },
+                  { icon:'📱', phase:'Mobile Analysis',         desc:'SAST/DAST static and dynamic binary security analysis.' },
                   { icon:'📊', phase:'Risk Assessment',         desc:'Findings scored by severity and mapped to OWASP categories.' },
                   { icon:'📝', phase:'Reporting',               desc:'Comprehensive report with remediation guidance and CVE/CWE mapping.' },
                 ].map((p,i) => (
@@ -648,7 +644,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                   const expanded = expandedRows[finding.id];
                   const cvssScore = getCVSS(finding.severity, finding.cvss);
                   return (
-                    <div key={finding.id} className="vapt-finding-card" style={{borderLeft:`4px solid ${c.fg}`}}>
+                    <div key={finding.id} className="card vapt-finding-card" style={{borderLeft:`4px solid ${c.fg}`}}>
                       <div className="vapt-finding-header" onClick={() => toggleRow(finding.id)}>
                         <CVSSGauge score={cvssScore} severity={finding.severity} />
                         <div className="vapt-finding-index" style={{color:c.fg}}>#{String(idx+1).padStart(3,'0')}</div>
@@ -738,7 +734,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                 const scanCounts = scanFindings.reduce((a,f)=>{ a[(f.severity||'LOW').toUpperCase()]=(a[(f.severity||'LOW').toUpperCase()]||0)+1; return a; }, {});
                 const score = parseInt(scan.score||50);
                 return (
-                  <div key={scan.id} className="vapt-mobile-app-card">
+                  <div key={scan.id} className="card vapt-mobile-app-card">
                     <div className="vapt-mobile-app-header">
                       <div className="vapt-mobile-app-info">
                         <span className="vapt-mobile-platform">{scan.source==='ios'?'🍏 iOS':'🤖 Android'}</span>
@@ -805,7 +801,7 @@ const VaptReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan 
                 { icon:'🔍', title:'Continuous Monitoring', desc:'Implement SIEM, WAF, IDS. Schedule recurring VAPT.' },
                 { icon:'👩‍💻', title:'Developer Training',   desc:'Conduct OWASP Top 10 & mobile security training regularly.' },
               ].map((bp,i) => (
-                <div key={i} className="vapt-bp-card">
+                <div key={i} className="card vapt-bp-card">
                   <span className="vapt-bp-icon">{bp.icon}</span>
                   <h5>{bp.title}</h5><p>{bp.desc}</p>
                 </div>

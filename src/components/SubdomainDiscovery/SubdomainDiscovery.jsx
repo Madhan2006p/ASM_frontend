@@ -91,7 +91,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
         />
 
         {/* Table Container */}
-        <div className="global-table-wrapper" style={{ marginTop: '1.5rem' }}>
+        <div className="card global-table-wrapper" style={{ marginTop: '1.5rem' }}>
           <div className="global-controls-row" style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', margin: 0 }}>
             <div>
               <div className="t-title" style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>Discovered Subdomains</div>

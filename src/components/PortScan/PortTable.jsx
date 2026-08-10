@@ -13,7 +13,7 @@ const portData = [
 
 const PortTable = () => {
   return (
-    <div className="port-table-card">
+    <div className="card port-table-card">
       
       {/* Top Controls */}
       <div className="port-controls-bar">

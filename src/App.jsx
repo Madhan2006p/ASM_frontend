@@ -5,18 +5,22 @@ import Overview from './components/Dashboard/Overview';
 import SubdomainDiscovery from './components/SubdomainDiscovery/SubdomainDiscovery';
 import Endpoints from './components/Endpoints/Endpoints';
 import Vulnerabilities from './components/Vulnerabilities/Vulnerabilities';
+import OWASPScannerUI from './components/Vulnerabilities/OWASPScannerUI';
 import Certificates from './components/Certificates/Certificates';
 import OpenPorts from './components/OpenPorts/OpenPorts';
 import Directories from './components/Directories/Directories';
 import Technologies from './components/Technologies/Technologies';
 import AntiPhishing from './components/AntiPhishing/AntiPhishing';
+import AntiPhishingScan from './components/AntiPhishingScan/AntiPhishingScan';
 import AntiMalware from './components/AntiMalware/AntiMalware';
+import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
+import SurfaceWebDashboard from './components/SurfaceWeb/SurfaceWebDashboard';
 import SuspiciousDomains from './components/SuspiciousDomains/SuspiciousDomains';
 import EmailSecurity from './components/EmailSecurity/EmailSecurity';
 import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDashboard';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
-import SurfaceWeb from './components/SurfaceWeb/SurfaceWeb';
+
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
 import Login from './components/Auth/Login';
@@ -36,6 +40,7 @@ import ExecutiveDashboard from './components/Dashboard/ExecutiveDashboard';
 import BrandMonitoringDashboard from './components/Dashboard/BrandMonitoringDashboard';
 import AttackPathAnalysisDashboard from './components/AttackPathAnalysis/AttackPathAnalysisDashboard';
 import VaptReport from './components/VaptReport/VaptReport';
+import AssetDiscoveryReport from './components/AssetDiscoveryReport/AssetDiscoveryReport';
 import { api } from './utils/api';
 
 function App() {
@@ -160,6 +165,14 @@ function App() {
   };
 
   useEffect(() => {
+    // Prioritize any currently running scan so ScanProgressPanel pops up automatically
+    const runningScan = scansList.find(s => s.status === 'running');
+    if (runningScan) {
+      setActiveScanId(runningScan.id);
+      setActiveTarget(runningScan.target);
+      return;
+    }
+
     // When selected domain changes, auto-select the latest scan for that domain
     if (selectedDomain) {
       const filtered = scansList.filter(s => s.target === selectedDomain);
@@ -248,15 +261,25 @@ function App() {
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
-          {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Vulnerabilities'       && <OWASPScannerUI activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} />}
           {activePage === 'Suspicious Domain'     && <SuspiciousDomains activeTarget={activeTarget} />}
           {activePage === 'Phishing Domain'       && <AntiPhishing activeTarget={activeTarget} />}
+          {activePage === 'Anti Phishing'         && <AntiPhishingScan activeTarget={activeTarget} />}
           {activePage === 'Impersonating Account' && <ImpersonatingAccount activeTarget={activeTarget} />}
           {activePage === 'Anti Malware'          && <AntiMalware activeTarget={activeTarget} />}
           {activePage === 'VAPT Report'  && (
             <VaptReport
+              activeScanId={activeScanId}
+              scansList={filteredScansList}
+              selectedDomain={selectedDomain}
+              handleSelectScan={handleSelectScan}
+            />
+          )}
+          {activePage === 'Asset Discovery Report' && (
+            <AssetDiscoveryReport
               activeScanId={activeScanId}
               scansList={filteredScansList}
               selectedDomain={selectedDomain}

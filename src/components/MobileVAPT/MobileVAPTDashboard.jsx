@@ -8,7 +8,9 @@ import {
   Activity, Lock, Code, Cpu
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+
 import { api } from '../../utils/api';
+import './MobileVAPT.css';
 
 const COLORS = { critical:'#EF4444', high:'#F97316', medium:'#EAB308', low:'#22C55E', info:'#3B82F6' };
 
@@ -42,6 +44,7 @@ const MobileVAPTDashboard = () => {
   const [db, setDb] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedGlobalCategory, setSelectedGlobalCategory] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -94,41 +97,69 @@ const MobileVAPTDashboard = () => {
 
   const topVulns = db?.top_vulnerabilities || [];
 
+  const catDist = db?.category_distribution || {};
+  const topCategories = Object.entries(catDist).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const catStats = topCategories.length > 0 ? topCategories.map(([cat, count]) => ({
+    label: cat.length > 20 ? cat.substring(0, 20) + '...' : cat,
+    value: count.toString(),
+    subtext: 'findings',
+    onClick: () => setSelectedGlobalCategory(cat)
+  })) : [
+    { label: 'NO DATA', value: '0', subtext: 'findings', onClick: null }
+  ];
+
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+    <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
         title="Mobile VAPT Dashboard"
         subtitle="Enterprise mobile application security posture overview."
-        stats={[
-          { label:'Apps Scanned',   value: total.toString() },
-          { label:'Critical/High',  value: critHigh.toString(), subtext:'severe issues' },
-          { label:'Medium/Low',     value: medLow.toString(), subtext:'warnings' },
-          { label:'Avg Score',      value: avgScore, subtext:'/ 100 overall' },
-        ]}
-        actions={
-          <button onClick={()=>window.location.reload()} style={{background:'var(--bg-card-2)',border:'1px solid var(--border-color)',borderRadius:7,padding:'0.4rem 0.6rem',cursor:'pointer',color:'var(--text-muted)'}}>
-            <RefreshCw size={14} className={loading?'spin':''}/>
-          </button>
-        }
+        
       />
 
-      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'0.75rem'}}>
-        <CT label="Critical" value={db?.critical||0} color={COLORS.critical}/>
-        <CT label="High"     value={db?.high||0}     color={COLORS.high}/>
-        <CT label="Medium"   value={db?.medium||0}   color={COLORS.medium}/>
-        <CT label="Low"      value={db?.low||0}      color={COLORS.low}/>
-        <CT label="Info"     value={db?.info||0}     color={COLORS.info}/>
-      </div>
+      {selectedGlobalCategory ? (
+        <div className="card" style={{padding:'2rem', textAlign:'center'}}>
+          <h3 style={{marginBottom:'1rem'}}>{selectedGlobalCategory} Findings</h3>
+          <p style={{color:'var(--text-muted)', marginBottom:'1.5rem'}}>Detailed global findings view is not available.</p>
+          <button style={{padding:'0.5rem 1rem', borderRadius:'8px', background:'var(--brand-primary)', color:'#fff', border:'none', cursor:'pointer'}} onClick={() => setSelectedGlobalCategory(null)}>Back to Dashboard</button>
+        </div>
+      ) : (
+        <>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'0.75rem'}}>
+            {catStats.map((stat, i) => (
+              <div 
+                key={i}
+                onClick={stat.onClick}
+                style={{
+                  background: 'var(--bg-card)', 
+                  border: '1px solid var(--border-color)', 
+                  borderRadius: 10,
+                  padding: '1rem', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 4,
+                  cursor: stat.onClick ? 'pointer' : 'default',
+                  transition: 'border-color 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.borderColor = 'var(--brand-primary)'}
+                onMouseOut={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
+              >
+                <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',
+                  letterSpacing:'0.06em',color:'var(--text-muted)'}}>{stat.label}</span>
+                <div style={{fontSize:'1.7rem',fontWeight:900,color:'var(--text-primary)',lineHeight:1}}>{stat.value}</div>
+                <span style={{fontSize:'0.65rem',color:'var(--text-muted)'}}>{stat.subtext}</span>
+              </div>
+            ))}
+          </div>
 
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
         <W title={<><Shield size={12}/> App Security Score Distribution</>}>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={scoreData} margin={{top:4,right:8,bottom:0,left:-20}}>
               <CartesianGrid {...gridLine}/>
               <XAxis dataKey="name" tick={{fill:'#64748b',fontSize:11}}/>
               <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Bar dataKey="value" radius={[4,4,0,0]}>
                 {scoreData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Bar>
@@ -136,18 +167,7 @@ const MobileVAPTDashboard = () => {
           </ResponsiveContainer>
         </W>
 
-        <W title={<><Activity size={12}/> Findings by Category</>}>
-          {catData.length===0 ? <div style={{color:'var(--text-muted)',textAlign:'center',padding:'2rem'}}>No category data</div> :
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart layout="vertical" data={catData.slice(0,6)} margin={{top:4,right:16,bottom:0,left:40}}>
-              <CartesianGrid {...gridLine}/>
-              <XAxis type="number" tick={{fill:'#64748b',fontSize:11}}/>
-              <YAxis dataKey="category" type="category" tick={{fill:'#64748b',fontSize:10}} width={80}/>
-              <Tooltip contentStyle={dark}/>
-              <Bar dataKey="count" fill="#8B5CF6" radius={[0,4,4,0]}/>
-            </BarChart>
-          </ResponsiveContainer>}
-        </W>
+
 
         <W title={<><Smartphone size={12}/> Platform Distribution</>}>
           <div style={{display:'flex',justifyContent:'center',marginTop:'1rem'}}>
@@ -155,7 +175,7 @@ const MobileVAPTDashboard = () => {
               <Pie data={[{name:'Android',value:android},{name:'iOS',value:ios}]} cx={80} cy={80} innerRadius={45} outerRadius={70} paddingAngle={2} dataKey="value">
                 <Cell fill="#22C55E"/><Cell fill="#3B82F6"/>
               </Pie>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
             </PieChart>
           </div>
           <div style={{display:'flex',justifyContent:'center',gap:'1rem',marginTop:8}}>
@@ -173,7 +193,7 @@ const MobileVAPTDashboard = () => {
               <Pie data={sevData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value">
                 {sevData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Pie>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize:'11px'}}/>
             </PieChart>
           </ResponsiveContainer>}
@@ -256,6 +276,8 @@ const MobileVAPTDashboard = () => {
           </table>
         </div>
       </W>
+        </>
+      )}
     </div>
   );
 };

@@ -65,10 +65,14 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
   const total = data.length || 1; // avoid /0
   let spf=0, dkim=0, dmarc=0, full=0;
   data.forEach(d => {
-    if(d.has_spf) spf++;
-    if(d.has_dkim) dkim++;
-    if(d.has_dmarc) dmarc++;
-    if(d.has_spf && d.has_dkim && d.has_dmarc) full++;
+    const hasSpf = d.spf && d.spf.length > 0;
+    const hasDmarc = d.dmarc && d.dmarc.length > 0;
+    const hasDkim = false; // DKIM not currently returned by backend
+
+    if(hasSpf) spf++;
+    if(hasDkim) dkim++;
+    if(hasDmarc) dmarc++;
+    if(hasSpf && hasDmarc) full++; // Reduced strictness since DKIM is not available
   });
 
   const authData = [
@@ -79,9 +83,12 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
 
   let cAll=0, cPartial=0, cNone=0;
   data.forEach(d => {
-    const c = (d.has_spf?1:0) + (d.has_dkim?1:0) + (d.has_dmarc?1:0);
-    if(c===3) cAll++;
-    else if(c>0) cPartial++;
+    const hasSpf = d.spf && d.spf.length > 0;
+    const hasDmarc = d.dmarc && d.dmarc.length > 0;
+    const c = (hasSpf ? 1 : 0) + (hasDmarc ? 1 : 0);
+    
+    if(c === 2) cAll++;
+    else if(c > 0) cPartial++;
     else cNone++;
   });
   const compData = [
@@ -99,7 +106,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
   ];
 
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+    <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
         badgeText="EMAIL SECURITY"
         title="Email Security Dashboard"
@@ -114,9 +121,6 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
           <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
             <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
               assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-            <button onClick={()=>window.location.reload()} style={{background:'var(--bg-card-2)',border:'1px solid var(--border-color)',borderRadius:7,padding:'0.4rem 0.6rem',cursor:'pointer',color:'var(--text-muted)'}}>
-              <RefreshCw size={14} className={loading?'spin':''}/>
-            </button>
           </div>
         }
       />
@@ -135,7 +139,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
               <CartesianGrid {...gridLine}/>
               <XAxis dataKey="name" tick={{fill:'#64748b',fontSize:11}}/>
               <YAxis tick={{fill:'#64748b',fontSize:11}}/>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
               <Legend wrapperStyle={{fontSize:'11px'}}/>
               <Bar dataKey="Pass" fill={COLORS.pass} radius={[4,4,0,0]}/>
               <Bar dataKey="Fail" fill={COLORS.fail} radius={[4,4,0,0]}/>
@@ -149,7 +153,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
               <Pie data={compData} cx={80} cy={80} innerRadius={45} outerRadius={70} paddingAngle={2} dataKey="value">
                 {compData.map((e,i)=><Cell key={i} fill={e.fill}/>)}
               </Pie>
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
             </PieChart>
           </div>
           <div style={{display:'flex',justifyContent:'center',gap:'0.8rem',marginTop:8,fontSize:'0.75rem',color:'var(--text-secondary)'}}>
@@ -166,7 +170,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
               <PolarAngleAxis dataKey="subject" tick={{fill:'#64748b',fontSize:10}}/>
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false}/>
               <Radar name="Compliance %" dataKey="A" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.4} />
-              <Tooltip contentStyle={dark}/>
+              <Tooltip contentStyle={dark} cursor={{fill: 'transparent'}}/>
             </RadarChart>
           </ResponsiveContainer>
         </W>
@@ -185,16 +189,24 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
               </thead>
               <tbody>
                 {data.map((d,i) => {
-                  const c = (d.has_spf?1:0) + (d.has_dkim?1:0) + (d.has_dmarc?1:0);
+                  const hasSpf = d.spf && d.spf.length > 0;
+                  const hasDmarc = d.dmarc && d.dmarc.length > 0;
+                  const c = (hasSpf?1:0) + (0) + (hasDmarc?1:0);
                   const risk = c===3?'Low':c>0?'Medium':'High';
                   const rc = risk==='Low'?COLORS.pass:risk==='Medium'?COLORS.warning:COLORS.fail;
-                  const Check = ({ok}) => ok ? <CheckCircle size={14} color={COLORS.pass}/> : <XCircle size={14} color={COLORS.fail}/>;
+                  
                   return (
                     <tr key={d.id||i} style={{borderBottom:'1px solid var(--border-color)',borderLeft:`3px solid ${rc}`}}>
                       <td style={{padding:'0.6rem 0.75rem',fontWeight:600,color:'var(--text-primary)'}}>{d.subdomain||'—'}</td>
-                      <td style={{padding:'0.6rem 0.75rem'}}><div style={{display:'flex',gap:5,alignItems:'center'}}><Check ok={d.has_spf}/> {d.has_spf?'Pass':'Fail'}</div></td>
-                      <td style={{padding:'0.6rem 0.75rem'}}><div style={{display:'flex',gap:5,alignItems:'center'}}><Check ok={d.has_dkim}/> {d.has_dkim?'Pass':'Fail'}</div></td>
-                      <td style={{padding:'0.6rem 0.75rem'}}><div style={{display:'flex',gap:5,alignItems:'center'}}><Check ok={d.has_dmarc}/> {d.has_dmarc?'Pass':'Fail'}</div></td>
+                      <td style={{padding:'0.6rem 0.75rem',textAlign:'center'}}>
+                        {hasSpf ? <CheckCircle size={16} color={COLORS.pass} style={{margin:'0 auto'}}/> : <XCircle size={16} color={COLORS.fail} style={{margin:'0 auto'}}/>}
+                      </td>
+                      <td style={{padding:'0.6rem 0.75rem',textAlign:'center'}}>
+                        <XCircle size={16} color={COLORS.fail} style={{margin:'0 auto'}}/>
+                      </td>
+                      <td style={{padding:'0.6rem 0.75rem',textAlign:'center'}}>
+                        {hasDmarc ? <CheckCircle size={16} color={COLORS.pass} style={{margin:'0 auto'}}/> : <XCircle size={16} color={COLORS.fail} style={{margin:'0 auto'}}/>}
+                      </td>
                       <td style={{padding:'0.6rem 0.75rem'}}>
                         <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',background:`${rc}22`,color:rc}}>{risk}</span>
                       </td>

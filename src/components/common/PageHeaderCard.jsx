@@ -65,11 +65,13 @@ const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
             return (
               <div 
                 key={index} 
-                className="phc-stat-card"
+                className="card phc-stat-card"
+                onClick={stat.onClick}
                 style={{
                   '--card-border': colorInfo.border,
                   '--card-glow': colorInfo.glow,
-                  '--card-bg': colorInfo.bg
+                  '--card-bg': colorInfo.bg,
+                  cursor: stat.onClick ? 'pointer' : 'default'
                 }}
               >
                 <div className="phc-stat-label">{stat.label}</div>
