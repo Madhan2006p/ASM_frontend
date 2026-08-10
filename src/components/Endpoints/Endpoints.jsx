@@ -19,19 +19,41 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const [selectedEndpoint, setSelectedEndpoint] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Fetch endpoints on mount and when activeScanId changes
+  // Fetch endpoints on mount and when activeScanId/selectedDomain changes
   useEffect(() => {
     const loadEndpoints = async () => {
-      if (!activeScanId) {
-        setEndpoints([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
-        setEndpoints(list);
+        
+        if (selectedDomain && activeScanId) {
+          // Specific domain selected — fetch from that scan only
+          const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
+          setEndpoints(list);
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains — fetch from ALL scans and combine
+          const allEndpoints = [];
+          const seenIds = new Set();
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/endpoints/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(ep => {
+                if (!seenIds.has(ep.id)) {
+                  seenIds.add(ep.id);
+                  allEndpoints.push(ep);
+                }
+              });
+            } catch (e) {
+              // Skip failed scan fetches
+            }
+          }
+          allEndpoints.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
+          setEndpoints(allEndpoints);
+        } else {
+          setEndpoints([]);
+        }
       } catch (e) {
         console.error("Failed to load endpoints", e);
         setEndpoints([]);
@@ -40,7 +62,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       }
     };
     loadEndpoints();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
   const getPathFromUrl = (urlStr) => {
     try {
@@ -142,18 +164,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     <div className="global-page-container">
       <div className="global-max-width">
         
-        <PageHeaderCard 
-          badgeText="ENDPOINTS"
-          title="Endpoints"
-          subtitle="Discovered API endpoints and web routes across your assets."
-          stats={[
-            { label: 'Unauthenticated API', value: unauthHigh.toString(), subtext: 'Threat Detected' },
-            { label: 'Exposed Files/Configs', value: exposedConfigs.toString(), subtext: 'Needs review' },
-            { label: 'Active Routes', value: totalRoutes.toString(), subtext: 'Total cataloged' },
-            { label: 'Failed Requests', value: failedRequests.toString(), subtext: 'Error responses' }
-          ]}
-        />
-
         <ScanSelector 
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
@@ -161,6 +171,19 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           scansList={scansList}
           activeScanId={activeScanId}
           handleSelectScan={handleSelectScan}
+        />
+
+        <PageHeaderCard 
+          badgeText="ENDPOINTS"
+          title="Endpoints"
+          subtitle="Discovered API endpoints and web routes across your assets."
+          stats={[
+            { label: 'ALL', value: endpoints.length.toString(), subtext: 'Total endpoints', isActive: riskFilter === 'All Risks', onClick: () => setRiskFilter('All Risks') },
+            { label: 'CRITICAL', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'CRITICAL').length.toString(), subtext: 'Immediate review', isActive: riskFilter === 'Critical', onClick: () => setRiskFilter('Critical') },
+            { label: 'HIGH', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'HIGH').length.toString(), subtext: 'Elevated exposure', isActive: riskFilter === 'High', onClick: () => setRiskFilter('High') },
+            { label: 'MEDIUM', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'MEDIUM').length.toString(), subtext: 'Moderate risk', isActive: riskFilter === 'Medium', onClick: () => setRiskFilter('Medium') },
+            { label: 'LOW', value: endpoints.filter(ep => mapRisk(ep.threat_count) === 'LOW').length.toString(), subtext: 'Low exposure', isActive: riskFilter === 'Low', onClick: () => setRiskFilter('Low') },
+          ]}
         />
 
         {/* Filters and Controls */}

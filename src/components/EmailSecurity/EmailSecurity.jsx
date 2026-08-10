@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, ChevronDown, ChevronUp, Server, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import PageHeaderCard from '../common/PageHeaderCard';
 import { api } from '../../utils/api';
 import './EmailSecurity.css';
 
@@ -31,7 +32,13 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const [expanded, setExpanded] = useState({});
   const toggleExpand = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
-  const domainList = Array.from(new Set(assignedDomains || []));
+  const domainList = Array.from(new Set([
+    'All Domains',
+    'kct.ac.in',
+    'uit.ac.in',
+    'hackersinfotech.com',
+    ...(assignedDomains || [])
+  ]));
 
   useEffect(() => {
     if (!selectedDomain && domainList.length > 0) {
@@ -138,7 +145,12 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const activeTargetDomain = selectedDomain || (domainList.length > 0 ? domainList[0] : (result?.domain || 'Unknown Domain'));
 
   return (
-    <div className="email-security-v2">
+    <div className="email-security-v2 global-page-container">
+      <PageHeaderCard
+        badgeText="EMAIL SECURITY"
+        title="Email Security"
+        subtitle="Organizations domain email authentication standards metrics overview."
+      />
       {domainList.length > 0 && (
         <div className="domain-tabs-v2">
           {domainList.map((d) => (

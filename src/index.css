@@ -27,7 +27,7 @@
   --status-new-bg:  rgba(245, 158, 11, 0.12);
 
   /* ── Borders ────────────────────────────────────── */
-  --border-color:   rgba(59, 130, 246, 0.18);
+  --border-color:   rgba(59, 130, 246, 0.25);
   --border-active:  rgba(59, 130, 246, 0.55);
 
   /* ── Severity ───────────────────────────────────── */
@@ -146,7 +146,7 @@
 }
 .light-mode td {
   color: #334155 !important;
-  border-bottom-color: rgba(37,99,235,0.07) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
 }
 .light-mode tr:hover td { background-color: #EFF6FF !important; color: #0F172A !important; }
 
@@ -424,11 +424,11 @@
 .light-mode table th {
   background-color: #F1F5F9 !important;
   color: #475569 !important;
-  border-bottom-color: rgba(37,99,235,0.1) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.12) !important;
 }
 .light-mode table td {
   color: #334155 !important;
-  border-bottom-color: rgba(37,99,235,0.07) !important;
+  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
 }
 .light-mode table tr:hover td { background-color: #EFF6FF !important; }
 

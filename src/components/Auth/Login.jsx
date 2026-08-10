@@ -43,7 +43,10 @@ const Login = ({ onLogin, onNavigate }) => {
         });
         if (res.tokens) {
           api.setTokens(res.tokens.access, res.tokens.refresh);
-          onLogin(res.user);
+          setSuccessMsg('Authentication successful. Initializing workspace...');
+          setTimeout(() => {
+            onLogin(res.user);
+          }, 1500);
         } else {
           setApiError('Authentication failed: Missing security token.');
           setLoading(false);
@@ -96,7 +99,7 @@ const Login = ({ onLogin, onNavigate }) => {
               <input
                 type="password"
                 name="password"
-                placeholder="••••••••"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleChange}
                 required

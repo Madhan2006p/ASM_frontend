@@ -32,15 +32,31 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   // Fetch directories
   useEffect(() => {
     const loadDirectories = async () => {
-      if (!activeScanId) {
-        setDirectories([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/directories/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        setDirectories(list);
+        if (selectedDomain && activeScanId) {
+          const data = await api.get(`/api/attacksurface/directories/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          setDirectories(list);
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          const allDirs = [];
+          const seenIds = new Set();
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/directories/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(d => {
+                if (!seenIds.has(d.id)) {
+                  seenIds.add(d.id);
+                  allDirs.push(d);
+                }
+              });
+            } catch (e) {}
+          }
+          setDirectories(allDirs);
+        } else {
+          setDirectories([]);
+        }
       } catch (e) {
         console.error("Failed to load directories", e);
         setDirectories([]);
@@ -49,7 +65,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       }
     };
     loadDirectories();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
   // ── Legacy fallbacks (only used for rows stored before the analysis engine) ──
   const getPathFromUrl = (urlStr) => {
@@ -226,18 +242,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     <div className="global-page-container">
       <div className="global-max-width">
 
-        <PageHeaderCard
-          badgeText="DISCOVERY"
-          title="Directories"
-          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
-          stats={[
-            { label: 'Directories Found', value: totalCount.toString(), subtext: 'Verified accessible paths' },
-            { label: 'Exposed', value: exposedCount.toString(), subtext: 'Sensitive content accessible' },
-            { label: 'Sensitive Paths', value: sensitiveCount.toString(), subtext: 'Requires review' },
-            { label: 'High / Critical Risk', value: highRiskCount.toString(), subtext: 'Priority remediation' }
-          ]}
-        />
-
         <ScanSelector
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
@@ -247,18 +251,20 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
           handleSelectScan={handleSelectScan}
         />
 
-        {/* Filter Pills */}
-        <div className="global-filter-row">
-          {['All', 'Exposed', 'Sensitive', 'Admin', 'Backup Files', 'Directory Listings', 'Public'].map(pill => (
-            <div
-              key={pill}
-              className={`global-filter-pill ${filterPill === pill ? 'active' : ''}`}
-              onClick={() => setFilterPill(pill)}
-            >
-              {pill}
-            </div>
-          ))}
-        </div>
+        <PageHeaderCard
+          badgeText="DISCOVERY"
+          title="Directories"
+          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
+          stats={[
+            { label: 'ALL', value: totalCount.toString(), subtext: 'Verified accessible paths', isActive: filterPill === 'All', onClick: () => setFilterPill('All') },
+            { label: 'EXPOSED', value: exposedCount.toString(), subtext: 'Sensitive content accessible', isActive: filterPill === 'Exposed', onClick: () => setFilterPill('Exposed') },
+            { label: 'SENSITIVE', value: sensitiveCount.toString(), subtext: 'Requires review', isActive: filterPill === 'Sensitive', onClick: () => setFilterPill('Sensitive') },
+            { label: 'ADMIN', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Admin Panel').length.toString(), subtext: 'Admin panels', isActive: filterPill === 'Admin', onClick: () => setFilterPill('Admin') },
+            { label: 'BACKUP FILES', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Backup File').length.toString(), subtext: 'Exposed backups', isActive: filterPill === 'Backup Files', onClick: () => setFilterPill('Backup Files') },
+            { label: 'DIRECTORY LISTINGS', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Directory Listing').length.toString(), subtext: 'Open listings', isActive: filterPill === 'Directory Listings', onClick: () => setFilterPill('Directory Listings') },
+            { label: 'PUBLIC', value: directories.filter(d => (d.access_status || getStatus(d.status, d.category || getCategory(getPathFromUrl(d.url)))) === 'Public').length.toString(), subtext: 'Publicly accessible', isActive: filterPill === 'Public', onClick: () => setFilterPill('Public') },
+          ]}
+        />
 
         {/* Table Controls */}
         <div className="global-controls-row">

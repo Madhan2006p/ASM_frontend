@@ -17,12 +17,18 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   let currentAttemptText = "Initializing...";
   let timeoutExplanation = "";
-  if (activeScan?.vuln_scan_phase === 'running_nuclei') {
-    currentAttemptText = "Phase 1: Nuclei Fast Scan";
-    timeoutExplanation = "Sending thousands of optimized exploit payloads to discover misconfigurations, CVEs, and exposures. This phase is heavily optimized for speed.";
+  if (activeScan?.vuln_scan_phase === 'running_basic') {
+    currentAttemptText = "Phase 1: Basic Vulnerability Scan (Fast Nuclei)";
+    timeoutExplanation = "Scanning for critical misconfigurations, exposures, and default logins using optimized Nuclei templates.";
+  } else if (activeScan?.vuln_scan_phase === 'running_deep') {
+    currentAttemptText = "Phase 2: Deep Vulnerability Scan (Deep Nuclei)";
+    timeoutExplanation = "Running deep checks across extensive vulnerability signature databases (CVEs, CNVDs, DNS exposure, and infrastructure weaknesses).";
   } else if (activeScan?.vuln_scan_phase === 'running_wapiti') {
-    currentAttemptText = "Phase 2: Wapiti Application Fuzzing (60s total)";
+    currentAttemptText = "Phase 3: Wapiti Application Fuzzing (60s total)";
     timeoutExplanation = "Crawling the application and injecting SQL/XSS payloads into forms. This takes exactly 60 seconds.";
+  } else if (activeScan?.vuln_scan_phase === 'running_arjun') {
+    currentAttemptText = "Phase 4: Arjun Parameter Discovery";
+    timeoutExplanation = "Scanning HTTP endpoints to detect hidden, undocumented HTTP query parameters and form fields.";
   } else if (activeScan?.vuln_scan_phase && activeScan.vuln_scan_phase.startsWith('phase_')) {
     // deep nuclei phase e.g. "phase_3_of_10_cnvd"
     const parts = activeScan.vuln_scan_phase.split('_');
@@ -34,49 +40,60 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
   }
 
 
-  // Load vulnerabilities — polls every 5s while deep scan is running
+  // Load vulnerabilities - polls every 5s while deep scan is running
   useEffect(() => {
     let mounted = true;
     let interval = null;
 
+    const mapVuln = (v) => {
+      const dateStr = v.discovered_at ? new Date(v.discovered_at).toLocaleDateString() : 'Recent';
+      let cvss = 3.0;
+      if (v.severity === 'CRITICAL') cvss = 9.5;
+      else if (v.severity === 'HIGH') cvss = 8.0;
+      else if (v.severity === 'MEDIUM') cvss = 5.5;
+
+      return {
+        id: v.id,
+        title: v.finding || v.vulnerability_id || 'Security Vulnerability',
+        cve: v.cve || '—',
+        cwe: v.cwe || '—',
+        description: v.description || 'No description provided.',
+        remediation: v.remediation || 'No remediation provided.',
+        reference: v.reference || '—',
+        severity: v.severity || 'LOW',
+        status: 'Open',
+        cvss,
+        asset: v.subdomain || v.domain || 'Target Scope',
+        age: dateStr,
+        source_tool: v.source_tool || 'Nuclei',
+        exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
+      };
+    };
+
     const loadVulns = async () => {
-      if (!activeScanId) {
-        setVulnerabilities([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
-        if (!mounted) return;
-        const list = Array.isArray(data) ? data : (data.results || []);
-        
-        const mapped = list.map(v => {
-          const dateStr = v.discovered_at ? new Date(v.discovered_at).toLocaleDateString() : 'Recent';
-          let cvss = 3.0;
-          if (v.severity === 'CRITICAL') cvss = 9.5;
-          else if (v.severity === 'HIGH') cvss = 8.0;
-          else if (v.severity === 'MEDIUM') cvss = 5.5;
+        let allMapped = [];
+        const seenIds = new Set();
 
-          return {
-            id: v.id,
-            title: v.finding || v.vulnerability_id || 'Security Vulnerability',
-            cve: v.cve || '—',
-            cwe: v.cwe || '—',
-            description: v.description || 'No description provided.',
-            remediation: v.remediation || 'No remediation provided.',
-            reference: v.reference || '—',
-            severity: v.severity || 'LOW',
-            status: 'Open',
-            cvss,
-            affected_assets: v.affected_assets || [v.subdomain || v.domain || 'Target Scope'],
-            age: dateStr,
-            source_tool: v.source_tool || 'Nuclei',
-            exploit: v.severity === 'CRITICAL' || v.severity === 'HIGH'
-          };
-        });
+        if (selectedDomain && activeScanId) {
+          // Specific domain: fetch from that scan only
+          const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.forEach(v => { if (!seenIds.has(v.id)) { seenIds.add(v.id); allMapped.push(mapVuln(v)); } });
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains: fetch from ALL scans and combine
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(v => { if (!seenIds.has(v.id)) { seenIds.add(v.id); allMapped.push(mapVuln(v)); } });
+            } catch (e) { /* skip failed */ }
+          }
+        }
 
-        mapped.sort((a, b) => b.cvss - a.cvss);
-        if (mounted) setVulnerabilities(mapped);
+        allMapped.sort((a, b) => b.cvss - a.cvss);
+        if (mounted) setVulnerabilities(allMapped);
       } catch (e) {
         console.error("Failed to load vulnerabilities", e);
         if (mounted) setVulnerabilities([]);
@@ -84,6 +101,17 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
         if (mounted) setLoading(false);
       }
     };
+
+    if (!selectedDomain && (!scansList || scansList.length === 0)) {
+      setVulnerabilities([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedDomain && !activeScanId) {
+      setVulnerabilities([]);
+      setLoading(false);
+      return;
+    }
 
     loadVulns();
 
@@ -96,7 +124,7 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
       mounted = false;
       if (interval) clearInterval(interval);
     };
-  }, [activeScanId, isVulnScanRunning]);
+  }, [activeScanId, selectedDomain, scansList, isVulnScanRunning]);
 
   const filteredData = vulnerabilities.filter(item => {
     if (activeFilter === 'All') return true;
@@ -105,9 +133,9 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
 
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,CVE,Severity,Status,CVSS,Affected Assets,Age,Exploit\n"
+      + "Title,CVE,Severity,Status,CVSS,Asset,Age,Exploit\n"
       + filteredData.map(row => 
-          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${(row.affected_assets || []).join(', ')}","${row.age}",${row.exploit}`
+          `"${row.title}","${row.cve}","${row.severity}","${row.status}",${row.cvss},"${row.asset}","${row.age}",${row.exploit}`
         ).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -136,11 +164,60 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
     <div className="global-page-container">
       <div className="global-max-width">
         
+        <div style={{ marginBottom: '1.5rem' }}>
+          <ScanSelector 
+            assignedDomains={assignedDomains}
+            selectedDomain={selectedDomain}
+            setSelectedDomain={setSelectedDomain}
+            scansList={scansList}
+            activeScanId={activeScanId}
+            handleSelectScan={handleSelectScan}
+          />
+        </div>
+
         <PageHeaderCard 
           badgeText="SECURITY"
           title="Vulnerability Management"
           subtitle="Track, triage and remediate findings across your attack surface."
+          stats={[
+            { label: 'ALL', value: vulnerabilities.length.toString(), subtext: 'Total findings', isActive: activeFilter === 'All', onClick: () => setActiveFilter('All') },
+            { label: 'CRITICAL', value: counts.critical.toString(), subtext: 'Immediate action', isActive: activeFilter === 'Critical', onClick: () => setActiveFilter('Critical') },
+            { label: 'HIGH', value: counts.high.toString(), subtext: 'Priority fix', isActive: activeFilter === 'High', onClick: () => setActiveFilter('High') },
+            { label: 'MEDIUM', value: counts.medium.toString(), subtext: 'Scheduled patch', isActive: activeFilter === 'Medium', onClick: () => setActiveFilter('Medium') },
+            { label: 'LOW', value: counts.low.toString(), subtext: 'Monitor', isActive: activeFilter === 'Low', onClick: () => setActiveFilter('Low') },
+          ]}
         />
+
+        {isVulnScanRunning && (
+          <div style={{ 
+            display: 'flex', flexDirection: 'column', gap: '0.5rem', 
+            padding: '1rem', background: 'rgba(34, 211, 238, 0.1)', 
+            border: '1px solid rgba(34, 211, 238, 0.3)', borderRadius: '8px',
+            color: '#22D3EE', marginBottom: '1.5rem', fontSize: '0.9rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500' }}>
+              <RefreshCw className="spin" size={18} />
+              <span>Deep vulnerability scanning is currently running ΓÇö findings appear below in real time.</span>
+              {vulnerabilities.length > 0 && (
+                <span style={{ marginLeft: 'auto', background: 'rgba(34,211,238,0.2)', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700' }}>
+                  {vulnerabilities.length} found
+                </span>
+              )}
+            </div>
+            <div style={{ paddingLeft: '1.85rem', color: '#8AAED6' }}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <strong style={{ color: '#fff' }}>Current Step: </strong> 
+                <span style={{ background: 'rgba(34, 211, 238, 0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(34,211,238,0.4)', color: '#22D3EE', fontWeight: '600' }}>
+                  {currentAttemptText}
+                </span>
+              </div>
+              <div><strong>What's happening?</strong> {timeoutExplanation}</div>
+              <div style={{ marginTop: '0.5rem', color: '#6B8CAE', fontSize: '0.8rem' }}>
+                Auto-refreshing every 5 seconds. Scan can run up to 5 days across 10 template categories.
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Vulnerability Breakdown */}
         <div className="vuln-breakdown-section">
@@ -163,50 +240,6 @@ const Vulnerabilities = ({ activeScanId, assignedDomains, selectedDomain, setSel
             ))}
           </div>
         </div>
-
-        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
-
-        {isVulnScanRunning && (
-          <div style={{ 
-            display: 'flex', flexDirection: 'column', gap: '0.5rem', 
-            padding: '1rem', background: 'rgba(34, 211, 238, 0.1)', 
-            border: '1px solid rgba(34, 211, 238, 0.3)', borderRadius: '8px',
-            color: '#22D3EE', marginBottom: '1.5rem', fontSize: '0.9rem'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '500' }}>
-              <RefreshCw className="spin" size={18} />
-              <span>Vulnerability scanning is currently running — findings appear below in real time.</span>
-              {vulnerabilities.length > 0 && (
-                <span style={{ marginLeft: 'auto', background: 'rgba(34,211,238,0.2)', padding: '0.1rem 0.6rem', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700' }}>
-                  {vulnerabilities.length} found
-                </span>
-              )}
-            </div>
-            <div style={{ paddingLeft: '1.85rem', color: '#8AAED6' }}>
-              <div style={{ marginBottom: '0.5rem' }}>
-                <strong style={{ color: '#fff' }}>Current Step: </strong> 
-                <span style={{ background: 'rgba(34, 211, 238, 0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px', border: '1px solid rgba(34,211,238,0.4)', color: '#22D3EE', fontWeight: '600' }}>
-                  {currentAttemptText}
-                </span>
-              </div>
-              <div><strong>What's happening?</strong> {timeoutExplanation}</div>
-              <div style={{ marginTop: '0.5rem', color: '#6B8CAE', fontSize: '0.8rem' }}>
-                Auto-refreshing every 5 seconds. Scan can run up to 5 days across 10 template categories.
-              </div>
-            </div>
-          </div>
-        )}
-
-
 
         <VulnerabilitiesTable
           data={filteredData}

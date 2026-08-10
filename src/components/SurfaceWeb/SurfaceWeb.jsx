@@ -405,16 +405,16 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
 
   return (
     <div className="surface-web-container" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <PageHeaderCard
-        badgeText="SURFACE WEB OSINT"
-        title="Spiderfoot Passive Intelligence Scan"
-        subtitle="Leverage passive OSINT to map internet names, IP addresses, domains, and leak intelligence."
-      />
-
       <TargetDomainTabs
         assignedDomains={assignedDomains}
         selectedDomain={selectedDomain}
         setSelectedDomain={setSelectedDomain}
+      />
+
+      <PageHeaderCard
+        badgeText="SURFACE WEB OSINT"
+        title="Spiderfoot Passive Intelligence Scan"
+        subtitle="Leverage passive OSINT to map internet names, IP addresses, domains, and leak intelligence."
       />
 
 

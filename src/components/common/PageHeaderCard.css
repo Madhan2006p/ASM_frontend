@@ -124,6 +124,20 @@
   filter: brightness(1.1);
 }
 
+.phc-stat-card--active {
+  background: var(--card-bg, rgba(255,255,255,0.08)) !important;
+  border-color: var(--card-border, rgba(59,130,246,0.65)) !important;
+  box-shadow: 0 0 20px var(--card-glow, rgba(59,130,246,0.2)), inset 0 0 15px var(--card-glow, transparent), 0 4px 12px rgba(0,0,0,0.2) !important;
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+
+.light-mode .phc-stat-card--active {
+  background: rgba(255,255,255,0.95) !important;
+  border-color: rgba(37,99,235,0.45) !important;
+  box-shadow: 0 0 16px rgba(37,99,235,0.12), 0 4px 12px rgba(0,0,0,0.06) !important;
+}
+
 .phc-stat-label {
   font-size: 0.6rem;
   font-weight: 800;

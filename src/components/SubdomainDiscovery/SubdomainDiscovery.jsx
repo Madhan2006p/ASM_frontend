@@ -13,18 +13,31 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   
   const itemsPerPage = 10;
 
-  // Load subdomains when activeScanId changes
+  // Load subdomains when activeScanId or selectedDomain changes
   useEffect(() => {
     const loadSubdomains = async () => {
-      if (!activeScanId) {
-        setSubdomains([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
-        setSubdomains(list);
+        let allData = [];
+        const seenIds = new Set();
+
+        if (selectedDomain && activeScanId) {
+          // Specific domain: fetch from that scan only
+          const data = await api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`);
+          const list = Array.isArray(data) ? data : (data.results || []);
+          list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
+        } else if (!selectedDomain && scansList && scansList.length > 0) {
+          // All Domains: fetch from ALL scans and combine
+          for (const scan of scansList) {
+            try {
+              const data = await api.get(`/api/attacksurface/subdomains/?scan=${scan.id}`);
+              const list = Array.isArray(data) ? data : (data.results || []);
+              list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
+            } catch (e) { /* skip failed */ }
+          }
+        }
+
+        setSubdomains(allData);
       } catch (e) {
         console.error("Failed to load subdomains", e);
         setSubdomains([]);
@@ -32,8 +45,20 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
         setLoading(false);
       }
     };
+
+    if (!selectedDomain && (!scansList || scansList.length === 0)) {
+      setSubdomains([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedDomain && !activeScanId) {
+      setSubdomains([]);
+      setLoading(false);
+      return;
+    }
+
     loadSubdomains();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList]);
 
 
 
@@ -67,6 +92,16 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     <div className="global-page-container">
       <div className="global-max-width">
         
+        {/* Active Scan Selector */}
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+
         {/* Banner Area */}
         <PageHeaderCard 
           badgeText="DISCOVERY"
@@ -78,16 +113,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
             { label: 'NEW THIS WEEK', value: '+18' },
             { label: 'AVG. SCAN TIME', value: '42s' }
           ]}
-        />
-
-        {/* Active Scan Selector */}
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
         />
 
         {/* Table Container */}

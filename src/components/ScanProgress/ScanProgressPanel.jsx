@@ -12,7 +12,8 @@ const PHASES = [
   { key: 'directories',    label: 'Directory Enumeration',           field: 'directories_done',progressStart: 45,  progressEnd: 55   },
   { key: 'technologies',   label: 'Technology Fingerprinting',       field: 'technologies_done',progressStart: 55, progressEnd: 65   },
   { key: 'email',          label: 'Email Security (SPF/DMARC)',      field: 'email_done',      progressStart: 65,  progressEnd: 70   },
-  { key: 'vulnerabilities',label: 'Vulnerability Scan',             field: 'vulnerabilities_done',progressStart: 70, progressEnd: 85 },
+  { key: 'vuln_basic',     label: 'Basic Vulnerability Scan',        field: 'vuln_scan_phase', progressStart: 70,  progressEnd: 80,  phaseValue: 'basic' },
+  { key: 'vuln_deep',      label: 'Deep Vulnerability Scan (Nuclei)',field: 'vuln_scan_phase', progressStart: 80,  progressEnd: 85,  phaseValue: 'complete' },
   { key: 'ssl',            label: 'SSL/TLS Certificate Audit',       field: 'ssl_done',        progressStart: 85,  progressEnd: 90   },
   { key: 'antimalware',    label: 'Anti-Malware & VirusTotal Check', field: 'malware_done',    progressStart: 90,  progressEnd: 100  },
 ];
@@ -32,6 +33,14 @@ function getPhaseStatus(phase, scanData) {
 
   if (phase.field === null) {
     return progress > 0 ? 'done' : (scanData.status === 'running' ? 'running' : 'pending');
+  }
+
+  if (phase.field === 'vuln_scan_phase') {
+    if (scanData.vuln_scan_phase === phase.phaseValue) return 'running';
+    if (phase.phaseValue === 'basic' && (scanData.vuln_scan_phase === 'basic' || scanData.vuln_scan_phase === 'complete')) return 'done';
+    if (phase.phaseValue === 'complete' && scanData.vuln_scan_phase === 'complete') return 'running';
+    if (phase.phaseValue === 'basic' && scanData.vuln_scan_phase && scanData.vuln_scan_phase !== 'pending') return 'done';
+    return 'pending';
   }
 
   if (scanData[phase.field] === true) return 'done';
@@ -110,9 +119,11 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
 
           if (prev.vuln_scan_phase !== data.vuln_scan_phase) {
             const phaseLabels = {
-              running_nuclei: '🔍 Nuclei fast scan started',
-              running_wapiti: '🕷️ Wapiti web fuzzing started',
-              complete:       '✓ Vulnerability scan complete',
+              running_basic:  '≡ƒöì Basic vulnerability scan started',
+              running_deep:   '≡ƒ¢í∩╕Å Deep vulnerability scan started',
+              running_wapiti: '≡ƒò╖∩╕Å Wapiti web fuzzing started',
+              running_arjun:  '≡ƒº⌐ Arjun parameter fuzzing started',
+              complete:       'Γ£ô Vulnerability scan complete',
             };
             const label = phaseLabels[data.vuln_scan_phase];
             if (label) phasesChanged.push({ phase: label, status: data.vuln_scan_phase === 'complete' ? 'done' : 'running', time: new Date().toISOString() });
@@ -163,7 +174,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
           // Log phase transitions
           if (prev && prev.phase_name !== data.phase_name && data.phase_name) {
             setLog(prevLog => [...prevLog, {
-              phase: `🐍 Python Scanner: ${data.phase_name}`,
+              phase: `≡ƒö¼ Nuclei: ${data.phase_name}`,
               status: 'running',
               time: new Date().toISOString()
             }]);
@@ -205,7 +216,10 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
   const target = scanData?.target ?? activeScan?.target ?? '';
 
   const vulnPhase = scanData?.vuln_scan_phase;
-  const vulnBadge = isDeepScanRunning || (vulnPhase && vulnPhase !== 'pending' && vulnPhase !== 'complete') ? '🐍 Python Scanner' : null;
+  const vulnBadge =
+    vulnPhase === 'running_nuclei' ? '≡ƒöì Nuclei' :
+    vulnPhase === 'running_wapiti' ? '≡ƒò╖∩╕Å Wapiti' :
+    isDeepScanRunning ? '≡ƒö¼ Deep Scan' : null;
 
   if (!activeScanId) return null;
   if (!visible) return null;
@@ -229,15 +243,15 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             {isRunning ? (
               <>
                 <span className="spp-dot-pulse" />
-                Scan Progress — {target}
+                Scan Progress ΓÇö {target}
                 {vulnBadge && <span className="spp-vuln-badge">{vulnBadge}</span>}
               </>
             ) : scanData?.status === 'completed' ? (
-              <><CheckCircle2 size={13} className="spp-done-icon" />Scan Complete — {target}</>
+              <><CheckCircle2 size={13} className="spp-done-icon" />Scan Complete ΓÇö {target}</>
             ) : scanData?.status === 'failed' ? (
-              <><AlertCircle size={13} className="spp-failed-icon" />Scan Failed — {target}</>
+              <><AlertCircle size={13} className="spp-failed-icon" />Scan Failed ΓÇö {target}</>
             ) : (
-              <><Clock size={13} className="spp-pending-icon" />Scan — {target}</>
+              <><Clock size={13} className="spp-pending-icon" />Scan ΓÇö {target}</>
             )}
           </span>
         </div>
@@ -246,7 +260,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             <span className={`spp-status-badge spp-status-${scanData.status}`}>{scanData.status}</span>
           )}
           <button className="spp-pin-btn" onClick={(e) => e.stopPropagation()} title="Scan progress panel">
-            <span className="spp-pin-icon spp-pinned">⬡</span>
+            <span className="spp-pin-icon spp-pinned">Γ¼í</span>
           </button>
           {!isRunning && (
             <button className="spp-close-btn" onClick={(e) => { e.stopPropagation(); setVisible(false); }} title="Dismiss">
@@ -281,7 +295,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
               ))}
             </div>
             <div className="spp-progress-phases">
-              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vulnerabilities').map(phase => {
+              {PHASES.filter(p => p.progressEnd % 25 === 0 || p.key === 'subdomains' || p.key === 'vuln_basic').map(phase => {
                 const st = getPhaseStatus(phase, scanData || activeScan);
                 return (
                   <span key={phase.key} className={`spp-phase-label ${st}`}>
@@ -293,12 +307,12 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             </div>
           </div>
 
-          {/* Deep scan panel — shown when deep scan is active or done */}
+          {/* Nuclei deep scan panel ΓÇö shown when deep scan is active or done */}
           {nucleiState && nucleiState.phases && nucleiState.phases.length > 0 && (
             <div className="spp-nuclei-panel">
               <div className="spp-nuclei-header">
                 <Shield size={13} />
-                <span>Python Vulnerability Scanner</span>
+                <span>Deep Nuclei Scan</span>
                 <span className="spp-nuclei-found">
                   {nucleiState.total_found} vuln{nucleiState.total_found !== 1 ? 's' : ''} found
                 </span>
@@ -308,14 +322,14 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
                   </span>
                 )}
                 {nucleiState.status === 'complete' && (
-                  <span className="spp-nuclei-complete">✓ Complete</span>
+                  <span className="spp-nuclei-complete">Γ£ô Complete</span>
                 )}
               </div>
               <div className="spp-nuclei-phases">
                 {nucleiState.phases.map((p) => (
                   <div key={p.id} className={`spp-nuclei-phase spp-nuclei-phase-${p.status}`}>
                     <span className="spp-nuclei-phase-icon">
-                      {p.status === 'done' ? '✓' : p.status === 'running' ? <Loader2 size={9} className="spin" /> : '○'}
+                      {p.status === 'done' ? 'Γ£ô' : p.status === 'running' ? <Loader2 size={9} className="spin" /> : 'Γùï'}
                     </span>
                     <span className="spp-nuclei-phase-name">{p.name}</span>
                     <span className="spp-nuclei-phase-est">{fmtTime(p.est_hours)}</span>
@@ -338,7 +352,7 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
                 <div key={i} className="spp-log-line">
                   <span className="spp-log-time">[{entry.time ? formatTime(entry.time) : formatTime(new Date().toISOString())}]</span>
                   <span className={`spp-log-status spp-log-${entry.status}`}>
-                    {entry.status === 'done' ? '✓' : entry.status === 'failed' ? '✗' : '●'}
+                    {entry.status === 'done' ? 'Γ£ô' : entry.status === 'failed' ? 'Γ£ù' : 'ΓùÅ'}
                   </span>
                   <span className="spp-log-msg">{entry.phase}</span>
                 </div>
