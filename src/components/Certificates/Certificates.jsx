@@ -150,8 +150,8 @@ const Certificates = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           handleSelectScan={handleSelectScan}
         />
         <CertDashboard certs={certs} loading={loading} />
-        <CertFindings certs={certs} loading={loading} />
         <CertificatesTable certs={certs} loading={loading} />
+        <CertFindings certs={certs} loading={loading} />
       </div>
     </div>
   );
