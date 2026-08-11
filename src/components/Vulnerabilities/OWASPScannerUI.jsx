@@ -56,7 +56,17 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
       const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
       const list = Array.isArray(data) ? data : (data.results || []);
 
-      const mapped = list.map(v => ({
+      const mapped = list.filter(v => {
+        const title = (v.finding || v.vulnerability_id || '').toLowerCase();
+        const template = (v.template_id || '').toLowerCase();
+        return !template.includes('ssl') &&
+               !title.includes('ssl/tls') &&
+               !title.includes('ssl certificate') &&
+               !title.includes('poodle') &&
+               !title.includes('sweet32') &&
+               !title.includes('beast') &&
+               !title.includes('lucky13');
+      }).map(v => ({
         id: v.id,
         title: v.finding || v.vulnerability_id || 'Security Vulnerability',
         cve: v.cve || '—',
