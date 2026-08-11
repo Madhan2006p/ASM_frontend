@@ -18,12 +18,15 @@ const TechTable = ({ onDataFiltered, technologies = [], loading, selectedDomain 
 
   const filteredData = (technologies || []).filter(item => {
     // Filter subdomains matching selectedDomain if active
+    const targetDomain = (selectedDomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
     const subs = (item.subdomains || []).filter(sub => {
-      if (!selectedDomain) return true;
-      return sub.parentDomain === selectedDomain || sub.subdomain.endsWith(selectedDomain);
+      if (!targetDomain) return true;
+      const sName = (sub.subdomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+      const pName = (sub.parentDomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+      return sName === targetDomain || sName.endsWith('.' + targetDomain) || sName.includes(targetDomain) || pName === targetDomain;
     });
 
-    if (subs.length === 0) return false;
+    if (selectedDomain && subs.length === 0) return false;
 
     // Search
     if (searchQuery) {

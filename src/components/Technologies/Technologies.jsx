@@ -18,25 +18,37 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         let rawItems = [];
         const seenDomains = new Set();
 
-        if (selectedDomain && activeScanId) {
-          // Specific domain: fetch from that scan only
-          const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
-          const list = Array.isArray(data) ? data : (data.results || []);
-          list.forEach(item => {
-            const domain = item.domain || '';
-            if (!seenDomains.has(domain)) { seenDomains.add(domain); rawItems.push(item); }
-          });
-        } else if (!selectedDomain && scansList && scansList.length > 0) {
-          // All Domains: fetch from ALL scans and combine
+        if (activeScanId) {
+          try {
+            const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
+            const list = Array.isArray(data) ? data : (data.results || []);
+            list.forEach(item => rawItems.push(item));
+          } catch (e) { /* skip */ }
+        }
+
+        // If no TechnologyResult items, fallback to EndpointResult technologies
+        if (rawItems.length === 0 && activeScanId) {
+          try {
+            const epData = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
+            const epList = Array.isArray(epData) ? epData : (epData.results || []);
+            epList.forEach(item => {
+              if (item.technologies && item.technologies.length > 0) {
+                rawItems.push({
+                  domain: item.subdomain_name || item.http_url || '',
+                  technologies: item.technologies
+                });
+              }
+            });
+          } catch (e) { /* skip */ }
+        }
+
+        if (rawItems.length === 0 && scansList && scansList.length > 0) {
           for (const scan of scansList) {
             try {
               const data = await api.get(`/api/attacksurface/technologies/?scan=${scan.id}`);
               const list = Array.isArray(data) ? data : (data.results || []);
-              list.forEach(item => {
-                const domain = item.domain || '';
-                if (!seenDomains.has(domain)) { seenDomains.add(domain); rawItems.push(item); }
-              });
-            } catch (e) { /* skip failed */ }
+              list.forEach(item => rawItems.push(item));
+            } catch (e) { /* skip */ }
           }
         }
 
