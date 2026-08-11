@@ -243,15 +243,15 @@ const ScanProgressPanel = ({ activeScanId, scansList = [], fetchScans }) => {
             {isRunning ? (
               <>
                 <span className="spp-dot-pulse" />
-                Scan Progress ΓÇö {target}
+                Scan Progress - {target}
                 {vulnBadge && <span className="spp-vuln-badge">{vulnBadge}</span>}
               </>
             ) : scanData?.status === 'completed' ? (
-              <><CheckCircle2 size={13} className="spp-done-icon" />Scan Complete ΓÇö {target}</>
+              <><CheckCircle2 size={13} className="spp-done-icon" />Scan Complete - {target}</>
             ) : scanData?.status === 'failed' ? (
-              <><AlertCircle size={13} className="spp-failed-icon" />Scan Failed ΓÇö {target}</>
+              <><AlertCircle size={13} className="spp-failed-icon" />Scan Failed - {target}</>
             ) : (
-              <><Clock size={13} className="spp-pending-icon" />Scan ΓÇö {target}</>
+              <><Clock size={13} className="spp-pending-icon" />Scan - {target}</>
             )}
           </span>
         </div>
