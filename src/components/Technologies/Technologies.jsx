@@ -57,6 +57,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         const techHosts = {};
         const techVersions = {};
         const techSubdomains = {};
+        const techCategories = {};
 
         rawItems.forEach(item => {
           const domainName = item.domain || '';
@@ -64,11 +65,16 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           techs.forEach(tech => {
             let name = tech;
             let version = '';
-            
-            // Remove the tool tag e.g. [Wappalyzer], [HTTPX] for clean merging
-            const toolMatch = name.match(/\s*\[(.*?)\]$/);
-            if (toolMatch) {
-              name = name.replace(toolMatch[0], '').trim();
+            let explicitCategory = '';
+
+            // Extract category tag e.g. [Analytics], [Web servers], [JavaScript libraries]
+            const catMatch = name.match(/\s*\[(.*?)\]$/);
+            if (catMatch) {
+              const tag = catMatch[1].trim();
+              if (tag !== 'Wappalyzer' && tag !== 'HTTPX') {
+                explicitCategory = tag;
+              }
+              name = name.replace(catMatch[0], '').trim();
             }
 
             if (name.includes('/')) {
@@ -82,6 +88,9 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             }
             const key = name.trim();
             techCounts[key] = (techCounts[key] || 0) + 1;
+            if (explicitCategory) {
+              techCategories[key] = explicitCategory;
+            }
             
             if (!techHosts[key]) techHosts[key] = [];
             if (!techHosts[key].includes(domainName)) {
@@ -109,28 +118,32 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
 
         const parsedList = Object.keys(techCounts).map((name, idx) => {
           const nameLower = name.toLowerCase();
-          let category = 'Miscellaneous';
+          let category = techCategories[name] || 'Miscellaneous';
           
-          if (['wordpress', 'elementor', 'yoast seo', 'contact form 7', 'wp rocket', 'wpbakery', 'slider revolution', 'smart slider', 'twenty twenty', 'moodle', 'drupal', 'joomla', 'shopify', 'magento', 'ghost', 'wix', 'squarespace', 'conditional fields'].some(k => nameLower.includes(k))) {
-            category = 'CMS & Plugins';
-          } else if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'litespeed cache', 'openresty', 'varnish'].some(k => nameLower.includes(k))) {
-            category = 'Web servers';
-          } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js', 'owl carousel', 'magnific popup', 'slick', 'lightbox', 'htmx', 'datatables', 'popper', 'modernizr', 'underscore', 'sweetalert', 'select2', 'swiper', 'fitvids', 'stellar.js', 'bxslider', 'webpack'].some(k => nameLower.includes(k))) {
-            category = 'JavaScript libraries';
-          } else if (['django', 'flask', 'express', 'laravel', 'php', 'python', 'node', 'ruby', 'spring', 'go', 'java', 'perl', 'codeigniter'].some(k => nameLower.includes(k))) {
-            category = 'Programming languages';
-          } else if (['mysql', 'postgresql', 'mongodb', 'redis', 'mariadb', 'sqlite', 'oracle', 'mssql', 'percona'].some(k => nameLower.includes(k))) {
-            category = 'Databases';
-          } else if (['cloudflare', 'cloudfront', 'fastly', 'cdn', 'akamai', 'jsdelivr', 'unpkg', 'bootstrapcdn', 'jquery cdn'].some(k => nameLower.includes(k))) {
-            category = 'CDN & Storage';
-          } else if (['google analytics', 'google tag manager', 'cloudflare browser insights', 'clarity', 'pixel', 'mixpanel', 'hotjar', 'segment', 'analytics'].some(k => nameLower.includes(k))) {
-            category = 'Analytics & SEO';
-          } else if (['recaptcha', 'captcha', 'hcaptcha', 'waf', 'firewall', 'imperva', 'incapsula', 'security', 'hsts'].some(k => nameLower.includes(k))) {
-            category = 'Security';
-          } else if (['font', 'awesome', 'google font', 'typekit', 'svg support'].some(k => nameLower.includes(k))) {
-            category = 'Font scripts';
-          } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas', 'hostinger'].some(k => nameLower.includes(k))) {
-            category = 'PaaS & Hosting';
+          if (category === 'Miscellaneous') {
+            if (['google analytics', 'facebook pixel', 'clarity', 'mixpanel', 'hotjar', 'segment', 'cloudflare browser insights'].some(k => nameLower.includes(k))) {
+              category = 'Analytics';
+            } else if (['recaptcha', 'hcaptcha', 'captcha', 'waf', 'imperva', 'incapsula', 'security', 'hsts'].some(k => nameLower.includes(k))) {
+              category = 'Security';
+            } else if (['font', 'awesome', 'google font', 'typekit', 'svg support', 'webfontloader'].some(k => nameLower.includes(k))) {
+              category = 'Font scripts';
+            } else if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'litespeed cache', 'openresty', 'varnish'].some(k => nameLower.includes(k))) {
+              category = 'Web servers';
+            } else if (['php', 'python', 'node', 'ruby', 'java', 'go', 'perl', 'django', 'flask', 'express', 'laravel', 'spring', 'codeigniter'].some(k => nameLower.includes(k))) {
+              category = 'Programming languages';
+            } else if (['cloudflare', 'cdnjs', 'cloudfront', 'fastly', 'cdn', 'akamai', 'jsdelivr', 'unpkg', 'bootstrapcdn', 'jquery cdn'].some(k => nameLower.includes(k))) {
+              category = 'CDN';
+            } else if (['google tag manager', 'matomo tag manager', 'tag manager'].some(k => nameLower.includes(k))) {
+              category = 'Tag managers';
+            } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js', 'owl carousel', 'magnific popup', 'slick', 'lightbox', 'htmx', 'datatables', 'popper', 'modernizr', 'underscore', 'sweetalert', 'select2', 'swiper', 'fitvids', 'stellar.js', 'bxslider', 'webpack'].some(k => nameLower.includes(k))) {
+              category = 'JavaScript libraries';
+            } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas', 'hostinger'].some(k => nameLower.includes(k))) {
+              category = 'PaaS';
+            } else if (['wordpress', 'elementor', 'yoast seo', 'contact form 7', 'wp rocket', 'wpbakery', 'slider revolution', 'smart slider', 'twenty twenty', 'wordpress block editor', 'moodle', 'drupal', 'joomla', 'shopify', 'magento', 'ghost', 'wix', 'squarespace', 'conditional fields'].some(k => nameLower.includes(k))) {
+              category = 'CMS';
+            } else if (['mysql', 'postgresql', 'mongodb', 'redis', 'mariadb', 'sqlite', 'oracle', 'mssql', 'percona'].some(k => nameLower.includes(k))) {
+              category = 'Databases';
+            }
           }
 
           let risk = 'LOW';
