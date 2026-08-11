@@ -155,7 +155,6 @@ const CertificatesTable = ({ certs = [], loading }) => {
               <th>Expiration Date</th>
               <th>Days Left</th>
               <th>Health Status</th>
-              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -179,19 +178,11 @@ const CertificatesTable = ({ certs = [], loading }) => {
                     {row.health}
                   </span>
                 </td>
-                <td style={{ textAlign: 'right' }}>
-                  <button 
-                    className="action-link" 
-                    onClick={(e) => { e.stopPropagation(); setSelectedCert(row); }}
-                  >
-                    <Eye size={15} /> Inspect
-                  </button>
-                </td>
               </tr>
             ))}
             {filteredData.length === 0 && (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                   {loading ? 'Loading certificates...' : 'No certificates match the current filters.'}
                 </td>
               </tr>
