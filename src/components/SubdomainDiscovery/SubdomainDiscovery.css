@@ -592,3 +592,162 @@
   border: 1px solid var(--border-color);
 }
 
+/* Port pills in the Ports column */
+.sub-port-pill {
+  background: rgba(139, 92, 246, 0.08);
+  color: #A78BFA;
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  padding: 0.12rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  white-space: nowrap;
+}
+
+/* Screenshot thumbnail with hover zoom */
+.shot-thumb {
+  display: inline-block;
+  position: relative;
+  line-height: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.shot-img {
+  display: block;
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 5px;
+  background-color: var(--bg-main);
+  transition: transform 0.18s ease;
+}
+
+.shot-thumb:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+  z-index: 5;
+}
+
+.shot-empty {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ── Expandable detail row (all IPs / all Ports) ─────────────── */
+.sub-more-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.35rem;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+.sub-more-btn:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+.sub-more-btn:hover .sub-badge-count {
+  background-color: rgba(139, 92, 246, 0.28);
+  transform: scale(1.1);
+}
+.sub-badge-count {
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.sub-expand-row td {
+  background: var(--bg-card-2);
+}
+
+.sub-expand-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  animation: subExpandIn 0.22s ease;
+}
+
+@keyframes subExpandIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sub-expand-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.sub-expand-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin-bottom: 0.7rem;
+}
+
+.sub-expand-count {
+  margin-left: auto;
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.28);
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.sub-expand-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.sub-expand-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.28rem 0.65rem;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.sub-expand-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.sub-chip-ip {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.sub-chip-port {
+  background: rgba(139, 92, 246, 0.1);
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.sub-expand-empty {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
