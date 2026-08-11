@@ -18,13 +18,8 @@ const menuGroups = [
       { name: 'Open Ports',          icon: <Crosshair size={16} /> },
       { name: 'Directories',         icon: <FileText size={16} /> },
       { name: 'Technologies',        icon: <PlusSquare size={16} /> },
+      { name: 'Vulnerabilities',     icon: <Eye size={16} /> },
       { name: 'SSL Certificates',    icon: <ShieldCheck size={16} /> },
-    ]
-  },
-  {
-    title: 'VULNERABILITY MANAGEMENT',
-    items: [
-      { name: 'Vulnerabilities',     icon: <ShieldAlert size={16} /> },
     ]
   },
   {
@@ -91,11 +86,8 @@ const itemFeatureMap = {
   'Open Ports': '1',
   'Directories': '1',
   'Technologies': '1',
-  'SSL Certificates': '1',
-
-  // VULNERABILITY MANAGEMENT
   'Vulnerabilities': '1',
-  'Vulnerability Management': '1',
+  'SSL Certificates': '1',
 
   // MOBILE SECURITY
   'Mobile Security Dashboard': '2',
@@ -104,6 +96,8 @@ const itemFeatureMap = {
   // EMAIL SECURITY
   'Email Security Dashboard': '3',
   'Email Security': '3',
+
+
 
   // SURFACE WEB MONITORING
   'Surface Web': '5',
@@ -136,7 +130,6 @@ const isItemVisible = (itemName, userFeatures, isSuperuser) => {
 const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
   const [expandedGroups, setExpandedGroups] = useState({
     'ASSET DISCOVERY': true,
-    'VULNERABILITY MANAGEMENT': false,
     'ATTACK PATH ANALYSIS': false,
     'EMAIL SECURITY': false,
     'SURFACE WEB MONITORING': false,
@@ -158,7 +151,6 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
     if (activeGroup) {
       setExpandedGroups({
         'ASSET DISCOVERY': false,
-        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
@@ -175,7 +167,6 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
       const isAlreadyExpanded = prev[groupTitle];
       const nextExpanded = {
         'ASSET DISCOVERY': false,
-        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,

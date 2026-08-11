@@ -95,7 +95,7 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
     if (active) setActivePollId(active.id);
   }, [history]);
 
-  const filteredApps = history.filter(s => s.source === platformFilter && s.status === 'completed');
+  const filteredApps = history.filter(s => s.source === platformFilter && ['completed', 'vt_completed'].includes(s.status));
 
   useEffect(() => {
     if (filteredApps.length > 0 && (!selectedApp || selectedApp.source !== platformFilter)) {

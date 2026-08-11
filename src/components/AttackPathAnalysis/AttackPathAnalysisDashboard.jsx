@@ -97,13 +97,13 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
     <div className="global-page-container page-animate">
       <div style={{ marginBottom: '1.5rem' }}>
         <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
+              assignedDomains={assignedDomains}
+              selectedDomain={selectedDomain}
+              setSelectedDomain={setSelectedDomain}
+              scansList={scansList}
+              activeScanId={activeScanId}
+              handleSelectScan={handleSelectScan}
+            />
       </div>
 
       <PageHeaderCard
@@ -149,6 +149,10 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
             </div>
           </div>
 
+          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+            
+          </div>
+          
           <div className="data-section-premium" style={{ marginTop: '1.5rem' }}>
             <div className="section-header">
               <h3>Attack Path Visualizations & Mitigation</h3>

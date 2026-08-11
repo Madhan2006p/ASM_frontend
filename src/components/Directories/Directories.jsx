@@ -32,31 +32,15 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   // Fetch directories
   useEffect(() => {
     const loadDirectories = async () => {
+      if (!activeScanId) {
+        setDirectories([]);
+        return;
+      }
       try {
         setLoading(true);
-        if (selectedDomain && activeScanId) {
-          const data = await api.get(`/api/attacksurface/directories/?scan=${activeScanId}`);
-          const list = Array.isArray(data) ? data : (data.results || []);
-          setDirectories(list);
-        } else if (!selectedDomain && scansList && scansList.length > 0) {
-          const allDirs = [];
-          const seenIds = new Set();
-          for (const scan of scansList) {
-            try {
-              const data = await api.get(`/api/attacksurface/directories/?scan=${scan.id}`);
-              const list = Array.isArray(data) ? data : (data.results || []);
-              list.forEach(d => {
-                if (!seenIds.has(d.id)) {
-                  seenIds.add(d.id);
-                  allDirs.push(d);
-                }
-              });
-            } catch (e) {}
-          }
-          setDirectories(allDirs);
-        } else {
-          setDirectories([]);
-        }
+        const data = await api.get(`/api/attacksurface/directories/?scan=${activeScanId}`);
+        const list = Array.isArray(data) ? data : (data.results || []);
+        setDirectories(list);
       } catch (e) {
         console.error("Failed to load directories", e);
         setDirectories([]);
@@ -65,7 +49,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       }
     };
     loadDirectories();
-  }, [activeScanId, selectedDomain, scansList]);
+  }, [activeScanId]);
 
   // ── Legacy fallbacks (only used for rows stored before the analysis engine) ──
   const getPathFromUrl = (urlStr) => {
@@ -170,13 +154,10 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       icon: getIcon(category)
     };
   }).filter(item => {
-    // Pill Filter
+    // Card Filter
     if (filterPill === 'Exposed' && item.status !== 'Exposed') return false;
     if (filterPill === 'Sensitive' && !item.isSensitive) return false;
-    if (filterPill === 'Admin' && item.category !== 'Admin Panel') return false;
-    if (filterPill === 'Backup Files' && item.category !== 'Backup File') return false;
-    if (filterPill === 'Directory Listings' && item.category !== 'Directory Listing') return false;
-    if (filterPill === 'Public' && item.status !== 'Public') return false;
+    if (filterPill === 'High / Critical Risk' && item.risk !== 'HIGH' && item.risk !== 'CRITICAL') return false;
 
     // Search Box
     if (searchQuery && !item.path.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -256,13 +237,10 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
           title="Directories"
           subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
           stats={[
-            { label: 'ALL', value: totalCount.toString(), subtext: 'Verified accessible paths', isActive: filterPill === 'All', onClick: () => setFilterPill('All') },
-            { label: 'EXPOSED', value: exposedCount.toString(), subtext: 'Sensitive content accessible', isActive: filterPill === 'Exposed', onClick: () => setFilterPill('Exposed') },
-            { label: 'SENSITIVE', value: sensitiveCount.toString(), subtext: 'Requires review', isActive: filterPill === 'Sensitive', onClick: () => setFilterPill('Sensitive') },
-            { label: 'ADMIN', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Admin Panel').length.toString(), subtext: 'Admin panels', isActive: filterPill === 'Admin', onClick: () => setFilterPill('Admin') },
-            { label: 'BACKUP FILES', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Backup File').length.toString(), subtext: 'Exposed backups', isActive: filterPill === 'Backup Files', onClick: () => setFilterPill('Backup Files') },
-            { label: 'DIRECTORY LISTINGS', value: directories.filter(d => (d.category || getCategory(getPathFromUrl(d.url))) === 'Directory Listing').length.toString(), subtext: 'Open listings', isActive: filterPill === 'Directory Listings', onClick: () => setFilterPill('Directory Listings') },
-            { label: 'PUBLIC', value: directories.filter(d => (d.access_status || getStatus(d.status, d.category || getCategory(getPathFromUrl(d.url)))) === 'Public').length.toString(), subtext: 'Publicly accessible', isActive: filterPill === 'Public', onClick: () => setFilterPill('Public') },
+            { label: 'ALL DIRECTORIES', value: totalCount.toString(), subtext: 'Verified accessible paths', onClick: () => setFilterPill('All') },
+            { label: 'EXPOSED', value: exposedCount.toString(), subtext: 'Sensitive content accessible', onClick: () => setFilterPill('Exposed') },
+            { label: 'SENSITIVE', value: sensitiveCount.toString(), subtext: 'Requires review', onClick: () => setFilterPill('Sensitive') },
+            { label: 'CRITICAL / HIGH RISK', value: highRiskCount.toString(), subtext: 'Priority remediation', onClick: () => setFilterPill('High / Critical Risk') }
           ]}
         />
 

@@ -112,6 +112,11 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
+      </div>
+
       <PageHeaderCard
         badgeText="ASSET DISCOVERY"
         title="Asset Discovery Dashboard"
@@ -124,8 +129,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
         ]}
       />
 
-      <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
+      
 
       {/* KPI Strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))',gap:'0.75rem'}}>

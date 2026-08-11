@@ -43,16 +43,16 @@ const Login = ({ onLogin, onNavigate }) => {
         });
         if (res.tokens) {
           api.setTokens(res.tokens.access, res.tokens.refresh);
-          setSuccessMsg('Authentication successful. Initializing workspace...');
-          setTimeout(() => {
-            onLogin(res.user);
-          }, 1500);
+          onLogin(res.user);
         } else {
           setApiError('Authentication failed: Missing security token.');
           setLoading(false);
         }
       } catch (err) {
-        setApiError(err.message || 'Invalid credentials provided');
+        const errorMsg = err.message === 'Failed to fetch'
+          ? 'Unable to connect to backend server. Please verify the backend service is running on port 8001.'
+          : (err.message || 'Invalid credentials provided');
+        setApiError(errorMsg);
         setLoading(false);
       }
     }
@@ -99,7 +99,7 @@ const Login = ({ onLogin, onNavigate }) => {
               <input
                 type="password"
                 name="password"
-                placeholder="Enter your password"
+                placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
                 required
