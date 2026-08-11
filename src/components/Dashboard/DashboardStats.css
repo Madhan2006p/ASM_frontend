@@ -1,0 +1,244 @@
+/* ── Page Header ─────────────────────────────────── */
+.dash-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #93C5FD;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-bottom: 0.6rem;
+}
+
+.dash-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: 0.3rem;
+}
+
+.dash-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.dash-header-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.last-sync {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+}
+
+/* ── Asset Stats Grid ────────────────────────────── */
+.dashboard-stats-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.top-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.875rem;
+}
+
+.stat-card-centered {
+  border-radius: 14px;
+  padding: 1.35rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.stat-card-centered::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  opacity: 0.8;
+}
+
+/* Gradient top border per card */
+.stat-grad-blue::before   { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+.stat-grad-cyan::before   { background: linear-gradient(90deg, #06B6D4, #22D3EE); }
+.stat-grad-green::before  { background: linear-gradient(90deg, #10B981, #34D399); }
+.stat-grad-red::before    { background: linear-gradient(90deg, #EF4444, #F87171); }
+.stat-grad-yellow::before { background: linear-gradient(90deg, #F59E0B, #FCD34D); }
+.stat-grad-gray::before   { background: linear-gradient(90deg, #4B6A9B, #7C94B8); }
+
+/* Solid tinted backgrounds — visible on dark theme */
+.stat-grad-blue   { background: linear-gradient(160deg, rgba(59,130,246,0.15) 0%, #0D1B33 100%); }
+.stat-grad-cyan   { background: linear-gradient(160deg, rgba(6,182,212,0.15) 0%, #0D1B33 100%); }
+.stat-grad-green  { background: linear-gradient(160deg, rgba(16,185,129,0.15) 0%, #0D1B33 100%); }
+.stat-grad-red    { background: linear-gradient(160deg, rgba(239,68,68,0.15) 0%, #0D1B33 100%); }
+.stat-grad-yellow { background: linear-gradient(160deg, rgba(245,158,11,0.15) 0%, #0D1B33 100%); }
+.stat-grad-gray   { background: linear-gradient(160deg, rgba(75,106,155,0.15) 0%, #0D1B33 100%); }
+
+.stat-card-centered:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+}
+
+.stat-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94B8D8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.stat-value-large {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* ── Color Helpers ───────────────────────────────── */
+.text-blue-500   { color: #60A5FA; }
+.text-cyan-400   { color: #22D3EE; }
+.text-green-500  { color: #34D399; }
+.text-red-500    { color: #F87171; }
+.text-yellow-500 { color: #FBBF24; }
+.text-gray-500   { color: var(--text-secondary); }
+
+/* ── Vuln Section Header ─────────────────────────── */
+.vuln-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── Vulnerability Cards ─────────────────────────── */
+.vuln-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.875rem;
+}
+
+.vuln-card {
+  background-color: var(--bg-card);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border: 1px solid var(--border-color);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  cursor: default;
+}
+.vuln-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.3);
+}
+
+/* Override bg-* with dark variants */
+.bg-red-50    { background: linear-gradient(160deg, rgba(239,68,68,0.07) 0%, var(--bg-card) 100%); border-color: rgba(239,68,68,0.15); }
+.bg-yellow-50 { background: linear-gradient(160deg, rgba(245,158,11,0.07) 0%, var(--bg-card) 100%); border-color: rgba(245,158,11,0.15); }
+.bg-blue-50   { background: linear-gradient(160deg, rgba(59,130,246,0.07) 0%, var(--bg-card) 100%); border-color: rgba(59,130,246,0.15); }
+.bg-gray-100  { background: linear-gradient(160deg, rgba(75,106,155,0.07) 0%, var(--bg-card) 100%); border-color: rgba(75,106,155,0.15); }
+
+.vuln-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vuln-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.vuln-info { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.vuln-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.vuln-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+/* Progress bar */
+.vuln-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 0.25rem;
+}
+.vuln-progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s ease;
+}
+.bar-critical { background: linear-gradient(90deg, #EF4444, #F87171); }
+.bar-high     { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.bar-medium   { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
+.bar-low      { background: linear-gradient(90deg, #4B6A9B, #7C94B8); }
