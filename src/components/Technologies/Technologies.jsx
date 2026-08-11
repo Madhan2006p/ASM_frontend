@@ -56,8 +56,10 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         const techCounts = {};
         const techHosts = {};
         const techVersions = {};
+        const techSubdomains = {};
 
         rawItems.forEach(item => {
+          const domainName = item.domain || '';
           const techs = Array.isArray(item.technologies) ? item.technologies : [];
           techs.forEach(tech => {
             let name = tech;
@@ -82,8 +84,21 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             techCounts[key] = (techCounts[key] || 0) + 1;
             
             if (!techHosts[key]) techHosts[key] = [];
-            if (!techHosts[key].includes(item.domain)) {
-              techHosts[key].push(item.domain);
+            if (!techHosts[key].includes(domainName)) {
+              techHosts[key].push(domainName);
+            }
+
+            if (!techSubdomains[key]) techSubdomains[key] = [];
+            const existingSub = techSubdomains[key].find(s => s.subdomain === domainName);
+            if (!existingSub) {
+              techSubdomains[key].push({
+                subdomain: domainName,
+                parentDomain: domainName,
+                version: version || 'Unknown',
+                status: 'Active'
+              });
+            } else if (version && existingSub.version === 'Unknown') {
+              existingSub.version = version;
             }
 
             if (version && version !== '—') {
@@ -96,37 +111,43 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           const nameLower = name.toLowerCase();
           let category = 'Miscellaneous';
           
-          if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'openresty'].some(k => nameLower.includes(k))) {
+          if (['wordpress', 'elementor', 'yoast seo', 'contact form 7', 'wp rocket', 'wpbakery', 'slider revolution', 'smart slider', 'twenty twenty', 'moodle', 'drupal', 'joomla', 'shopify', 'magento', 'ghost', 'wix', 'squarespace', 'conditional fields'].some(k => nameLower.includes(k))) {
+            category = 'CMS & Plugins';
+          } else if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'litespeed cache', 'openresty', 'varnish'].some(k => nameLower.includes(k))) {
             category = 'Web servers';
-          } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js'].some(k => nameLower.includes(k))) {
+          } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js', 'owl carousel', 'magnific popup', 'slick', 'lightbox', 'htmx', 'datatables', 'popper', 'modernizr', 'underscore', 'sweetalert', 'select2', 'swiper', 'fitvids', 'stellar.js', 'bxslider', 'webpack'].some(k => nameLower.includes(k))) {
             category = 'JavaScript libraries';
-          } else if (['django', 'flask', 'express', 'laravel', 'php', 'python', 'node', 'ruby', 'spring', 'go', 'java'].some(k => nameLower.includes(k))) {
+          } else if (['django', 'flask', 'express', 'laravel', 'php', 'python', 'node', 'ruby', 'spring', 'go', 'java', 'perl', 'codeigniter'].some(k => nameLower.includes(k))) {
             category = 'Programming languages';
-          } else if (['cloudflare', 'cloudfront', 'fastly', 'cdn', 'akamai'].some(k => nameLower.includes(k))) {
-            category = 'CDN';
-          } else if (['google analytics', 'clarity', 'pixel', 'mixpanel', 'hotjar', 'segment', 'analytics', 'tag manager'].some(k => nameLower.includes(k))) {
-            category = 'Analytics';
-          } else if (['recaptcha', 'captcha', 'hcaptcha', 'waf', 'firewall', 'imperva', 'incapsula', 'security'].some(k => nameLower.includes(k))) {
+          } else if (['mysql', 'postgresql', 'mongodb', 'redis', 'mariadb', 'sqlite', 'oracle', 'mssql', 'percona'].some(k => nameLower.includes(k))) {
+            category = 'Databases';
+          } else if (['cloudflare', 'cloudfront', 'fastly', 'cdn', 'akamai', 'jsdelivr', 'unpkg', 'bootstrapcdn', 'jquery cdn'].some(k => nameLower.includes(k))) {
+            category = 'CDN & Storage';
+          } else if (['google analytics', 'google tag manager', 'cloudflare browser insights', 'clarity', 'pixel', 'mixpanel', 'hotjar', 'segment', 'analytics'].some(k => nameLower.includes(k))) {
+            category = 'Analytics & SEO';
+          } else if (['recaptcha', 'captcha', 'hcaptcha', 'waf', 'firewall', 'imperva', 'incapsula', 'security', 'hsts'].some(k => nameLower.includes(k))) {
             category = 'Security';
-          } else if (['font', 'awesome', 'google font', 'typekit'].some(k => nameLower.includes(k))) {
+          } else if (['font', 'awesome', 'google font', 'typekit', 'svg support'].some(k => nameLower.includes(k))) {
             category = 'Font scripts';
-          } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas'].some(k => nameLower.includes(k))) {
-            category = 'PaaS';
+          } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas', 'hostinger'].some(k => nameLower.includes(k))) {
+            category = 'PaaS & Hosting';
           }
 
           let risk = 'LOW';
           if (['jquery', 'apache'].some(k => nameLower.includes(k))) risk = 'HIGH';
           else if (['nginx', 'mysql', 'tomcat'].some(k => nameLower.includes(k))) risk = 'MEDIUM';
 
+          const subs = techSubdomains[name] || [];
           return {
             id: idx + 1,
             name,
-            version: techVersions[name] || '',
+            version: techVersions[name] || 'Unknown',
             category,
             eol: nameLower.includes('jquery') ? '2021-05-01' : 'Supported',
             risk,
-            assets: techCounts[name],
-            hosts: techHosts[name]
+            assets: subs.length,
+            hosts: techHosts[name] || [],
+            subdomains: subs
           };
         });
 

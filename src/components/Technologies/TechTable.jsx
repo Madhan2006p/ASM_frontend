@@ -126,9 +126,12 @@ const TechTable = ({ onDataFiltered, technologies = [], loading, selectedDomain 
                     </thead>
                     <tbody>
                       {techs.map((tech) => {
+                        const targetDomain = (selectedDomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
                         const filteredSubdomains = (tech.subdomains || []).filter(sub => {
-                          if (!selectedDomain) return true;
-                          return sub.parentDomain === selectedDomain || sub.subdomain.endsWith(selectedDomain);
+                          if (!targetDomain) return true;
+                          const sName = (sub.subdomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+                          const pName = (sub.parentDomain || '').toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+                          return sName === targetDomain || sName.endsWith('.' + targetDomain) || sName.includes(targetDomain) || pName === targetDomain;
                         });
 
                         const isExpanded = !!expandedRows[tech.id];
@@ -141,6 +144,8 @@ const TechTable = ({ onDataFiltered, technologies = [], loading, selectedDomain 
                           versionDisplay = `v${versions[0]}`;
                         } else if (versions.length > 1) {
                           versionDisplay = 'Multiple Versions';
+                        } else if (tech.version && tech.version !== 'Unknown') {
+                          versionDisplay = `v${tech.version}`;
                         }
 
                         // Calculate overall status display
