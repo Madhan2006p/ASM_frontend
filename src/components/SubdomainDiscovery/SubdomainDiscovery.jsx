@@ -13,31 +13,18 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   
   const itemsPerPage = 10;
 
-  // Load subdomains when activeScanId or selectedDomain changes
+  // Load subdomains when activeScanId changes
   useEffect(() => {
     const loadSubdomains = async () => {
+      if (!activeScanId) {
+        setSubdomains([]);
+        return;
+      }
       try {
         setLoading(true);
-        let allData = [];
-        const seenIds = new Set();
-
-        if (selectedDomain && activeScanId) {
-          // Specific domain: fetch from that scan only
-          const data = await api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`);
-          const list = Array.isArray(data) ? data : (data.results || []);
-          list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
-        } else if (!selectedDomain && scansList && scansList.length > 0) {
-          // All Domains: fetch from ALL scans and combine
-          for (const scan of scansList) {
-            try {
-              const data = await api.get(`/api/attacksurface/subdomains/?scan=${scan.id}`);
-              const list = Array.isArray(data) ? data : (data.results || []);
-              list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
-            } catch (e) { /* skip failed */ }
-          }
-        }
-
-        setSubdomains(allData);
+        const data = await api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`);
+        const list = Array.isArray(data) ? data : (data.results || []);
+        setSubdomains(list);
       } catch (e) {
         console.error("Failed to load subdomains", e);
         setSubdomains([]);
@@ -45,27 +32,45 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
         setLoading(false);
       }
     };
-
-    if (!selectedDomain && (!scansList || scansList.length === 0)) {
-      setSubdomains([]);
-      setLoading(false);
-      return;
-    }
-    if (selectedDomain && !activeScanId) {
-      setSubdomains([]);
-      setLoading(false);
-      return;
-    }
-
     loadSubdomains();
-  }, [activeScanId, selectedDomain, scansList]);
+  }, [activeScanId]);
 
 
 
-  const filteredData = subdomains.filter(item =>
-    item.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').includes(searchTerm)
-  );
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Helper to determine active/inactive status from item.status
+  const isSubdomainActive = (item) => {
+    const s = (item.status || 'active').toLowerCase();
+    return s === 'live' || s === 'active' || s === 'up';
+  };
+
+  // Counts for tabs
+  const allCount = subdomains.length;
+  const activeCount = subdomains.filter(isSubdomainActive).length;
+  const inactiveCount = subdomains.filter(item => !isSubdomainActive(item)).length;
+
+  const handleFilterChange = (filter) => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const filteredData = subdomains.filter(item => {
+    // Status Filter
+    if (statusFilter === 'ACTIVE' && !isSubdomainActive(item)) return false;
+    if (statusFilter === 'INACTIVE' && isSubdomainActive(item)) return false;
+
+    // Search Term Filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const domainMatch = (item.domain || '').toLowerCase().includes(term);
+      const ipMatch = (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').toLowerCase().includes(term);
+      const titleMatch = (item.title || '').toLowerCase().includes(term);
+      if (!domainMatch && !ipMatch && !titleMatch) return false;
+    }
+
+    return true;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -80,6 +85,13 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     if (s === 'live' || s === 'active' || s === 'up') return { label: 'Active', color: '#22C55E', icon: <CheckCircle2 size={13}/> };
     if (s === 'down' || s === 'inactive') return { label: 'Down', color: '#EF4444', icon: <XCircle size={13}/> };
     return { label: 'Unknown', color: '#94A3B8', icon: <AlertCircle size={13}/> };
+  };
+
+  const getEmptyStateText = () => {
+    if (searchTerm) return `No subdomains found matching "${searchTerm}".`;
+    if (statusFilter === 'ACTIVE') return 'No active subdomains found.';
+    if (statusFilter === 'INACTIVE') return 'No inactive subdomains found.';
+    return 'No subdomains found.';
   };
 
   const formatDate = (dateStr) => {
@@ -108,10 +120,32 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
           title="Attack Surface Discovery"
           subtitle="Monitor and enumerate every external-facing asset across your perimeter."
           stats={[
-            { label: 'DISCOVERED ASSETS', value: subdomains.length.toString() },
-            { label: 'ACTIVE SCANS', value: scansList.filter(s => s.status === 'running' || s.status === 'pending').length.toString() },
-            { label: 'NEW THIS WEEK', value: '+18' },
-            { label: 'AVG. SCAN TIME', value: '42s' }
+            {
+              label: 'DISCOVERED ASSETS',
+              value: allCount.toString(),
+              subtext: statusFilter === 'ALL' ? 'Showing all assets' : 'Click to view all',
+              active: statusFilter === 'ALL',
+              onClick: () => handleFilterChange('ALL')
+            },
+            {
+              label: 'ACTIVE SUBDOMAINS',
+              value: activeCount.toString(),
+              subtext: statusFilter === 'ACTIVE' ? 'Filter: Active only' : 'Live / up assets',
+              active: statusFilter === 'ACTIVE',
+              onClick: () => handleFilterChange(statusFilter === 'ACTIVE' ? 'ALL' : 'ACTIVE')
+            },
+            {
+              label: 'INACTIVE SUBDOMAINS',
+              value: inactiveCount.toString(),
+              subtext: statusFilter === 'INACTIVE' ? 'Filter: Inactive only' : 'Down / unreachable',
+              active: statusFilter === 'INACTIVE',
+              onClick: () => handleFilterChange(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')
+            },
+            {
+              label: 'ACTIVE SCANS',
+              value: scansList.filter(s => s.status === 'running' || s.status === 'pending').length.toString(),
+              subtext: 'Running background'
+            }
           ]}
         />
 
@@ -219,7 +253,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
               {!loading && currentData.length === 0 && (
                 <tr>
                   <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
-                    No subdomains found.
+                    {getEmptyStateText()}
                   </td>
                 </tr>
               )}

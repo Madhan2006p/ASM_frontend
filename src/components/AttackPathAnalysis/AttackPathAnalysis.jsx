@@ -103,14 +103,6 @@ const AttackPathAnalysis = ({
 
   return (
     <div className="global-page-container page-animate apa-wrapper">
-      <div style={{ marginBottom: '1.25rem' }}>
-        <TargetDomainTabs
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-        />
-      </div>
-
       {/* ── Page Header ─────────────────────────────────────── */}
       <PageHeaderCard
         badgeText="MODULE"
@@ -143,6 +135,14 @@ const AttackPathAnalysis = ({
           </div>
         }
       />
+
+      <div style={{ marginTop: '1.25rem' }}>
+        <TargetDomainTabs
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+        />
+      </div>
 
       {/* ── Reusable Filter Bar ───────────────────────────────── */}
       <div className="apa-filter-bar no-print">

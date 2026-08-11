@@ -107,6 +107,11 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
+      </div>
+
       <PageHeaderCard
         badgeText="EMAIL SECURITY"
         title="Email Security Dashboard"
@@ -126,8 +131,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
         <CT label="Fully Protected" value={full}  sub={`/ ${data.length}`} good={full>0 && full===data.length} />
       </div>
 
-      <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
+      
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
         <W title={<><Mail size={12}/> Email Authentication Overview</>}>
