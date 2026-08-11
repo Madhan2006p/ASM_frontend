@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Check, ArrowRight, Eye, ShieldCheck } from 'lucide-react';
-import SSLDetailModal from './SSLDetailModal';
+import { Search, ChevronDown, Check, ArrowRight } from 'lucide-react';
 import './Certificates.css';
 
 const CertificatesTable = ({ certs = [], loading }) => {
@@ -8,7 +7,6 @@ const CertificatesTable = ({ certs = [], loading }) => {
   const [issuerFilter, setIssuerFilter] = useState('Issuer: All');
   const [tlsFilter, setTlsFilter] = useState('TLS Version: All');
   const [healthFilter, setHealthFilter] = useState('Health Status: All');
-  const [selectedCert, setSelectedCert] = useState(null);
 
   const [showIssuerMenu, setShowIssuerMenu] = useState(false);
   const [showTlsMenu, setShowTlsMenu] = useState(false);
@@ -159,7 +157,7 @@ const CertificatesTable = ({ certs = [], loading }) => {
           </thead>
           <tbody>
             {filteredData.map((row) => (
-              <tr key={row.id} style={{ cursor: 'pointer' }} onClick={() => setSelectedCert(row)}>
+              <tr key={row.id}>
                 <td className="font-bold font-mono">{row.domain}</td>
                 <td className="text-slate-600">{row.issuer}</td>
                 <td>
@@ -190,14 +188,6 @@ const CertificatesTable = ({ certs = [], loading }) => {
           </tbody>
         </table>
       </div>
-
-      {/* Modal Inspector */}
-      {selectedCert && (
-        <SSLDetailModal 
-          cert={selectedCert} 
-          onClose={() => setSelectedCert(null)} 
-        />
-      )}
     </div>
   );
 };

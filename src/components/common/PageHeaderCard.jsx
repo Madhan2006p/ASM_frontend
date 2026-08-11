@@ -41,9 +41,15 @@ const getStatColor = (label = '', subtext = '', index = 0) => {
 const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
   return (
     <div className="phc-container">
+      <div className="phc-badge">
+        <div className="dot"></div>
+        {badgeText}
+      </div>
+
       <div className="phc-header-row">
         <div>
           <h1 className="phc-title">{title}</h1>
+          <p className="phc-subtitle">{subtitle}</p>
         </div>
         {actions && (
           <div className="phc-actions">
@@ -56,16 +62,18 @@ const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
         <div className="phc-stats-grid">
           {stats.map((stat, index) => {
             const colorInfo = getStatColor(stat.label, stat.subtext, index);
+            const isClickable = typeof stat.onClick === 'function';
             return (
               <div 
                 key={index} 
-                className={`card phc-stat-card${stat.isActive ? ' phc-stat-card--active' : ''}`}
+                className={`card phc-stat-card ${stat.active ? 'active' : ''} ${isClickable ? 'clickable' : ''}`}
                 onClick={stat.onClick}
                 style={{
                   '--card-border': colorInfo.border,
                   '--card-glow': colorInfo.glow,
                   '--card-bg': colorInfo.bg,
-                  cursor: stat.onClick ? 'pointer' : 'default'
+                  cursor: isClickable ? 'pointer' : 'default',
+                  ...stat.style
                 }}
               >
                 <div className="phc-stat-label">{stat.label}</div>

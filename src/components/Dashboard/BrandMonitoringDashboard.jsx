@@ -98,12 +98,6 @@ const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelected
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
-      <TargetDomainTabs
-        assignedDomains={assignedDomains}
-        selectedDomain={selectedDomain}
-        setSelectedDomain={setSelectedDomain}
-      />
-
       <PageHeaderCard
         badgeText="BRAND MONITORING"
         title="Brand Monitoring Overview"
@@ -123,6 +117,12 @@ const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelected
         <CT label="Phishing Domains" value={phish} color={COLORS.phishing}/>
         <CT label="Impersonations" value={imp}   color={COLORS.impersonation}/>
       </div>
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
         <W title={<><Activity size={12}/> Brand Health Score</>}>

@@ -317,24 +317,23 @@ const Overview = ({ setActivePage, activeScanId, activeTarget, scansList = [], h
   return (
     <div className="ov-root">
 
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={safeScansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+      </div>
+
       {/* Page header */}
       <div className="ov-page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div className="ov-header-badge"><Zap size={11} /> Live Dashboard</div>
           <h1 className="ov-page-title">Dashboard Overview</h1>
           <p className="ov-page-sub">Real-time visibility into your external attack surface</p>
-        </div>
-
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Scan selector */}
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={safeScansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
         </div>
       </div>
 

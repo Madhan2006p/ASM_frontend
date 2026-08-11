@@ -124,18 +124,27 @@
   filter: brightness(1.1);
 }
 
-.phc-stat-card--active {
-  background: var(--card-bg, rgba(255,255,255,0.08)) !important;
-  border-color: var(--card-border, rgba(59,130,246,0.65)) !important;
-  box-shadow: 0 0 20px var(--card-glow, rgba(59,130,246,0.2)), inset 0 0 15px var(--card-glow, transparent), 0 4px 12px rgba(0,0,0,0.2) !important;
-  transform: translateY(-2px);
-  filter: brightness(1.15);
+.phc-stat-card.clickable {
+  cursor: pointer;
 }
 
-.light-mode .phc-stat-card--active {
-  background: rgba(255,255,255,0.95) !important;
-  border-color: rgba(37,99,235,0.45) !important;
-  box-shadow: 0 0 16px rgba(37,99,235,0.12), 0 4px 12px rgba(0,0,0,0.06) !important;
+.phc-stat-card.active {
+  border-color: #3B82F6 !important;
+  background: rgba(59, 130, 246, 0.16) !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.25), inset 0 0 12px rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+.phc-stat-card.active .phc-stat-label {
+  color: #60A5FA !important;
+}
+
+.phc-stat-card.active .phc-stat-val {
+  color: #FFFFFF !important;
+}
+
+.phc-stat-card.active .phc-stat-sub {
+  color: #93C5FD !important;
 }
 
 .phc-stat-label {
@@ -202,3 +211,22 @@
 .light-mode .phc-stat-label { color: rgba(37,99,235,0.7) !important; }
 .light-mode .phc-stat-val   { color: #0F172A !important; }
 .light-mode .phc-stat-sub   { color: #2563EB !important; }
+
+/* Light mode active card state */
+.light-mode .phc-stat-card.active {
+  background: #EFF6FF !important;
+  border-color: #2563EB !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.22), inset 0 0 0 1.5px #2563EB !important;
+}
+
+.light-mode .phc-stat-card.active .phc-stat-label {
+  color: #1D4ED8 !important;
+}
+
+.light-mode .phc-stat-card.active .phc-stat-val {
+  color: #1E3A8A !important; /* Deep navy text - clear and highly visible! */
+}
+
+.light-mode .phc-stat-card.active .phc-stat-sub {
+  color: #2563EB !important;
+}

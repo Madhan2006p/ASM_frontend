@@ -537,3 +537,58 @@
 }
 
 .sub-badge-count { background-color: rgba(139, 92, 246, 0.1); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.2); padding: 0.1rem 0.4rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem; }
+
+/* Status Filter Tabs */
+.sub-status-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.sub-status-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+  outline: none;
+}
+
+.sub-status-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-card);
+}
+
+.sub-status-tab.active {
+  background: #3B82F6;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+}
+
+.sub-status-tab .tab-count {
+  font-size: 0.68rem;
+  padding: 0.08rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.sub-status-tab:not(.active) .tab-count {
+  background: var(--bg-card);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+}
+

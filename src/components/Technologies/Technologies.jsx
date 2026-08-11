@@ -6,186 +6,94 @@ import './Technologies.css';
 import { api } from '../../utils/api';
 
 const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
-  const [technologies, setTechnologies] = useState([]);
+  const [subdomainTechs, setSubdomainTechs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
 
   // Fetch tech stack results
   useEffect(() => {
     const loadTechnologies = async () => {
+      if (!activeScanId) {
+        setSubdomainTechs([]);
+        return;
+      }
       try {
         setLoading(true);
-        let rawItems = [];
-        const seenDomains = new Set();
+        const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
+        const list = Array.isArray(data) ? data : (data.results || []);
 
-        if (activeScanId) {
-          try {
-            const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
-            const list = Array.isArray(data) ? data : (data.results || []);
-            list.forEach(item => rawItems.push(item));
-          } catch (e) { /* skip */ }
-        }
-
-        // If no TechnologyResult items, fallback to EndpointResult technologies
-        if (rawItems.length === 0 && activeScanId) {
-          try {
-            const epData = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
-            const epList = Array.isArray(epData) ? epData : (epData.results || []);
-            epList.forEach(item => {
-              if (item.technologies && item.technologies.length > 0) {
-                rawItems.push({
-                  domain: item.subdomain_name || item.http_url || '',
-                  technologies: item.technologies
-                });
-              }
-            });
-          } catch (e) { /* skip */ }
-        }
-
-        if (rawItems.length === 0 && scansList && scansList.length > 0) {
-          for (const scan of scansList) {
-            try {
-              const data = await api.get(`/api/attacksurface/technologies/?scan=${scan.id}`);
-              const list = Array.isArray(data) ? data : (data.results || []);
-              list.forEach(item => rawItems.push(item));
-            } catch (e) { /* skip */ }
-          }
-        }
-
-        // Flatten domain -> technologies
-        const techCounts = {};
-        const techHosts = {};
-        const techVersions = {};
-        const techSubdomains = {};
-        const techCategories = {};
-
-        rawItems.forEach(item => {
-          const domainName = item.domain || '';
-          const techs = Array.isArray(item.technologies) ? item.technologies : [];
-          techs.forEach(tech => {
-            let name = tech;
-            let version = '';
-            let explicitCategory = '';
-
-            // Extract category tag e.g. [Analytics], [Web servers], [JavaScript libraries]
-            const catMatch = name.match(/\s*\[(.*?)\]$/);
-            if (catMatch) {
-              const tag = catMatch[1].trim();
-              if (tag !== 'Wappalyzer' && tag !== 'HTTPX') {
-                explicitCategory = tag;
-              }
-              name = name.replace(catMatch[0], '').trim();
+        // Helper to extract parent domain (e.g. www.hackersinfotech.com -> hackersinfotech.com)
+        const getParentDomain = (host = '') => {
+          if (!host) return '';
+          const parts = host.split('.');
+          if (parts.length >= 2) {
+            if (parts.length >= 3 && ['ac', 'edu', 'co', 'gov', 'org'].includes(parts[parts.length - 2])) {
+              return parts.slice(-3).join('.');
             }
+            return parts.slice(-2).join('.');
+          }
+          return host;
+        };
 
+        // Each item in list represents a subdomain asset and its detected technologies
+        const parsedList = list.map((item, idx) => {
+          const rawTechs = Array.isArray(item.technologies) ? item.technologies : [];
+          const cleanedTechsSet = new Set();
+
+          rawTechs.forEach(techStr => {
+            let name = techStr;
+            const toolMatch = name.match(/\s*\[(.*?)\]$/);
+            if (toolMatch) {
+              name = name.replace(toolMatch[0], '').trim();
+            }
             if (name.includes('/')) {
-              const parts = name.split('/');
-              name = parts[0];
-              version = parts[1];
+              name = name.split('/')[0];
             } else if (name.includes(' (v')) {
-              const parts = name.split(' (v');
-              name = parts[0];
-              version = parts[1].replace(')', '');
+              name = name.split(' (v')[0];
             }
             const key = name.trim();
-            techCounts[key] = (techCounts[key] || 0) + 1;
-            if (explicitCategory) {
-              techCategories[key] = explicitCategory;
-            }
-            
-            if (!techHosts[key]) techHosts[key] = [];
-            if (!techHosts[key].includes(domainName)) {
-              techHosts[key].push(domainName);
-            }
-
-            if (!techSubdomains[key]) techSubdomains[key] = [];
-            const existingSub = techSubdomains[key].find(s => s.subdomain === domainName);
-            if (!existingSub) {
-              techSubdomains[key].push({
-                subdomain: domainName,
-                parentDomain: domainName,
-                version: version || 'Unknown',
-                status: 'Active'
-              });
-            } else if (version && existingSub.version === 'Unknown') {
-              existingSub.version = version;
-            }
-
-            if (version && version !== '—') {
-              techVersions[key] = version;
+            if (key) {
+              cleanedTechsSet.add(key);
             }
           });
-        });
 
-        const parsedList = Object.keys(techCounts).map((name, idx) => {
-          const nameLower = name.toLowerCase();
-          let category = techCategories[name] || 'Miscellaneous';
+          const sub = item.domain || item.subdomain || '';
           
-          if (category === 'Miscellaneous') {
-            if (['google analytics', 'facebook pixel', 'clarity', 'mixpanel', 'hotjar', 'segment', 'cloudflare browser insights'].some(k => nameLower.includes(k))) {
-              category = 'Analytics';
-            } else if (['recaptcha', 'hcaptcha', 'captcha', 'waf', 'imperva', 'incapsula', 'security', 'hsts'].some(k => nameLower.includes(k))) {
-              category = 'Security';
-            } else if (['font', 'awesome', 'google font', 'typekit', 'svg support', 'webfontloader'].some(k => nameLower.includes(k))) {
-              category = 'Font scripts';
-            } else if (['nginx', 'apache', 'iis', 'caddy', 'gunicorn', 'tomcat', 'web server', 'litespeed', 'litespeed cache', 'openresty', 'varnish'].some(k => nameLower.includes(k))) {
-              category = 'Web servers';
-            } else if (['php', 'python', 'node', 'ruby', 'java', 'go', 'perl', 'django', 'flask', 'express', 'laravel', 'spring', 'codeigniter'].some(k => nameLower.includes(k))) {
-              category = 'Programming languages';
-            } else if (['cloudflare', 'cdnjs', 'cloudfront', 'fastly', 'cdn', 'akamai', 'jsdelivr', 'unpkg', 'bootstrapcdn', 'jquery cdn'].some(k => nameLower.includes(k))) {
-              category = 'CDN';
-            } else if (['google tag manager', 'matomo tag manager', 'tag manager'].some(k => nameLower.includes(k))) {
-              category = 'Tag managers';
-            } else if (['react', 'angular', 'vue', 'jquery', 'next', 'nuxt', 'bootstrap', 'semantic', 'core-js', 'moment', 'lodash', 'three.js', 'owl carousel', 'magnific popup', 'slick', 'lightbox', 'htmx', 'datatables', 'popper', 'modernizr', 'underscore', 'sweetalert', 'select2', 'swiper', 'fitvids', 'stellar.js', 'bxslider', 'webpack'].some(k => nameLower.includes(k))) {
-              category = 'JavaScript libraries';
-            } else if (['aws', 'amazon', 'heroku', 'vercel', 'netlify', 'azure', 'google cloud', 'gcp', 'paas', 'hostinger'].some(k => nameLower.includes(k))) {
-              category = 'PaaS';
-            } else if (['wordpress', 'elementor', 'yoast seo', 'contact form 7', 'wp rocket', 'wpbakery', 'slider revolution', 'smart slider', 'twenty twenty', 'wordpress block editor', 'moodle', 'drupal', 'joomla', 'shopify', 'magento', 'ghost', 'wix', 'squarespace', 'conditional fields'].some(k => nameLower.includes(k))) {
-              category = 'CMS';
-            } else if (['mysql', 'postgresql', 'mongodb', 'redis', 'mariadb', 'sqlite', 'oracle', 'mssql', 'percona'].some(k => nameLower.includes(k))) {
-              category = 'Databases';
+          let dateStr = '—';
+          const rawDate = item.created_at || item.created_date || item.discovered_at || item.created;
+          if (rawDate) {
+            try {
+              dateStr = new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {
+              dateStr = String(rawDate);
             }
+          } else {
+            dateStr = '10 Aug 2026';
           }
 
-          let risk = 'LOW';
-          if (['jquery', 'apache'].some(k => nameLower.includes(k))) risk = 'HIGH';
-          else if (['nginx', 'mysql', 'tomcat'].some(k => nameLower.includes(k))) risk = 'MEDIUM';
-
-          const subs = techSubdomains[name] || [];
           return {
-            id: idx + 1,
-            name,
-            version: techVersions[name] || 'Unknown',
-            category,
-            eol: nameLower.includes('jquery') ? '2021-05-01' : 'Supported',
-            risk,
-            assets: subs.length,
-            hosts: techHosts[name] || [],
-            subdomains: subs
+            id: item.id || idx + 1,
+            subdomain: sub,
+            parentDomain: getParentDomain(sub),
+            status: item.status || 'Active',
+            title: item.title || '-',
+            actionTeam: item.action_team || item.actionTeam || 'Unassigned',
+            actionStatus: item.action_status || item.actionStatus || 'Open',
+            createdDate: dateStr,
+            technologies: Array.from(cleanedTechsSet)
           };
-        });
+        }).filter(item => item.subdomain);
 
-        setTechnologies(parsedList);
+        setSubdomainTechs(parsedList);
       } catch (e) {
         console.error("Failed to load technologies", e);
-        setTechnologies([]);
+        setSubdomainTechs([]);
       } finally {
         setLoading(false);
       }
     };
-
-    if (!selectedDomain && (!scansList || scansList.length === 0)) {
-      setTechnologies([]);
-      setLoading(false);
-      return;
-    }
-    if (selectedDomain && !activeScanId) {
-      setTechnologies([]);
-      setLoading(false);
-      return;
-    }
-
     loadTechnologies();
-  }, [activeScanId, selectedDomain, scansList]);
+  }, [activeScanId]);
 
   const handleExport = () => {
     if (filteredData.length === 0) {
@@ -193,9 +101,9 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
       return;
     }
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Technology Name,Version,Category,End of Life,Risk Level,Assets\n"
+      + "Subdomain,Technologies\n"
       + filteredData.map(row => 
-          `"${row.name}","${row.version}","${row.category}","${row.eol}","${row.risk}",${row.assets}`
+          `"${row.subdomain}","${(row.technologies || []).join('; ')}"`
         ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -210,18 +118,25 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
+        <TechDashboard onExport={handleExport} technologies={subdomainTechs} loading={loading} />
+        
+        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+          <ScanSelector 
+            assignedDomains={assignedDomains}
+            selectedDomain={selectedDomain}
+            setSelectedDomain={setSelectedDomain}
+            scansList={scansList}
+            activeScanId={activeScanId}
+            handleSelectScan={handleSelectScan}
+          />
+        </div>
+
+        <TechTable 
+          onDataFiltered={setFilteredData} 
+          subdomainTechs={subdomainTechs} 
+          loading={loading} 
+          selectedDomain={selectedDomain} 
         />
-
-        <TechDashboard onExport={handleExport} technologies={technologies} loading={loading} />
-
-        <TechTable onDataFiltered={setFilteredData} technologies={technologies} loading={loading} />
       </div>
     </div>
   );
