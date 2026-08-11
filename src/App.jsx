@@ -17,6 +17,7 @@ import SurfaceWebDashboard from './components/SurfaceWeb/SurfaceWebDashboard';
 import SuspiciousDomains from './components/SuspiciousDomains/SuspiciousDomains';
 import EmailSecurity from './components/EmailSecurity/EmailSecurity';
 import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDashboard';
+import EmailSecurityRecommendations from './components/EmailSecurity/EmailSecurityRecommendations';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
 
@@ -151,6 +152,7 @@ function App() {
   }, [isAuthenticated]);
 
   const [selectedDomain, setSelectedDomain] = useState('');
+  const [emailSecRec, setEmailSecRec] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
@@ -247,7 +249,13 @@ function App() {
           {activePage === 'SSL/TLS Discovery'     && <SSLTLSDiscovery />}
           {activePage === 'Active Directory'      && <ActiveDirectory />}
           {activePage === 'Email Security Dashboard' && <EmailSecurityDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
-          {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} setActivePage={setActivePage} setEmailSecRec={setEmailSecRec} />}
+          {activePage === 'Email Security Recommendation' && (
+            <EmailSecurityRecommendations
+              rec={emailSecRec}
+              onBack={() => setActivePage('Email Security')}
+            />
+          )}
 
           {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
