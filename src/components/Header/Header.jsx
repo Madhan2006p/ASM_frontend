@@ -11,7 +11,8 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   const notificationsRef = useRef(null);
 
   const getParentLabel = () => {
-    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'Vulnerabilities', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
+    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
+    if (['Vulnerabilities'].includes(activePage)) return 'VULNERABILITY MANAGEMENT';
     if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';
     if (['Mobile Security Dashboard', 'Mobile Security'].includes(activePage)) return 'MOBILE SECURITY';
     if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';

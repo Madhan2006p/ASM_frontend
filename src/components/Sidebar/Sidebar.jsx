@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'; 
 import { 
   Home, Globe, Search, Crosshair, PlusSquare, ShieldCheck,
-  Eye, Activity, AlertCircle, FileText, Settings,
+  Activity, AlertCircle, FileText, Settings,
   ChevronDown, Shield, Mail, Smartphone, User, Store,
   GitMerge, ShieldAlert, Layers
 } from 'lucide-react';
@@ -18,8 +18,13 @@ const menuGroups = [
       { name: 'Open Ports',          icon: <Crosshair size={16} /> },
       { name: 'Directories',         icon: <FileText size={16} /> },
       { name: 'Technologies',        icon: <PlusSquare size={16} /> },
-      { name: 'Vulnerabilities',     icon: <Eye size={16} /> },
       { name: 'SSL Certificates',    icon: <ShieldCheck size={16} /> },
+    ]
+  },
+  {
+    title: 'VULNERABILITY MANAGEMENT',
+    items: [
+      { name: 'Vulnerabilities', icon: <ShieldAlert size={16} /> },
     ]
   },
   {
@@ -130,6 +135,7 @@ const isItemVisible = (itemName, userFeatures, isSuperuser) => {
 const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
   const [expandedGroups, setExpandedGroups] = useState({
     'ASSET DISCOVERY': true,
+    'VULNERABILITY MANAGEMENT': false,
     'ATTACK PATH ANALYSIS': false,
     'EMAIL SECURITY': false,
     'SURFACE WEB MONITORING': false,
@@ -151,6 +157,7 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
     if (activeGroup) {
       setExpandedGroups({
         'ASSET DISCOVERY': false,
+        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
@@ -167,6 +174,7 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
       const isAlreadyExpanded = prev[groupTitle];
       const nextExpanded = {
         'ASSET DISCOVERY': false,
+        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,

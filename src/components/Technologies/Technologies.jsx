@@ -10,7 +10,9 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   const [loading, setLoading] = useState(false);
   const [filteredData, setFilteredData] = useState([]);
 
-  // Fetch tech stack results
+  // Fetch tech stack results — merged with the subdomain list so EVERY
+  // subdomain of the scan is displayed (with its tech stack or a
+  // "No technologies" state) instead of only hosts that had techs.
   useEffect(() => {
     const loadTechnologies = async () => {
       if (!activeScanId) {
@@ -19,8 +21,6 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
       }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`);
-        const list = Array.isArray(data) ? data : (data.results || []);
 
         // Helper to extract parent domain (e.g. www.hackersinfotech.com -> hackersinfotech.com)
         const getParentDomain = (host = '') => {
@@ -35,56 +35,62 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           return host;
         };
 
-        // Each item in list represents a subdomain asset and its detected technologies
-        const parsedList = list.map((item, idx) => {
-          const rawTechs = Array.isArray(item.technologies) ? item.technologies : [];
-          const cleanedTechsSet = new Set();
+        // 1) Technology rows (domain -> technologies) from the tech phase
+        const [techData, subData] = await Promise.all([
+          api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`).catch(() => []),
+          api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`).catch(() => []),
+        ]);
+        const techList = Array.isArray(techData) ? techData : ((techData && techData.results) || []);
+        const subList = Array.isArray(subData) ? subData : ((subData && subData.results) || []);
 
-          rawTechs.forEach(techStr => {
-            let name = techStr;
-            const toolMatch = name.match(/\s*\[(.*?)\]$/);
-            if (toolMatch) {
-              name = name.replace(toolMatch[0], '').trim();
-            }
-            if (name.includes('/')) {
-              name = name.split('/')[0];
-            } else if (name.includes(' (v')) {
-              name = name.split(' (v')[0];
-            }
-            const key = name.trim();
-            if (key) {
-              cleanedTechsSet.add(key);
-            }
-          });
+        // Tech map: domain -> sorted unique technologies
+        const techMap = {};
+        techList.forEach(item => {
+          const host = item.domain || item.subdomain || '';
+          if (!host) return;
+          const techs = Array.isArray(item.technologies) ? item.technologies : [];
+          const cleaned = Array.from(new Set(techs.map(t => (t || '').trim()).filter(Boolean)));
+          if (cleaned.length) techMap[host] = cleaned;
+        });
 
-          const sub = item.domain || item.subdomain || '';
-          
-          let dateStr = '—';
-          const rawDate = item.created_at || item.created_date || item.discovered_at || item.created;
+        // 2) Build the row list: every subdomain of the scan, plus any
+        //    tech-only hosts (e.g. the parent domain) that aren't subdomains.
+        const rowsByHost = {};
+        const addRow = (host, src) => {
+          if (!host || rowsByHost[host]) return;
+          const rawTechs = Array.isArray(src.technologies) ? src.technologies : [];
+          const cleanedTechs = Array.from(new Set(rawTechs.map(t => (t || '').trim()).filter(Boolean)));
+
+          let dateStr;
+          const rawDate = src.created_at || src.created_date || src.discovered_at || src.created;
           if (rawDate) {
             try {
               dateStr = new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-            } catch (e) {
+            } catch {
               dateStr = String(rawDate);
             }
           } else {
-            dateStr = '10 Aug 2026';
+            dateStr = '—';
           }
 
-          return {
-            id: item.id || idx + 1,
-            subdomain: sub,
-            parentDomain: getParentDomain(sub),
-            status: item.status || 'Active',
-            title: item.title || '-',
-            actionTeam: item.action_team || item.actionTeam || 'Unassigned',
-            actionStatus: item.action_status || item.actionStatus || 'Open',
+          rowsByHost[host] = {
+            id: src.id || host,
+            subdomain: host,
+            parentDomain: getParentDomain(host),
+            status: src.status || 'Active',
+            title: src.title || '-',
             createdDate: dateStr,
-            technologies: Array.from(cleanedTechsSet)
+            // Tech from the technology phase wins; otherwise use the
+            // subdomain's own stored technologies field.
+            technologies: techMap[host] || cleanedTechs,
           };
-        }).filter(item => item.subdomain);
+        };
 
-        setSubdomainTechs(parsedList);
+        subList.forEach(s => addRow(s.domain || s.subdomain || '', s));
+        // Tech-only hosts that aren't in the subdomain list
+        Object.keys(techMap).forEach(host => addRow(host, { technologies: techMap[host] }));
+
+        setSubdomainTechs(Object.values(rowsByHost));
       } catch (e) {
         console.error("Failed to load technologies", e);
         setSubdomainTechs([]);
@@ -102,7 +108,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
     }
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Subdomain,Technologies\n"
-      + filteredData.map(row => 
+      + filteredData.filter(row => (row.technologies || []).length > 0).map(row => 
           `"${row.subdomain}","${(row.technologies || []).join('; ')}"`
         ).join("\n");
     
