@@ -1,17 +1,22 @@
-import React from 'react';
-import { ArrowLeft, ShieldAlert, XCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  X,
+  ShieldAlert,
+  XCircle,
+  AlertTriangle,
+  Info,
+  CheckCircle2,
+  Copy,
+  Check,
+  ShieldCheck,
+  AlertCircle,
+  Lightbulb,
+  Code,
+  ArrowLeft
+} from 'lucide-react';
 
 /**
- * EmailSecurityRecommendations — Full page component (NOT a modal).
- *
- * Rendered by App.jsx when activePage === 'Email Security Recommendation'.
- *
- * Props:
- *   rec          — the recommendation object for the selected module
- *   onBack       — callback to return to 'Email Security' page
- *
- * Also exports:
- *   buildRecommendations(result) — derives per-protocol recs from a live scan result
+ * EmailSecurityRecommendations — Modal Popup & Standalone Page Component
  */
 
 // ─── Severity metadata ────────────────────────────────────────────────────────
@@ -19,36 +24,36 @@ export const SEVERITY_META = {
   critical: {
     label: 'Critical',
     color: '#ef4444',
-    bg: 'rgba(239,68,68,0.10)',
-    border: 'rgba(239,68,68,0.30)',
+    bg: 'rgba(239, 68, 68, 0.12)',
+    border: 'rgba(239, 68, 68, 0.35)',
     icon: <ShieldAlert size={15} />,
   },
   high: {
     label: 'High',
     color: '#f97316',
-    bg: 'rgba(249,115,22,0.10)',
-    border: 'rgba(249,115,22,0.30)',
+    bg: 'rgba(249, 115, 22, 0.12)',
+    border: 'rgba(249, 115, 22, 0.35)',
     icon: <XCircle size={15} />,
   },
   medium: {
     label: 'Medium',
     color: '#fab333',
-    bg: 'rgba(250,179,51,0.10)',
-    border: 'rgba(250,179,51,0.30)',
+    bg: 'rgba(250, 179, 51, 0.12)',
+    border: 'rgba(250, 179, 51, 0.35)',
     icon: <AlertTriangle size={15} />,
   },
   low: {
     label: 'Low',
     color: '#00bfff',
-    bg: 'rgba(0,191,255,0.10)',
-    border: 'rgba(0,191,255,0.25)',
+    bg: 'rgba(0, 191, 255, 0.12)',
+    border: 'rgba(0, 191, 255, 0.30)',
     icon: <Info size={15} />,
   },
   info: {
     label: 'Good',
     color: '#22c55e',
-    bg: 'rgba(34,197,94,0.10)',
-    border: 'rgba(34,197,94,0.25)',
+    bg: 'rgba(34, 197, 94, 0.12)',
+    border: 'rgba(34, 197, 94, 0.30)',
     icon: <CheckCircle2 size={15} />,
   },
 };
@@ -194,13 +199,13 @@ export function buildRecommendations(result) {
       id: 'dkim-missing',
       protocol: 'DKIM',
       severity: 'high',
-      finding: 'No DKIM record found for default or selector1 selectors',
+      finding: 'No DKIM record found for domain selectors',
       whyMatters:
         'Without DKIM, emails from your domain cannot be verified as unaltered in transit. This reduces your domain reputation with receiving providers, increases spam scoring, and means DMARC cannot rely on DKIM as an authentication method.',
       action:
-        'Generate a 2048-bit RSA DKIM key pair in your mail server or ESP, publish the public key as a DNS TXT record, and configure your mail server to sign all outbound messages.',
+        'Obtain the appropriate DKIM public key and selector name from your email service provider (ESP) or mail server software, publish it as a DNS TXT record, and enable DKIM signing.',
       fix:
-        'default._domainkey.<yourdomain>  IN TXT\n"v=DKIM1; k=rsa; p=<base64-encoded-public-key>"\n\nFor Google Workspace: Admin Console → Apps → Gmail → Authenticate email\nFor Microsoft 365: Admin Center → Exchange → DomainKeys\nFor SendGrid: Settings → Sender Authentication',
+        'DKIM selector names depend on your email provider:\n• Google Workspace: google._domainkey.<yourdomain>\n• Microsoft 365: selector1._domainkey.<yourdomain>\n• Generic/Custom: default._domainkey.<yourdomain> or <selector>._domainkey.<yourdomain>\n\nSample TXT Record:\n<selector>._domainkey.<yourdomain>  IN TXT\n"v=DKIM1; k=rsa; p=<base64-encoded-public-key>"',
       benefit:
         'Cryptographic signing proves emails have not been altered in transit and strengthens DMARC authentication.',
     });
@@ -213,9 +218,9 @@ export function buildRecommendations(result) {
       whyMatters:
         'DKIM is configured, which is great. However, long-lived DKIM keys become a liability over time — if the private key is ever compromised, attackers can sign emails that will pass DKIM verification.',
       action:
-        'Rotate DKIM keys at least once per year. Publish the new key under a new selector, switch your mail server to sign with the new key, then remove the old DNS record after propagation.',
+        'Rotate DKIM keys at least once per year. Publish the new key under a new selector name provided by your mail host, switch signing to the new selector, then remove the old selector DNS record.',
       fix:
-        '• Generate new key pair annually\n• Publish new public key: new-selector._domainkey.<domain>\n• Switch mail server to new selector\n• Wait for TTL to expire, then remove old selector record\n• Verify all outbound streams (ESPs, CRMs, ticketing) are DKIM-signed',
+        '• Generate/obtain new key pair from mail provider annually\n• Publish new public key: <new-selector>._domainkey.<yourdomain>\n• Switch mail server/provider to sign with new selector\n• Wait for TTL to expire, then remove old selector record',
       benefit:
         'Regular key rotation limits exposure if a private key is ever compromised and keeps your signing infrastructure healthy.',
     });
@@ -359,38 +364,148 @@ export function buildRecommendations(result) {
   return recs;
 }
 
-// ─── Recommendation Page Component ───────────────────────────────────────────
-const EmailSecurityRecommendations = ({ rec, onBack }) => {
-  if (!rec) {
+// ─── Recommendation Component (Modal Popup or Page) ──────────────────────────
+const EmailSecurityRecommendations = ({ rec, onClose, onBack }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleClose = () => {
+    if (onClose) onClose();
+    else if (onBack) onBack();
+  };
+
+  if (!rec) return null;
+
+  const meta = SEVERITY_META[rec.severity] || SEVERITY_META.low;
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) handleClose();
+  };
+
+  const handleCopyCode = () => {
+    if (rec.fix) {
+      navigator.clipboard.writeText(rec.fix);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const isModalMode = Boolean(onClose || !onBack);
+
+  const contentMarkup = (
+    <>
+      {/* Overview Top Cards */}
+      <div className="es-rec-grid-two">
+        <div className="es-rec-meta-card">
+          <div className="es-rec-modal-section-heading">Module</div>
+          <div className="es-rec-modal-value">{rec.protocol}</div>
+        </div>
+        <div className="es-rec-meta-card">
+          <div className="es-rec-modal-section-heading">Finding Status</div>
+          <div className="es-rec-modal-value" style={{ color: meta.color }}>
+            {rec.finding}
+          </div>
+        </div>
+      </div>
+
+      {/* Why This Matters */}
+      <div className="es-rec-section-card">
+        <div className="es-rec-card-header-label">
+          <AlertCircle size={16} /> Why This Matters
+        </div>
+        <div className="es-rec-modal-text">{rec.whyMatters}</div>
+      </div>
+
+      {/* Recommended Action */}
+      <div className="es-rec-section-card">
+        <div className="es-rec-card-header-label">
+          <Lightbulb size={16} /> Recommended Action
+        </div>
+        <div className="es-rec-modal-text">{rec.action}</div>
+      </div>
+
+      {/* Remediation & Configuration Code */}
+      <div className="es-rec-section-card">
+        <div className="es-rec-card-header-label">
+          <Code size={16} /> Remediation & Configuration
+        </div>
+        <div className="es-rec-code-wrapper">
+          <div className="es-rec-code-header">
+            <span>DNS TXT Record / Configuration Command</span>
+            <button className="es-rec-copy-btn" onClick={handleCopyCode} title="Copy code">
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+              <span>{copied ? 'Copied!' : 'Copy'}</span>
+            </button>
+          </div>
+          <pre className="es-rec-page-code">{rec.fix}</pre>
+        </div>
+      </div>
+
+      {/* Expected Security Benefit */}
+      <div className="es-rec-benefit-card">
+        <div className="es-rec-card-header-label">
+          <ShieldCheck size={16} /> Expected Security Benefit
+        </div>
+        <div className="es-rec-modal-text" style={{ color: 'var(--text-primary)' }}>
+          {rec.benefit}
+        </div>
+      </div>
+    </>
+  );
+
+  if (isModalMode) {
     return (
-      <div className="es-rec-page">
-        <div className="es-rec-page-inner">
-          <button className="es-rec-back-btn" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Back to Email Security
-          </button>
-          <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-            No recommendation found.
+      <div className="es-rec-overlay" onClick={handleOverlayClick}>
+        <div className="es-rec-modal">
+          {/* Header */}
+          <div className="es-rec-modal-header">
+            <div className="es-rec-header-left">
+              <div className="es-rec-header-title-group">
+                <div className="es-rec-modal-title-main">Security Recommendation</div>
+                <div className="es-rec-badges-row">
+                  <span
+                    className="es-rec-protocol-badge"
+                    style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}
+                  >
+                    {rec.protocol}
+                  </span>
+                  <span
+                    className="es-rec-severity-badge"
+                    style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}
+                  >
+                    {meta.icon}
+                    <span style={{ marginLeft: '0.35rem' }}>{meta.label}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button className="es-rec-close-btn" onClick={handleClose} title="Close">
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Modal body */}
+          <div className="es-rec-modal-body">{contentMarkup}</div>
+
+          {/* Footer */}
+          <div className="es-rec-modal-footer">
+            <button className="es-rec-close-full-btn" onClick={handleClose}>
+              Close
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
-  const meta = SEVERITY_META[rec.severity] || SEVERITY_META.low;
-
+  // Standalone Page Mode
   return (
     <div className="es-rec-page">
       <div className="es-rec-page-inner">
-        {/* Back button */}
-        <button className="es-rec-back-btn" onClick={onBack}>
-          <ArrowLeft size={16} />
-          Back to Email Security
+        <button className="es-rec-back-btn" onClick={handleClose}>
+          <ArrowLeft size={16} /> Back to Email Security
         </button>
-
-        {/* Page header */}
         <div className="es-rec-page-header">
-          <div className="es-rec-page-title">Security Recommendation</div>
+          <h1 className="es-rec-page-title">Security Recommendation</h1>
           <div className="es-rec-page-badges">
             <span
               className="es-rec-protocol-badge"
@@ -403,58 +518,12 @@ const EmailSecurityRecommendations = ({ rec, onBack }) => {
               style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.border}` }}
             >
               {meta.icon}
-              <span>{meta.label}</span>
+              <span style={{ marginLeft: '0.35rem' }}>{meta.label}</span>
             </span>
           </div>
         </div>
-
-        {/* Content card */}
-        <div className="es-rec-page-card">
-          {/* Finding */}
-          <div className="es-rec-page-section">
-            <div className="es-rec-page-section-label">Finding</div>
-            <div className="es-rec-page-section-value">{rec.finding}</div>
-          </div>
-
-          <div className="es-rec-page-divider" />
-
-          {/* Why this matters */}
-          <div className="es-rec-page-section">
-            <div className="es-rec-page-section-label">Why This Matters</div>
-            <div className="es-rec-page-section-text">{rec.whyMatters}</div>
-          </div>
-
-          <div className="es-rec-page-divider" />
-
-          {/* Recommended Action */}
-          <div className="es-rec-page-section">
-            <div className="es-rec-page-section-label">Recommended Action</div>
-            <div className="es-rec-page-section-text">{rec.action}</div>
-          </div>
-
-          <div className="es-rec-page-divider" />
-
-          {/* Remediation */}
-          <div className="es-rec-page-section">
-            <div className="es-rec-page-section-label">Remediation</div>
-            <pre className="es-rec-page-code">{rec.fix}</pre>
-          </div>
-
-          <div className="es-rec-page-divider" />
-
-          {/* Expected Security Benefit */}
-          <div className="es-rec-page-section">
-            <div className="es-rec-page-section-label">Expected Security Benefit</div>
-            <div className="es-rec-page-section-text">{rec.benefit}</div>
-          </div>
-        </div>
-
-        {/* Bottom back button */}
-        <div style={{ marginTop: '2rem' }}>
-          <button className="es-rec-back-btn" onClick={onBack}>
-            <ArrowLeft size={16} />
-            Back to Email Security
-          </button>
+        <div className="es-rec-page-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          {contentMarkup}
         </div>
       </div>
     </div>
@@ -462,3 +531,4 @@ const EmailSecurityRecommendations = ({ rec, onBack }) => {
 };
 
 export default EmailSecurityRecommendations;
+
