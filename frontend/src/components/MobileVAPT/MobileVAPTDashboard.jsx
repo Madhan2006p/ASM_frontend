@@ -8,6 +8,7 @@ import {
   Activity, Lock, Code, Cpu
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
@@ -40,7 +41,7 @@ const CT = ({ label, value, color }) => (
 const dark = { background:'#1a1f2e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 12px', color:'#e2e8f0', fontSize:'0.78rem' };
 const gridLine = { stroke:'rgba(255,255,255,0.05)' };
 
-const MobileVAPTDashboard = () => {
+const MobileVAPTDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [db, setDb] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -110,6 +111,12 @@ const MobileVAPTDashboard = () => {
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
+
       <PageHeaderCard
         badgeText="MOBILE SECURITY"
         title="Mobile VAPT Dashboard"
@@ -259,13 +266,13 @@ const MobileVAPTDashboard = () => {
                     <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.version_name||'—'}</td>
                     <td style={{padding:'0.6rem 0.75rem'}}>
                       <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',
-                        background:s.status==='completed'?'rgba(34,197,94,0.12)':s.status.includes('fail')?'rgba(239,68,68,0.12)':'rgba(59,130,246,0.12)',
-                        color:s.status==='completed'?'#22C55E':s.status.includes('fail')?'#EF4444':'#3B82F6'}}>
+                        background:['completed', 'vt_completed'].includes(s.status)?'rgba(34,197,94,0.12)':s.status.includes('fail')?'rgba(239,68,68,0.12)':'rgba(59,130,246,0.12)',
+                        color:['completed', 'vt_completed'].includes(s.status)?'#22C55E':s.status.includes('fail')?'#EF4444':'#3B82F6'}}>
                         {s.status||'—'}
                       </span>
                     </td>
                     <td style={{padding:'0.6rem 0.75rem'}}>
-                      {s.status==='completed' ? <span style={{color:scCol,fontWeight:800}}>{sc}/100</span> : <span style={{color:'var(--text-muted)'}}>—</span>}
+                      {['completed', 'vt_completed'].includes(s.status) ? <span style={{color:scCol,fontWeight:800}}>{sc}/100</span> : <span style={{color:'var(--text-muted)'}}>—</span>}
                     </td>
                     <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.updated_at?new Date(s.updated_at).toLocaleString():'—'}</td>
                   </tr>

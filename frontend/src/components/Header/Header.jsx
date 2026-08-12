@@ -11,7 +11,8 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   const notificationsRef = useRef(null);
 
   const getParentLabel = () => {
-    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'Vulnerabilities', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
+    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
+    if (['Vulnerabilities'].includes(activePage)) return 'VULNERABILITY MANAGEMENT';
     if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';
     if (['Mobile Security Dashboard', 'Mobile Security'].includes(activePage)) return 'MOBILE SECURITY';
     if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';
@@ -47,7 +48,7 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
       <div className="header-breadcrumbs">
         {activePage === 'Executive Dashboard' ? (
           <div className="header-page-title">
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>Executive Dashboard</h1>
+            <h1 style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>EXECUTIVE DASHBOARD</h1>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>A complete centralized security posture overview.</p>
           </div>
         ) : (

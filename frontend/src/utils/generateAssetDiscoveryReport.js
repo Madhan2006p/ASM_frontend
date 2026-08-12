@@ -146,23 +146,45 @@ export function generateAssetDiscoveryReportHTML({
     <div class="cover-sev-lbl">${s.label}</div>
   </div>`).join('');
 
+  const getHeaderHtml = (sectionTitle) => `
+<div class="page-header">
+  <div class="header-brand" style="display:flex;align-items:center;gap:6px">
+    <span class="provider-name" style="color:#1e40af;font-weight:900;letter-spacing:0.08em">HACKERS INFOTECH</span>
+    <span class="header-divider" style="color:#94a3b8">|</span>
+    <span class="section-name" style="color:#334155;text-transform:uppercase;font-weight:700">${escapeHtml(sectionTitle)}</span>
+  </div>
+  <div class="header-target" style="color:#64748b;font-size:7pt">
+    Target Org: <strong style="color:#0f172a">${escapeHtml(orgName || scope || 'Target Organization')}</strong>
+  </div>
+</div>`;
+
   const coverPage = `
 <div class="page cover-page">
   <div class="cover-bg-accent"></div>
   <div class="cover-inner">
-    <div class="cover-top">
-      <div class="cover-logo-wrap">
+    <div class="cover-top" style="display:flex;justify-content:space-between;align-items:center">
+      <div class="cover-logo-wrap" style="display:flex;align-items:center;gap:14px">
         ${logoDataUrl
-          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:70px;max-width:200px;object-fit:contain;border-radius:6px"/>`
-          : `<div class="cover-shield">🔍</div>`}
+          ? `<img src="${logoDataUrl}" alt="Logo" style="max-height:52px;max-width:180px;object-fit:contain"/>`
+          : `<div class="cover-shield" style="font-size:24pt;color:#60a5fa">🎯</div>`}
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:15pt;font-weight:900;color:#ffffff !important;letter-spacing:-0.01em;white-space:nowrap;text-shadow:0 2px 4px rgba(0,0,0,0.6)">${escapeHtml(orgName || scope || 'Target Organization')}</span>
+          <span style="font-size:7.5pt;font-weight:800;color:#93c5fd !important;text-transform:uppercase;letter-spacing:0.09em">Target Organization</span>
+        </div>
       </div>
-      <div class="cover-confidential">CONFIDENTIAL</div>
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(59,130,246,0.15);border:0.75pt solid rgba(59,130,246,0.4);padding:6pt 14pt;border-radius:6pt">
+        <div style="font-size:16pt;color:#60a5fa">🛡️</div>
+        <div style="display:flex;flex-direction:column;text-align:right">
+          <span style="font-size:12.5pt;font-weight:900;color:#ffffff !important;letter-spacing:0.05em;white-space:nowrap">HACKERS INFOTECH</span>
+          <span style="font-size:7pt;font-weight:800;color:#93c5fd !important;text-transform:uppercase;letter-spacing:0.08em">Assessment Provider</span>
+        </div>
+      </div>
     </div>
 
     <div class="cover-center">
       <div class="cover-label">ATTACK SURFACE MANAGEMENT</div>
       <h1 class="cover-title">${escapeHtml(reportTitle)}</h1>
-      ${orgName ? `<p class="cover-org">Prepared for: <strong>${escapeHtml(orgName)}</strong></p>` : ''}
+      <p class="cover-org">Prepared for: <strong>${escapeHtml(orgName || scope || 'Target Organization')}</strong> | Assessed by: <strong>Hackers Infotech</strong></p>
     </div>
 
     <div class="cover-meta-box">
@@ -208,7 +230,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const tocPage = `
 <div class="page">
-  <div class="page-header"><span>TABLE OF CONTENTS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('Table of Contents')}
   <h2 class="section-heading">Table of Contents</h2>
   <table class="toc-table">
     ${toc.map(t => `<tr><td class="toc-num">${t.n}.</td><td class="toc-title">${escapeHtml(t.title)}</td><td class="toc-dots"></td></tr>`).join('')}
@@ -224,7 +246,7 @@ export function generateAssetDiscoveryReportHTML({
   let sn = 1;
   const execPage = `
 <div class="page">
-  <div class="page-header"><span>1. EXECUTIVE SUMMARY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('1. Executive Summary')}
   <h2 class="section-heading">1. Executive Summary</h2>
 
   <p class="narrative">
@@ -318,7 +340,7 @@ export function generateAssetDiscoveryReportHTML({
   /* ── Scope & Methodology ────────────────────────────────── */
   const scopePage = `
 <div class="page">
-  <div class="page-header"><span>2. SCOPE &amp; METHODOLOGY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('2. Scope & Methodology')}
   <h2 class="section-heading">2. Scope &amp; Methodology</h2>
 
   <div class="two-col">
@@ -333,14 +355,14 @@ export function generateAssetDiscoveryReportHTML({
       </table>
     </div>
     <div>
-      <h3 class="sub-heading">🛠 Tool Stack</h3>
+      <h3 class="sub-heading">📊 Surface Overview</h3>
       <table class="meta-table">
-        <tr><td>Subdomain Discovery</td><td>Subfinder, DNS Brute-force</td></tr>
-        <tr><td>Port Scanning</td><td>Nmap (TCP/UDP)</td></tr>
-        <tr><td>Web Crawling</td><td>Wapiti, Custom Crawler</td></tr>
-        <tr><td>Tech Fingerprint</td><td>Wappalyzer, HTTPX</td></tr>
-        <tr><td>Vulnerability Scan</td><td>Nuclei Template Engine</td></tr>
-        <tr><td>Certificate Analysis</td><td>OpenSSL, HTTPX</td></tr>
+        <tr><td>Active Subdomains</td><td><strong>${subdomains.length}</strong></td></tr>
+        <tr><td>Discovered Endpoints</td><td><strong>${endpoints.length}</strong></td></tr>
+        <tr><td>Open Network Ports</td><td><strong>${ports.length}</strong></td></tr>
+        <tr><td>Technologies Detected</td><td><strong>${technologies.length}</strong></td></tr>
+        <tr><td>SSL Certificates</td><td><strong>${certificates.length}</strong></td></tr>
+        <tr><td>Assessment Engine</td><td>Enterprise ASM Scanner</td></tr>
       </table>
     </div>
   </div>
@@ -350,12 +372,12 @@ export function generateAssetDiscoveryReportHTML({
 
   <div class="phases-grid">
     ${[
-      { icon: '🔍', phase: 'Phase 1: Subdomain Enumeration', desc: 'Passive and active subdomain enumeration using Subfinder, DNS brute-force, and certificate transparency logs to map the full external attack surface.' },
-      { icon: '🚪', phase: 'Phase 2: Port & Service Scanning', desc: 'TCP/UDP port scanning using Nmap to identify open services, running versions, and exposed management interfaces.' },
-      { icon: '🌐', phase: 'Phase 3: Web Endpoint Discovery', desc: 'Web crawling and directory fuzzing to enumerate all accessible endpoints, APIs, and web assets exposed on identified hosts.' },
-      { icon: '🛠', phase: 'Phase 4: Technology Fingerprinting', desc: 'Identification of web frameworks, libraries, CMS, CDN, and backend technologies using Wappalyzer and HTTPX header analysis.' },
-      { icon: '🔒', phase: 'Phase 5: Certificate Analysis', desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
-      { icon: '⚡', phase: 'Phase 6: Vulnerability Assessment', desc: 'Automated vulnerability scanning using Nuclei template engine against all discovered assets to identify known CVEs and misconfigurations.' },
+      { icon: '🔍', phase: 'Phase 1: Subdomain Enumeration', desc: 'Passive and active subdomain discovery using DNS brute-force, certificate transparency logs, and OSINT sources to map the full external attack surface.' },
+      { icon: '🚪', phase: 'Phase 2: Port & Service Scanning', desc: 'Automated TCP/UDP port scanning to identify open network services, running protocols, and exposed interfaces.' },
+      { icon: '🌐', phase: 'Phase 3: Web Endpoint Discovery', desc: 'Web crawling and endpoint discovery to map accessible web applications, APIs, and administrative interfaces.' },
+      { icon: '🛠', phase: 'Phase 4: Technology Fingerprinting', desc: 'Identification of web frameworks, libraries, CMS engines, CDN providers, and backend infrastructure via HTTP response header analysis.' },
+      { icon: '🔒', phase: 'Phase 5: Certificate Analysis', desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version security configuration.' },
+      { icon: '⚡', phase: 'Phase 6: Vulnerability Assessment', desc: 'Automated vulnerability assessment scanning against discovered digital assets to identify known CVEs and security misconfigurations.' },
     ].map(p => `
       <div class="phase-card">
         <div class="phase-icon">${p.icon}</div>
@@ -378,55 +400,70 @@ export function generateAssetDiscoveryReportHTML({
       <td style="font-family:monospace;font-size:8pt;color:#475569">${escapeHtml(ip)}</td>
       <td style="font-size:7.5pt">${portList || '<span style="color:#94a3b8">—</span>'}</td>
       <td style="font-size:7.5pt;color:#475569">${techList.map(t => escapeHtml(t.name)).slice(0, 3).join(', ') || '—'}</td>
-      <td style="text-align:center;font-size:8pt;color:#475569">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—'}</td>
+      <td style="text-align:center;font-size:7.5pt;color:#475569">${sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—'}</td>
+      <td style="text-align:center;font-size:7.5pt;color:#475569">${sub.updated_at ? new Date(sub.updated_at).toLocaleDateString() : (sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—')}</td>
     </tr>`;
   }).join('');
 
   const assetInventoryPage = `
 <div class="page">
-  <div class="page-header"><span>3. ASSET INVENTORY</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('3. Asset Inventory')}
   <h2 class="section-heading">3. Asset Inventory</h2>
   <p class="narrative">
     The following table lists all <strong>${subdomains.length}</strong> subdomains discovered during the assessment,
-    along with their IP addresses, status, open ports, and detected technologies.
+    along with their IP addresses, status, open ports, detected technologies, discovery dates, and last update timestamps.
   </p>
   <table class="findings-summary-table">
     <thead>
       <tr>
-        <th style="width:32px">#</th>
+        <th style="width:28px">#</th>
         <th>Domain / Asset</th>
-        <th style="width:70px">Status</th>
-        <th style="width:110px">IP Address</th>
+        <th style="width:65px">Status</th>
+        <th style="width:95px">IP Address</th>
         <th>Open Ports</th>
         <th>Technologies</th>
-        <th style="width:80px">Discovered</th>
+        <th style="width:70px">Discovered</th>
+        <th style="width:75px">Last Updated</th>
       </tr>
     </thead>
     <tbody>
-      ${subdomains.length > 0 ? assetRows : `<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">No subdomains discovered in this scan.</td></tr>`}
+      ${subdomains.length > 0 ? assetRows : `<tr><td colspan="8" style="text-align:center;padding:20px;color:#94a3b8">No subdomains discovered in this scan.</td></tr>`}
     </tbody>
   </table>
 </div>`;
+
+  /* Helper to resolve all affected assets as an array */
+  const resolveAssetList = (v) => {
+    if (Array.isArray(v?.affected_assets) && v.affected_assets.length > 0) {
+      return v.affected_assets.filter(Boolean);
+    }
+    const list = [v?.subdomain, v?.domain, v?.url].filter(Boolean);
+    if (list.length > 0) return [...new Set(list)];
+    return scope ? [scope] : ['Target Domain'];
+  };
 
   /* ── Vulnerability Findings ─────────────────────────────── */
   const vulnRows = vulnerabilities.map((v, idx) => {
     const sev = (v.severity || 'LOW').toUpperCase();
     const c = getSC(sev);
     const cvss = cvssOf(sev, v.cvss_score);
+    const assets = resolveAssetList(v);
+    const assetStackHtml = `<div class="asset-stack-list">
+      ${assets.map(a => `<div class="asset-stack-item"><code>${escapeHtml(a)}</code></div>`).join('')}
+    </div>`;
     return `<tr>
       <td class="td-num">${idx + 1}</td>
       <td class="td-title">${escapeHtml(v.finding || v.vulnerability_id || 'Security Finding')}</td>
       <td>${badgeHtml(sev)}</td>
       <td class="td-cvss" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)}</td>
-      <td class="td-asset"><code>${escapeHtml(v.subdomain || v.domain || scope || '—')}</code></td>
-      <td style="font-size:7.5pt">${escapeHtml(v.source_tool || 'Nuclei')}</td>
+      <td class="td-asset">${assetStackHtml}</td>
       <td class="td-cve">${escapeHtml([v.cve, v.cwe].filter(Boolean).join(' / ') || '—')}</td>
     </tr>`;
   }).join('');
 
   const findingsSummaryPage = `
 <div class="page">
-  <div class="page-header"><span>4. VULNERABILITY FINDINGS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('4. Vulnerability Findings')}
   <h2 class="section-heading">4. Vulnerability Findings</h2>
   <p class="narrative">
     The following <strong>${totalVulns}</strong> vulnerabilities were identified across the discovered attack surface.
@@ -439,13 +476,12 @@ export function generateAssetDiscoveryReportHTML({
         <th>Finding / Vulnerability</th>
         <th style="width:80px">Severity</th>
         <th style="width:44px">CVSS</th>
-        <th>Affected Asset</th>
-        <th style="width:70px">Tool</th>
-        <th style="width:90px">CVE / CWE</th>
+        <th>Affected Assets (${vulnerabilities.reduce((acc, curr) => acc + (curr.affected_assets?.length || 1), 0)})</th>
+        <th style="width:100px">CVE / CWE</th>
       </tr>
     </thead>
     <tbody>
-      ${totalVulns > 0 ? vulnRows : `<tr><td colspan="7" style="text-align:center;padding:20px;color:#94a3b8">No vulnerabilities identified in this scan.</td></tr>`}
+      ${totalVulns > 0 ? vulnRows : `<tr><td colspan="6" style="text-align:center;padding:20px;color:#94a3b8">No vulnerabilities identified in this scan.</td></tr>`}
     </tbody>
   </table>
 </div>`;
@@ -456,6 +492,7 @@ export function generateAssetDiscoveryReportHTML({
     const c = getSC(sev);
     const cvss = cvssOf(sev, v.cvss_score);
     const cvssLabel = cvss >= 9 ? 'Critical' : cvss >= 7 ? 'High' : cvss >= 4 ? 'Medium' : cvss >= 0.1 ? 'Low' : 'Info';
+    const assets = resolveAssetList(v);
     return `
 <div class="finding-block">
   <div class="finding-header" style="border-left:5px solid ${c.dot};background:${c.bg}">
@@ -475,9 +512,8 @@ export function generateAssetDiscoveryReportHTML({
     <div class="finding-header-meta">
       ${v.cve ? `<span class="meta-tag" style="background:#fee2e2;color:#991b1b;border-color:#fca5a5">CVE: ${escapeHtml(v.cve)}</span>` : ''}
       ${v.cwe ? `<span class="meta-tag" style="background:#f3e8ff;color:#6b21a8;border-color:#d8b4fe">CWE: ${escapeHtml(v.cwe)}</span>` : ''}
+      <span class="meta-tag" style="background:#dbeafe;color:#1e40af;border-color:#bfdbfe;font-weight:700">🎯 ${assets.length} Affected Asset(s)</span>
       ${v.category ? `<span class="meta-tag">Category: ${escapeHtml(v.category)}</span>` : ''}
-      <span class="meta-tag">🔧 ${escapeHtml(v.source_tool || 'Nuclei')}</span>
-      ${v.subdomain || v.domain ? `<span class="meta-tag">🎯 ${escapeHtml(v.subdomain || v.domain)}</span>` : ''}
     </div>
   </div>
   <div class="finding-body">
@@ -492,13 +528,18 @@ export function generateAssetDiscoveryReportHTML({
         <div class="finding-section-label" style="color:#15803d">✅ Remediation</div>
         <p class="finding-text" style="color:#166534">${escapeHtml(v.remediation)}</p>
       </div>` : ''}
+      <div class="finding-section" style="grid-column:1/-1;border-left:3px solid #3b82f6;background:#eff6ff;padding:8px 12px;margin-top:6px">
+        <div class="finding-section-label" style="color:#1d4ed8;margin-bottom:4px">🛡 Affected Assets (${assets.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px">
+          ${assets.map(a => `<code style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:7.5pt;border:1px solid #bfdbfe">${escapeHtml(a)}</code>`).join(' ')}
+        </div>
+      </div>
     </div>
     <div class="finding-attrs">
+      <div class="attr-item" style="grid-column:1/-1"><span class="attr-label">Affected Assets (${assets.length})</span><span class="attr-value" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">${assets.map(a => `<code>${escapeHtml(a)}</code>`).join(' ')}</span></div>
       <div class="attr-item"><span class="attr-label">CVSS Score</span><span class="attr-value" style="color:${c.fg};font-weight:800">${cvss.toFixed(1)} / 10.0 (${cvssLabel})</span></div>
       ${v.cve ? `<div class="attr-item"><span class="attr-label">CVE ID</span><span class="attr-value"><code>${escapeHtml(v.cve)}</code></span></div>` : ''}
       ${v.cwe ? `<div class="attr-item"><span class="attr-label">CWE ID</span><span class="attr-value"><code>${escapeHtml(v.cwe)}</code></span></div>` : ''}
-      <div class="attr-item"><span class="attr-label">Affected Asset</span><span class="attr-value"><code>${escapeHtml(v.subdomain || v.domain || '—')}</code></span></div>
-      <div class="attr-item"><span class="attr-label">Discovery Tool</span><span class="attr-value">${escapeHtml(v.source_tool || 'Nuclei')}</span></div>
     </div>
   </div>
 </div>`;
@@ -506,7 +547,7 @@ export function generateAssetDiscoveryReportHTML({
 
   const detailedFindingsPage = vulnerabilities.length > 0 ? `
 <div class="page">
-  <div class="page-header"><span>4. DETAILED FINDINGS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml('4. Detailed Findings')}
   <h2 class="section-heading">4. Detailed Findings</h2>
   <p class="narrative">
     This section provides a detailed analysis of all ${totalVulns} vulnerabilities identified during the assessment.
@@ -541,7 +582,7 @@ export function generateAssetDiscoveryReportHTML({
 
     return `
 <div class="page">
-  <div class="page-header"><span>${techNum}. TECHNOLOGY FINGERPRINT</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${techNum}. Technology Fingerprint`)}
   <h2 class="section-heading">${techNum}. Technology Fingerprint</h2>
   <p class="narrative">
     The following <strong>${technologies.length}</strong> technologies were detected across the attack surface.
@@ -588,7 +629,7 @@ export function generateAssetDiscoveryReportHTML({
 
     return `
 <div class="page">
-  <div class="page-header"><span>${certNum}. SSL / TLS OVERVIEW</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${certNum}. SSL / TLS Overview`)}
   <h2 class="section-heading">${certNum}. SSL / TLS Overview</h2>
   <p class="narrative">
     The following <strong>${certificates.length}</strong> SSL/TLS certificates were analysed.
@@ -599,9 +640,9 @@ export function generateAssetDiscoveryReportHTML({
   <!-- Summary strip -->
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
     ${[
-      { label: '✅ Healthy', value: certStats['Healthy'] || 0, color: '#14532d', bg: '#dcfce7', border: '#86efac' },
-      { label: '⏳ Expiring Soon', value: certStats['Expiring Soon'] || 0, color: '#9a3412', bg: '#ffedd5', border: '#fdba74' },
-      { label: '❌ Expired', value: certStats['Expired'] || 0, color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
+      { label: 'Healthy', value: certStats['Healthy'] || 0, color: '#14532d', bg: '#dcfce7', border: '#86efac' },
+      { label: 'Expiring Soon', value: certStats['Expiring Soon'] || 0, color: '#9a3412', bg: '#ffedd5', border: '#fdba74' },
+      { label: 'Expired', value: certStats['Expired'] || 0, color: '#991b1b', bg: '#fee2e2', border: '#fca5a5' },
     ].map(s => `<div class="info-box" style="border:1px solid ${s.border};background:${s.bg}">
       <div class="info-box-title" style="color:${s.color}">${s.label}</div>
       <div class="info-box-num" style="color:${s.color}">${s.value}</div>
@@ -628,7 +669,7 @@ export function generateAssetDiscoveryReportHTML({
   const remNum = toc[toc.length - 1].n;
   const remediationPage = `
 <div class="page">
-  <div class="page-header"><span>${remNum}. HARDENING RECOMMENDATIONS</span><span>${escapeHtml(reportTitle)}</span></div>
+  ${getHeaderHtml(`${remNum}. Hardening Recommendations`)}
   <h2 class="section-heading">${remNum}. Hardening Recommendations</h2>
   <p class="narrative">
     The following remediation roadmap prioritises findings based on risk severity and provides
@@ -637,13 +678,13 @@ export function generateAssetDiscoveryReportHTML({
 
   <div class="roadmap-grid">
     ${[
-      { icon: '🚨', label: 'IMMEDIATE',   sub: '0 – 48 hours',   color: '#dc2626', bg: '#fee2e2', cnt: countBySev.CRITICAL || 0,
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M7.86 2h8.28L22 7.86v8.28L16.14 22H7.86L2 16.14V7.86L7.86 2z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`, label: 'IMMEDIATE',  sub: '0 – 48 hours',    color: '#dc2626', bg: '#fee2e2', cnt: countBySev.CRITICAL || 0,
         desc: `Patch or take offline all Critical vulnerabilities. These are actively exploitable and pose immediate risk. Escalate to leadership immediately.` },
-      { icon: '⚠️', label: 'SHORT TERM',  sub: '7 – 14 days',    color: '#ea580c', bg: '#ffedd5', cnt: (countBySev.HIGH || 0) + (certStats['Expired'] || 0),
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`, label: 'SHORT TERM',  sub: '7 – 14 days',    color: '#ea580c', bg: '#ffedd5', cnt: (countBySev.HIGH || 0) + (certStats['Expired'] || 0),
         desc: `Resolve all High severity vulnerabilities and renew expired SSL certificates. Implement compensating controls where patching is delayed.` },
-      { icon: '🔶', label: 'MEDIUM TERM', sub: '30 – 90 days',   color: '#ca8a04', bg: '#fef9c3', cnt: (countBySev.MEDIUM || 0) + ports.filter(p => [21, 22, 23, 3306, 5432].includes(Number(p.port))).length,
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ca8a04" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, label: 'MEDIUM TERM', sub: '30 – 90 days',   color: '#ca8a04', bg: '#fef9c3', cnt: (countBySev.MEDIUM || 0) + ports.filter(p => [21, 22, 23, 3306, 5432].includes(Number(p.port))).length,
         desc: `Address Medium severity findings and restrict sensitive open ports (SSH, FTP, DB) to allow-lists. Renew certificates expiring within 30 days.` },
-      { icon: '📌', label: 'LONG TERM',   sub: '3 – 6 months',   color: '#15803d', bg: '#dcfce7', cnt: (countBySev.LOW || 0) + (countBySev.INFO || 0),
+      { icon: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`, label: 'LONG TERM',   sub: '3 – 6 months',   color: '#15803d', bg: '#dcfce7', cnt: (countBySev.LOW || 0) + (countBySev.INFO || 0),
         desc: `Update outdated technology stacks, audit third-party dependencies, and incorporate findings into the regular security review cycle.` },
     ].map(item => `
       <div class="roadmap-card" style="border-left:5px solid ${item.color}">
@@ -662,18 +703,17 @@ export function generateAssetDiscoveryReportHTML({
   <h3 class="sub-heading" style="margin-top:20px">General Asset Hardening Recommendations</h3>
   <div class="rec-grid">
     ${[
-      { icon: '🔒', title: 'Reduce Attack Surface', desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
-      { icon: '🔑', title: 'Authentication Controls', desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
-      { icon: '🛡️', title: 'Security Headers', desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
-      { icon: '📦', title: 'Dependency Management', desc: 'Audit and update all detected technology stacks. Subscribe to CVE advisories.' },
-      { icon: '🔒', title: 'TLS Hygiene', desc: 'Enforce TLS 1.2+. Disable TLS 1.0/1.1 and SSLv3. Automate certificate renewal.' },
-      { icon: '🔍', title: 'Continuous Monitoring', desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
-      { icon: '🚪', title: 'Port Restriction', desc: 'Restrict sensitive ports (22, 3306, 27017) to VPN or specific IP allow-lists only.' },
-      { icon: '📋', title: 'Asset Inventory', desc: 'Maintain a live inventory of all discovered assets and their risk classification.' },
+      { title: 'Reduce Attack Surface', desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
+      { title: 'Authentication Controls', desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
+      { title: 'Security Headers', desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
+      { title: 'Dependency Management', desc: 'Audit and update all detected technology stacks. Subscribe to CVE advisories.' },
+      { title: 'TLS Hygiene', desc: 'Enforce TLS 1.2+. Disable TLS 1.0/1.1 and SSLv3. Automate certificate renewal.' },
+      { title: 'Continuous Monitoring', desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
+      { title: 'Port Restriction', desc: 'Restrict sensitive ports (22, 3306, 27017) to VPN or specific IP allow-lists only.' },
+      { title: 'Asset Inventory', desc: 'Maintain a live inventory of all discovered assets and their risk classification.' },
     ].map(r => `
       <div class="rec-card">
-        <span class="rec-icon">${r.icon}</span>
-        <div><strong style="font-size:9pt">${escapeHtml(r.title)}</strong>
+        <div><strong style="font-size:9pt;color:#1e40af">${escapeHtml(r.title)}</strong>
         <p style="margin:3px 0 0;font-size:7.5pt;color:#475569;line-height:1.5">${escapeHtml(r.desc)}</p></div>
       </div>`).join('')}
   </div>
@@ -1088,7 +1128,30 @@ export function generateAssetDiscoveryReportHTML({
     .td-num   { font-weight: 800; color: #64748b; text-align: center; width: 22pt; }
     .td-title { font-weight: 600; }
     .td-cvss  { text-align: center; font-family: monospace; }
-    .td-asset { font-size: 7.5pt; max-width: 110pt; word-break: break-all; }
+    .td-asset { font-size: 7.5pt; width: 170pt; vertical-align: top; }
+    .asset-stack-list {
+      display: flex;
+      flex-direction: column;
+      gap: 3pt;
+      padding: 1pt 0;
+    }
+    .asset-stack-item {
+      display: block;
+    }
+    .asset-stack-item code {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 0.75pt solid #bfdbfe;
+      border-radius: 3pt;
+      padding: 1.5pt 5pt;
+      font-family: 'Courier New', monospace;
+      font-size: 7.2pt;
+      font-weight: 600;
+      white-space: nowrap;
+      word-break: keep-all;
+      line-height: 1.25;
+    }
     .td-cve   { font-family: 'Courier New', monospace; font-size: 7pt; color: #64748b; }
 
     /* ══ DETAILED FINDINGS ═══════════════════════════════════ */

@@ -8,6 +8,7 @@ import {
   ExternalLink, Crosshair, FileWarning, Activity, Search
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 
 const COLORS = { malicious:'#EF4444', suspicious:'#F97316', phishing:'#DC2626', impersonation:'#EAB308', harmless:'#22C55E' };
@@ -38,7 +39,7 @@ const CT = ({ label, value, color }) => (
 const dark = { background:'#1a1f2e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 12px', color:'#e2e8f0', fontSize:'0.78rem' };
 const gridLine = { stroke:'rgba(255,255,255,0.05)' };
 
-const BrandMonitoringDashboard = () => {
+const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -116,6 +117,12 @@ const BrandMonitoringDashboard = () => {
         <CT label="Phishing Domains" value={phish} color={COLORS.phishing}/>
         <CT label="Impersonations" value={imp}   color={COLORS.impersonation}/>
       </div>
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
+      />
 
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem'}}>
         <W title={<><Activity size={12}/> Brand Health Score</>}>

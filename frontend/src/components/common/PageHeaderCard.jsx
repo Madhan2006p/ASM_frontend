@@ -62,16 +62,18 @@ const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
         <div className="phc-stats-grid">
           {stats.map((stat, index) => {
             const colorInfo = getStatColor(stat.label, stat.subtext, index);
+            const isClickable = typeof stat.onClick === 'function';
             return (
               <div 
                 key={index} 
-                className="card phc-stat-card"
+                className={`card phc-stat-card ${stat.active ? 'active' : ''} ${isClickable ? 'clickable' : ''}`}
                 onClick={stat.onClick}
                 style={{
                   '--card-border': colorInfo.border,
                   '--card-glow': colorInfo.glow,
                   '--card-bg': colorInfo.bg,
-                  cursor: stat.onClick ? 'pointer' : 'default'
+                  cursor: isClickable ? 'pointer' : 'default',
+                  ...stat.style
                 }}
               >
                 <div className="phc-stat-label">{stat.label}</div>

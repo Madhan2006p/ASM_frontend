@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'; 
 import { 
   Home, Globe, Search, Crosshair, PlusSquare, ShieldCheck,
-  Eye, Activity, AlertCircle, FileText, Settings,
-  ChevronDown, Shield, Mail, Smartphone, User, Store
+  Activity, AlertCircle, FileText, Settings,
+  ChevronDown, Shield, Mail, Smartphone, User, Store,
+  GitMerge, ShieldAlert, Layers
 } from 'lucide-react';
 import './Sidebar.css';
 import { BASE_URL } from '../../utils/api';
@@ -17,14 +18,25 @@ const menuGroups = [
       { name: 'Open Ports',          icon: <Crosshair size={16} /> },
       { name: 'Directories',         icon: <FileText size={16} /> },
       { name: 'Technologies',        icon: <PlusSquare size={16} /> },
-      { name: 'Vulnerabilities',     icon: <Eye size={16} /> },
       { name: 'SSL Certificates',    icon: <ShieldCheck size={16} /> },
+    ]
+  },
+  {
+    title: 'VULNERABILITY MANAGEMENT',
+    items: [
+      { name: 'Vulnerabilities', icon: <ShieldAlert size={16} /> },
     ]
   },
   {
     title: 'ATTACK PATH ANALYSIS',
     items: [
       { name: 'Attack Path Analysis Dashboard', icon: <Activity size={16} /> },
+      { name: 'Attack Graph',                 icon: <GitMerge size={16} /> },
+      { name: 'Attack Paths',                 icon: <Crosshair size={16} /> },
+      { name: 'Critical Assets',             icon: <ShieldAlert size={16} /> },
+      { name: 'MITRE Mapping',               icon: <Layers size={16} /> },
+      { name: 'Recommendations',             icon: <ShieldCheck size={16} /> },
+      { name: 'Attack Path Reports',         icon: <FileText size={16} /> },
     ]
   },
 
@@ -123,6 +135,7 @@ const isItemVisible = (itemName, userFeatures, isSuperuser) => {
 const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
   const [expandedGroups, setExpandedGroups] = useState({
     'ASSET DISCOVERY': true,
+    'VULNERABILITY MANAGEMENT': false,
     'ATTACK PATH ANALYSIS': false,
     'EMAIL SECURITY': false,
     'SURFACE WEB MONITORING': false,
@@ -144,6 +157,7 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
     if (activeGroup) {
       setExpandedGroups({
         'ASSET DISCOVERY': false,
+        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
@@ -160,6 +174,7 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
       const isAlreadyExpanded = prev[groupTitle];
       const nextExpanded = {
         'ASSET DISCOVERY': false,
+        'VULNERABILITY MANAGEMENT': false,
         'ATTACK PATH ANALYSIS': false,
         'EMAIL SECURITY': false,
         'SURFACE WEB MONITORING': false,
@@ -220,9 +235,10 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
               <div
                 className={`nav-item ${activePage === 'Executive Dashboard' ? 'active' : ''}`}
                 onClick={() => setActivePage('Executive Dashboard')}
+                style={{ fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' }}
               >
                 <span className="nav-icon"><Home size={16} /></span>
-                <span>Executive Dashboard</span>
+                <span>EXECUTIVE DASHBOARD</span>
               </div>
             </div>
 

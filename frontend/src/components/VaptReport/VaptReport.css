@@ -225,18 +225,22 @@
 ═══════════════════════════════════════════════════════════════ */
 .vapt-cover-page {
   min-height: 480px;
-  background: linear-gradient(135deg, #0D1B33 0%, #060D1E 55%, #0A1733 100%);
-  border: 1px solid rgba(59,130,246,0.2);
+  background: linear-gradient(135deg, #0D1B33 0%, #060D1E 55%, #0A1733 100%) !important;
+  border: 1px solid rgba(59,130,246,0.3) !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  color: #FFFFFF !important;
+}
+.vapt-cover-page * {
+  color: inherit;
 }
 .vapt-cover-page::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 65% 55% at 50% 30%, rgba(59,130,246,0.07) 0%, transparent 70%);
+  background: radial-gradient(ellipse 65% 55% at 50% 30%, rgba(59,130,246,0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 .vapt-cover-header {
@@ -244,20 +248,23 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 2rem 2.5rem 0;
+  color: #FFFFFF !important;
 }
-.vapt-cover-logo { display: flex; align-items: center; }
+.vapt-cover-logo { display: flex; align-items: center; color: #FFFFFF !important; }
+.vapt-cover-logo span { color: #FFFFFF !important; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
 .vapt-org-logo { max-height: 60px; max-width: 160px; object-fit: contain; border-radius: 6px; filter: drop-shadow(0 2px 10px rgba(0,0,0,.5)); }
 .vapt-cover-watermark {
   font-size: 0.65rem;
   font-weight: 900;
   letter-spacing: 0.2em;
-  color: rgba(239,68,68,0.4);
-  border: 1px solid rgba(239,68,68,0.25);
+  color: #EF4444 !important;
+  border: 1px solid rgba(239,68,68,0.4) !important;
+  background: rgba(239,68,68,0.12) !important;
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   align-self: flex-start;
 }
-.vapt-cover-center { padding: 2.5rem 2.5rem 1rem; text-align: center; }
+.vapt-cover-center { padding: 2.5rem 2.5rem 1rem; text-align: center; color: #FFFFFF !important; }
 .vapt-cover-badge {
   display: inline-block;
   font-size: 0.6rem;

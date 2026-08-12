@@ -115,25 +115,14 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   // Stats calculation
   const criticalCount = portsList.filter(p => p.severity === 'CRITICAL').length;
   const highCount = portsList.filter(p => p.severity === 'HIGH').length;
-  const uniqueHosts = [...new Set(portsList.map(p => p.host))].length;
+  const mediumCount = portsList.filter(p => p.severity === 'MEDIUM').length;
+  const lowCount = portsList.filter(p => p.severity === 'LOW').length;
   const totalOpen = portsList.length;
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
         
-        <PageHeaderCard 
-          badgeText="SECURITY"
-          title="Open Ports"
-          subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
-          stats={[
-            { label: 'Critical Ports', value: criticalCount.toString(), subtext: 'Requires immediate review' },
-            { label: 'High Risk Services', value: highCount.toString(), subtext: 'Elevated exposure' },
-            { label: 'Unique Hosts', value: uniqueHosts.toString(), subtext: 'With externally facing ports' },
-            { label: 'Open Services', value: totalOpen.toString(), subtext: 'Total detected' }
-          ]}
-        />
-
         <ScanSelector 
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
@@ -143,18 +132,18 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           handleSelectScan={handleSelectScan}
         />
 
-        {/* Severity Filters */}
-        <div className="global-filter-row">
-          {['All', 'Critical', 'High', 'Medium', 'Low'].map(sev => (
-            <div 
-              key={sev}
-              className={`global-filter-pill ${severityFilter === sev ? 'active' : ''}`}
-              onClick={() => setSeverityFilter(sev)}
-            >
-              {sev}
-            </div>
-          ))}
-        </div>
+        <PageHeaderCard 
+          badgeText="SECURITY"
+          title="Open Ports"
+          subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
+          stats={[
+            { label: 'ALL', value: totalOpen.toString(), subtext: 'Total open ports', onClick: () => setSeverityFilter('All') },
+            { label: 'CRITICAL', value: criticalCount.toString(), subtext: 'Immediate action', onClick: () => setSeverityFilter('Critical') },
+            { label: 'HIGH', value: highCount.toString(), subtext: 'Needs review', onClick: () => setSeverityFilter('High') },
+            { label: 'MEDIUM', value: mediumCount.toString(), subtext: 'Monitored', onClick: () => setSeverityFilter('Medium') },
+            { label: 'LOW', value: lowCount.toString(), subtext: 'Low risk', onClick: () => setSeverityFilter('Low') }
+          ]}
+        />
 
         {/* Table */}
         <div className="global-table-wrapper">

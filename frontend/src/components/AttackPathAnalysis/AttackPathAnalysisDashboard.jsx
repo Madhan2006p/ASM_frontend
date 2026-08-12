@@ -95,22 +95,22 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
 
   return (
     <div className="global-page-container page-animate">
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector 
+              assignedDomains={assignedDomains}
+              selectedDomain={selectedDomain}
+              setSelectedDomain={setSelectedDomain}
+              scansList={scansList}
+              activeScanId={activeScanId}
+              handleSelectScan={handleSelectScan}
+            />
+      </div>
+
       <PageHeaderCard
         badgeText="ATTACK PATH ANALYSIS"
         title="Attack Path Analysis Dashboard"
         subtitle="Visualize how attackers could chain existing vulnerabilities to breach your critical assets."
       />
-
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
-      </div>
 
       {loading ? (
         <div className="card" style={{ marginTop: '1.5rem', padding: '3rem', display: 'flex', justifyContent: 'center', color: 'var(--text-secondary)' }}>
@@ -147,6 +147,10 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
                 <div className="card-value">{stats.pathComplexity}</div>
               </div>
             </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+            
           </div>
           
           <div className="data-section-premium" style={{ marginTop: '1.5rem' }}>

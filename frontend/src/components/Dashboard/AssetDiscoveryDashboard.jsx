@@ -11,7 +11,7 @@ import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
 
-const COLORS = { critical:'#EF4444', high:'#F97316', medium:'#EAB308', low:'#22C55E', info:'#3B82F6' };
+const COLORS = { critical:'#F87171', high:'#EA580C', medium:'#38BDF8', low:'#4ADE80', info:'#3B82F6' };
 
 const W = ({ title, children, style={} }) => (
   <div style={{
@@ -112,6 +112,11 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
+        assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
+      </div>
+
       <PageHeaderCard
         badgeText="ASSET DISCOVERY"
         title="Asset Discovery Dashboard"
@@ -122,13 +127,9 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
           { label:'High Vulns',     value:(vs.high||0).toString(),     subtext:'address within 7 days' },
           { label:'SSL Expiring',   value:sslExpiring.toString(),      subtext:'within 90 days' },
         ]}
-        actions={
-          <div style={{display:'flex',gap:'0.5rem',alignItems:'center'}}>
-            <ScanSelector scansList={scansList} activeScanId={activeScanId} handleSelectScan={handleSelectScan}
-              assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain}/>
-          </div>
-        }
       />
+
+      
 
       {/* KPI Strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))',gap:'0.75rem'}}>
@@ -137,7 +138,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
         <CT label="Open Ports"   value={ports}  color="#F97316" icon={<Activity size={16}/>} sub="exposed"/>
         <CT label="Directories"  value={dirs}   color="#10B981" icon={<Folder size={16}/>}   sub="found"/>
         <CT label="Technologies" value={techsCount}  color="#06B6D4" icon={<Code size={16}/>}     sub="identified"/>
-        <CT label="Total Vulns"  value={tvulns} color="#EF4444" icon={<Shield size={16}/>}   sub="all severity"/>
+        <CT label="Total Vulns"  value={tvulns} color="#F87171" icon={<Shield size={16}/>}   sub="all severity"/>
         <CT label="Expiring SSL" value={sslExpiring} color="#F59E0B" icon={<Award size={16}/>}   sub="within 90 days"/>
       </div>
 
@@ -169,7 +170,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
         </W>
 
         <W title={<><AlertTriangle size={12}/> High Risk Assets</>}>
-          <div style={{fontSize:'2.4rem',fontWeight:900,color:'#EF4444',lineHeight:1,marginBottom:'0.75rem'}}>{(vs.critical||0)+(vs.high||0)}</div>
+          <div style={{fontSize:'2.4rem',fontWeight:900,color:'#F87171',lineHeight:1,marginBottom:'0.75rem'}}>{(vs.critical||0)+(vs.high||0)}</div>
           <div style={{display:'flex',flexDirection:'column',gap:6,marginBottom:'0.75rem'}}>
             {[['Critical Severity',vs.critical||0,COLORS.critical],['High Severity',vs.high||0,COLORS.high]].map(([l,v,c])=>(
               <div key={l} style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
@@ -184,10 +185,10 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
           <ResponsiveContainer width="100%" height={55}>
             <AreaChart data={chartTrends} margin={{top:0,right:0,bottom:0,left:0}}>
               <defs><linearGradient id="hrg" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#EF4444" stopOpacity={0.4}/>
-                <stop offset="100%" stopColor="#EF4444" stopOpacity={0}/>
+                <stop offset="0%" stopColor="#F87171" stopOpacity={0.4}/>
+                <stop offset="100%" stopColor="#F87171" stopOpacity={0}/>
               </linearGradient></defs>
-              <Area type="monotone" dataKey="vulns" stroke="#EF4444" fill="url(#hrg)" strokeWidth={2} dot={false}/>
+              <Area type="monotone" dataKey="vulns" stroke="#F87171" fill="url(#hrg)" strokeWidth={2} dot={false}/>
             </AreaChart>
           </ResponsiveContainer>
           <div style={{fontSize:'0.68rem',color:'var(--text-muted)',marginTop:4}}>showing last {trends.length||1} scan(s)</div>

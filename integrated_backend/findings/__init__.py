@@ -1,1 +1,0 @@
-# findings app package

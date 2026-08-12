@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Users, RefreshCw, Search, ArrowRight, Eye, ShieldAlert, CheckCircle, Trash2, ExternalLink } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './ImpersonatingAccount.css';
 import { api } from '../../utils/api';
 
-const ImpersonatingAccount = () => {
+const ImpersonatingAccount = ({ activeTarget, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [scans, setScans] = useState([]);
   const [activeScanId, setActiveScanId] = useState(null);
   const [results, setResults] = useState([]);
@@ -90,6 +91,12 @@ const ImpersonatingAccount = () => {
           { label: 'Platforms Detected', value: platformsChecked.toString(), subtext: 'Unique social sites' },
           { label: 'Active Alerts', value: activeThreats.toString(), subtext: 'Pending resolution' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Select Scan & Info Row */}

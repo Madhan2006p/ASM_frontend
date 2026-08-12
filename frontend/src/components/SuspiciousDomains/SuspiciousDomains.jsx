@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { RefreshCw, Terminal, Filter, Search, CheckCircle, AlertTriangle, Eye, ShieldAlert } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './SuspiciousDomains.css';
 import { api } from '../../utils/api';
 
-const SuspiciousDomains = () => {
+const SuspiciousDomains = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,6 +91,12 @@ const SuspiciousDomains = () => {
           { label: 'Newly Registered',value: reports.filter(r => r.whois_created).length.toString(), subtext: 'WHOIS verified' },
           { label: 'Confirmed Malicious', value: maliciousCount.toString(), subtext: 'Threat intelligence hit' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Tabs */}

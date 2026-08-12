@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Shield, RefreshCw, Plus, Search, HelpCircle, CheckCircle, AlertTriangle, Eye, ShieldAlert, Image } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import './AntiPhishing.css';
 import { api } from '../../utils/api';
 
-const AntiPhishing = ({ activeTarget }) => {
+const AntiPhishing = ({ activeTarget, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +73,12 @@ const AntiPhishing = ({ activeTarget }) => {
           { label: 'Live Resolution',  value: activeCount.toString(), subtext: 'A/MX records active' },
           { label: 'Clean / Inactive',  value: (totalCount - phishingCount).toString(), subtext: 'No risk detected' },
         ]}
+      />
+
+      <TargetDomainTabs
+        assignedDomains={assignedDomains}
+        selectedDomain={selectedDomain}
+        setSelectedDomain={setSelectedDomain}
       />
 
       {/* Controls */}

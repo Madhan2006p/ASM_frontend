@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateAssetDiscoveryReportHTML } from '../../utils/generateAssetDiscoveryReport';
 import {
-  FileText, Download, Shield, AlertTriangle, AlertCircle,
-  CheckCircle, RefreshCw, ChevronDown, ChevronRight,
+  FileText, Download, Shield, AlertTriangle, AlertCircle, AlertOctagon, Clock,
+  CheckCircle, CheckCircle2, RefreshCw, ChevronDown, ChevronRight,
   Globe, Calendar, User, TrendingUp, Eye, X, Upload,
-  Settings2, Layers, Server, Lock, Cpu, Search
+  Settings2, Layers, Server, Lock, KeyRound, ShieldCheck, Box, Cpu, Search, Building2
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts';
 import PageHeaderCard from '../common/PageHeaderCard';
+import TargetDomainTabs from '../common/TargetDomainTabs';
 import { api } from '../../utils/api';
 import './AssetDiscoveryReport.css';
 
@@ -19,10 +20,10 @@ import './AssetDiscoveryReport.css';
 ───────────────────────────────────────────────────────── */
 const SEV_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, INFO: 4, WARNING: 5 };
 const SEV_COLORS = {
-  CRITICAL: { bg: 'rgba(239,68,68,0.12)',  fg: '#EF4444', border: 'rgba(239,68,68,0.3)',  chart: '#EF4444' },
-  HIGH:     { bg: 'rgba(249,115,22,0.12)', fg: '#F97316', border: 'rgba(249,115,22,0.3)', chart: '#F97316' },
-  MEDIUM:   { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.3)',  chart: '#EAB308' },
-  LOW:      { bg: 'rgba(34,197,94,0.12)',  fg: '#22C55E', border: 'rgba(34,197,94,0.3)',  chart: '#22C55E' },
+  CRITICAL: { bg: 'rgba(239,68,68,0.12)',  fg: '#F87171', border: 'rgba(239,68,68,0.3)',  chart: '#F87171' },
+  HIGH:     { bg: 'rgba(249,115,22,0.12)', fg: '#EA580C', border: 'rgba(249,115,22,0.3)', chart: '#EA580C' },
+  MEDIUM:   { bg: 'rgba(56,189,248,0.12)', fg: '#38BDF8', border: 'rgba(56,189,248,0.3)', chart: '#38BDF8' },
+  LOW:      { bg: 'rgba(74,222,128,0.12)', fg: '#4ADE80', border: 'rgba(74,222,128,0.3)', chart: '#4ADE80' },
   INFO:     { bg: 'rgba(59,130,246,0.12)', fg: '#3B82F6', border: 'rgba(59,130,246,0.3)', chart: '#3B82F6' },
   WARNING:  { bg: 'rgba(234,179,8,0.12)',  fg: '#EAB308', border: 'rgba(234,179,8,0.3)',  chart: '#EAB308' },
 };
@@ -76,10 +77,10 @@ const calcRiskScore = (counts) => {
   return Math.min(10, (CRITICAL * 10 + HIGH * 7 + MEDIUM * 4 + LOW * 1) / total).toFixed(1);
 };
 const riskLabel = (score) => {
-  if (score >= 8) return { label: 'CRITICAL', color: '#EF4444' };
-  if (score >= 6) return { label: 'HIGH',     color: '#F97316' };
-  if (score >= 4) return { label: 'MEDIUM',   color: '#EAB308' };
-  if (score >= 2) return { label: 'LOW',      color: '#22C55E' };
+  if (score >= 8) return { label: 'CRITICAL', color: '#F87171' };
+  if (score >= 6) return { label: 'HIGH',     color: '#EA580C' };
+  if (score >= 4) return { label: 'MEDIUM',   color: '#38BDF8' };
+  if (score >= 2) return { label: 'LOW',      color: '#4ADE80' };
   return              { label: 'MINIMAL',  color: '#3B82F6' };
 };
 
@@ -132,7 +133,7 @@ const certHealthCfg = (expiryDate, isValid) => {
 /* ═════════════════════════════════════════════════════════
    Main Component
 ═════════════════════════════════════════════════════════ */
-const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleSelectScan }) => {
+const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, selectedDomain, setSelectedDomain, handleSelectScan, user }) => {
 
   /* ── State ─────────────────────────────────── */
   const [loading, setLoading]             = useState(false);
@@ -147,7 +148,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
 
   /* Report config */
   const [reportTitle, setReportTitle]     = useState('Asset Discovery Report');
-  const [orgName, setOrgName]             = useState('');
+  const [orgName, setOrgName]             = useState(user?.organization || 'Infotech Sentinel');
   const [assessorName, setAssessorName]   = useState('');
   const [reportDate, setReportDate]       = useState(() => new Date().toISOString().split('T')[0]);
   const [scope, setScope]                 = useState('');
@@ -155,8 +156,39 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
     'Automated Attack Surface Management (ASM) scanning using Subfinder, Nmap, Wappalyzer, Wapiti, and Nuclei to discover and assess the full external attack surface.'
   );
   const [showSettings, setShowSettings]   = useState(false);
-  const [logoDataUrl, setLogoDataUrl]     = useState(null);
+  const [logoDataUrl, setLogoDataUrl]     = useState(user?.logo_url ? (user.logo_url.startsWith('http') || user.logo_url.startsWith('data:') ? user.logo_url : `${BASE_URL}${user.logo_url}`) : null);
   const logoInputRef                      = useRef(null);
+
+  /* Auto-sync organization profile and logo */
+  useEffect(() => {
+    const syncProfile = async () => {
+      if (user?.organization) {
+        setOrgName(prev => (prev && prev !== 'Infotech Sentinel') ? prev : user.organization);
+      }
+      if (user?.logo_url) {
+        const fullLogoUrl = (user.logo_url.startsWith('http') || user.logo_url.startsWith('data:'))
+          ? user.logo_url
+          : `${BASE_URL}${user.logo_url}`;
+        setLogoDataUrl(prev => prev || fullLogoUrl);
+      }
+      
+      try {
+        const profile = await api.get('/api/auth/profile/');
+        if (profile) {
+          if (profile.organization) setOrgName(prev => (prev && prev !== 'Infotech Sentinel') ? prev : profile.organization);
+          if (profile.logo_url) {
+            const fullUrl = (profile.logo_url.startsWith('http') || profile.logo_url.startsWith('data:'))
+              ? profile.logo_url
+              : `${BASE_URL}${profile.logo_url}`;
+            setLogoDataUrl(prev => prev || fullUrl);
+          }
+        }
+      } catch (e) {
+        // silent fallback
+      }
+    };
+    syncProfile();
+  }, [user]);
 
   /* Filters */
   const [severityFilter, setSeverityFilter] = useState('ALL');
@@ -167,6 +199,21 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
 
   /* ── Resolve the active scan id (prop or local selection) ── */
   const resolvedScanId = localScanId || activeScanId || null;
+
+  /* ── Running top header on each report section ────────────── */
+  const renderRunningHeader = (title) => (
+    <div className="vapt-running-header">
+      <div className="vapt-rh-left">
+        <Shield size={14} className="vapt-rh-icon" />
+        <span className="vapt-rh-provider">HACKERS INFOTECH</span>
+        <span className="vapt-rh-sep">|</span>
+        <span className="vapt-rh-title">{title}</span>
+      </div>
+      <div className="vapt-rh-right">
+        <span>Target Org: <strong style={{ color: '#F1F5F9' }}>{orgName || scope || 'Target Organization'}</strong></span>
+      </div>
+    </div>
+  );
 
   /* ── Load all Asset Discovery data ─────────── */
   const loadData = useCallback(async (signal) => {
@@ -510,14 +557,14 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
         {/* ── Sticky section nav ── */}
         <div className="vapt-section-nav no-print">
           {[
-            { id: 'cover',        label: '📄 Cover'            },
-            { id: 'exec',         label: '📊 Executive Summary' },
-            { id: 'scope-sec',    label: '🎯 Scope'            },
-            { id: 'assets',       label: '🌐 Assets'           },
-            { id: 'vulns',        label: '🔍 Vulnerabilities'   },
-            ...(technologies.length > 0 ? [{ id: 'tech-sec',  label: '🛠 Technologies'  }] : []),
-            ...(certificates.length > 0 ? [{ id: 'cert-sec',  label: '🔒 Certificates'  }] : []),
-            { id: 'hardening',    label: '🛡️ Hardening'       },
+            { id: 'cover',        label: 'Cover'            },
+            { id: 'exec',         label: 'Executive Summary' },
+            { id: 'scope-sec',    label: 'Scope'            },
+            { id: 'assets',       label: 'Assets'           },
+            { id: 'vulns',        label: 'Vulnerabilities'   },
+            ...(technologies.length > 0 ? [{ id: 'tech-sec',  label: 'Technologies'  }] : []),
+            ...(certificates.length > 0 ? [{ id: 'cert-sec',  label: 'Certificates'  }] : []),
+            { id: 'hardening',    label: 'Hardening Recommendations' },
           ].map(s => (
             <button key={s.id} className={`vapt-nav-btn ${activeSection === s.id ? 'active' : ''}`} onClick={() => scrollTo(s.id)}>
               {s.label}
@@ -530,17 +577,40 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ╚══════════════════════════════════╝ */}
         <div id="cover" className="vapt-page vapt-cover-page">
           <div className="vapt-cover-header">
-            <div className="vapt-cover-logo">
-              {logoDataUrl
-                ? <img src={logoDataUrl} alt="Logo" className="vapt-org-logo" />
-                : <Search size={52} style={{ color: '#3B82F6' }} />}
+            {/* Target Organization */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              {logoDataUrl ? (
+                <img src={logoDataUrl} alt={orgName || 'Organization Logo'} className="vapt-org-logo" style={{ maxHeight: '52px', maxWidth: '180px', objectFit: 'contain' }} />
+              ) : (
+                <Building2 size={38} style={{ color: '#60A5FA' }} />
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '1.35rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.01em', textShadow: '0 2px 4px rgba(0,0,0,0.6)', whiteSpace: 'nowrap' }}>
+                  {orgName || scope || 'Target Organization'}
+                </span>
+                <span style={{ fontSize: '0.72rem', color: '#93C5FD', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Target Organization
+                </span>
+              </div>
             </div>
-            <div className="vapt-cover-watermark">CONFIDENTIAL</div>
+
+            {/* Assessment Provider (Hackers Infotech) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.4)', padding: '7px 16px', borderRadius: '8px' }}>
+              <Shield size={22} style={{ color: '#60A5FA' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'right' }}>
+                <span style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
+                  HACKERS INFOTECH
+                </span>
+                <span style={{ fontSize: '0.68rem', color: '#93C5FD', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Assessment Provider
+                </span>
+              </div>
+            </div>
           </div>
           <div className="vapt-cover-center">
             <div className="vapt-cover-badge">ATTACK SURFACE MANAGEMENT</div>
             <h1 className="vapt-cover-title">{reportTitle}</h1>
-            {orgName && <p className="vapt-cover-org">Prepared for: <strong>{orgName}</strong></p>}
+            <p className="vapt-cover-org">Prepared for: <strong>{orgName || scope || 'Target Organization'}</strong> &nbsp;|&nbsp; Assessed by: <strong>Hackers Infotech</strong></p>
           </div>
           <div className="vapt-cover-meta">
             <div className="vapt-cover-meta-grid">
@@ -698,6 +768,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  3 — SCOPE & METHODOLOGY        ║
             ╚══════════════════════════════════╝ */}
         <div id="scope-sec" className="vapt-page vapt-print-break">
+          {renderRunningHeader('2. Scope & Methodology')}
           <div className="vapt-section-title">
             <Globe size={18} className="vapt-section-icon"/>
             <h2>2. Scope &amp; Methodology</h2>
@@ -714,13 +785,13 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               </tbody></table>
             </div>
             <div className="card vapt-scope-card">
-              <h4><Server size={14}/> Tool Stack</h4>
+              <h4><Layers size={14}/> Surface Overview</h4>
               <table className="vapt-meta-table"><tbody>
-                <tr><td>Subdomain Discovery</td><td>Subfinder</td></tr>
-                <tr><td>Port Scanning</td><td>Nmap</td></tr>
-                <tr><td>Web Crawling</td><td>Wapiti</td></tr>
-                <tr><td>Tech Fingerprint</td><td>Wappalyzer, HTTPX</td></tr>
-                <tr><td>Vulnerability Scan</td><td>Nuclei</td></tr>
+                <tr><td>Active Subdomains</td><td><strong>{subdomains.length}</strong></td></tr>
+                <tr><td>Discovered Endpoints</td><td><strong>{endpoints.length}</strong></td></tr>
+                <tr><td>Open Network Ports</td><td><strong>{ports.length}</strong></td></tr>
+                <tr><td>Technologies Detected</td><td><strong>{technologies.length}</strong></td></tr>
+                <tr><td>SSL Certificates</td><td><strong>{certificates.length}</strong></td></tr>
               </tbody></table>
             </div>
             <div className="card vapt-scope-card vapt-scope-full">
@@ -728,12 +799,12 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               <p className="vapt-methodology-text">{methodology}</p>
               <div className="vapt-methodology-phases">
                 {[
-                  { icon: '🔍', phase: 'Subdomain Enumeration',    desc: 'Passive and active subdomain discovery using Subfinder, DNS brute-force, and certificate transparency logs.' },
-                  { icon: '🚪', phase: 'Port & Service Scanning',  desc: 'TCP/UDP port scanning with Nmap to identify open services, running versions, and exposed interfaces.' },
-                  { icon: '🌐', phase: 'Web Endpoint Discovery',   desc: 'Web crawling and directory enumeration to map all accessible endpoints and APIs.' },
-                  { icon: '🛠', phase: 'Technology Fingerprinting',desc: 'Identification of web frameworks, libraries, and backend tech via Wappalyzer and HTTP header analysis.' },
-                  { icon: '🔒', phase: 'Certificate Analysis',     desc: 'SSL/TLS inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
-                  { icon: '⚡', phase: 'Vulnerability Assessment', desc: 'Automated scanning with Nuclei templates against all discovered assets to identify known CVEs and misconfigurations.' },
+                  { icon: '🔍', phase: 'Subdomain Enumeration',    desc: 'Passive and active subdomain discovery using DNS brute-force, certificate transparency logs, and OSINT sources.' },
+                  { icon: '🚪', phase: 'Port & Service Scanning',  desc: 'Automated TCP/UDP port scanning to identify open network services, running protocols, and exposed interfaces.' },
+                  { icon: '🌐', phase: 'Web Endpoint Discovery',   desc: 'Web crawling and endpoint discovery to map accessible web applications, APIs, and administrative interfaces.' },
+                  { icon: '🛠', phase: 'Technology Fingerprinting',desc: 'Identification of web frameworks, libraries, CMS engines, and backend infrastructure via HTTP response header analysis.' },
+                  { icon: '🔒', phase: 'Certificate Analysis',     desc: 'SSL/TLS certificate inspection for validity, expiry dates, issuer chains, and TLS version configuration.' },
+                  { icon: '⚡', phase: 'Vulnerability Assessment', desc: 'Automated vulnerability assessment scanning against discovered digital assets to identify known CVEs and security misconfigurations.' },
                 ].map((p, i) => (
                   <div key={i} className="vapt-phase-item">
                     <span className="vapt-phase-icon">{p.icon}</span>
@@ -749,6 +820,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  4 — ASSET INVENTORY            ║
             ╚══════════════════════════════════╝ */}
         <div id="assets" className="vapt-page vapt-print-break">
+          {renderRunningHeader('3. Asset Inventory')}
           <div className="vapt-section-title">
             <Globe size={18} className="vapt-section-icon"/>
             <h2>3. Asset Inventory</h2>
@@ -827,6 +899,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                             <span><strong>Status:</strong> {sc.label}</span>
                             <span><strong>Vulnerabilities:</strong> {subVulns.length}</span>
                             {sub.created_at && <span><strong>Discovered:</strong> {new Date(sub.created_at).toLocaleDateString()}</span>}
+                            <span><strong>Last Updated:</strong> {sub.updated_at ? new Date(sub.updated_at).toLocaleDateString() : (sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—')}</span>
                           </div>
                         </div>
                       )}
@@ -838,7 +911,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               {/* Print: compact table */}
               <table className="vapt-print-table print-only">
                 <thead>
-                  <tr><th>#</th><th>Domain</th><th>Status</th><th>IP Address</th><th>Open Ports</th><th>Discovered</th></tr>
+                  <tr><th>#</th><th>Domain</th><th>Status</th><th>IP Address</th><th>Open Ports</th><th>Discovered</th><th>Last Updated</th></tr>
                 </thead>
                 <tbody>
                   {filteredSubs.map((sub, idx) => {
@@ -853,6 +926,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                         <td className="vapt-pt-asset">{ip}</td>
                         <td className="vapt-pt-cve">{subPorts.map(p => `${p.port}`).join(', ') || '—'}</td>
                         <td>{sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—'}</td>
+                        <td>{sub.updated_at ? new Date(sub.updated_at).toLocaleDateString() : (sub.created_at ? new Date(sub.created_at).toLocaleDateString() : '—')}</td>
                       </tr>
                     );
                   })}
@@ -866,6 +940,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             ║  5 — VULNERABILITY FINDINGS     ║
             ╚══════════════════════════════════╝ */}
         <div id="vulns" className="vapt-page vapt-print-break">
+          {renderRunningHeader('4. Vulnerability Findings')}
           <div className="vapt-section-title">
             <Eye size={18} className="vapt-section-icon"/>
             <h2>4. Vulnerability Findings</h2>
@@ -905,6 +980,9 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                   const c = getSevColor(sev);
                   const expanded = expandedRows[`vuln-${v.id}`];
                   const cvssScore = getCVSS(sev, v.cvss_score);
+                  const assetsList = (Array.isArray(v.affected_assets) && v.affected_assets.length > 0)
+                    ? v.affected_assets.filter(Boolean)
+                    : [v.subdomain || v.domain || v.url || scope || 'Asset Domain'];
                   return (
                     <div key={v.id} className="card vapt-finding-card" style={{ borderLeft: `4px solid ${c.fg}` }}>
                       <div className="vapt-finding-header" onClick={() => toggleRow(`vuln-${v.id}`)}>
@@ -915,8 +993,10 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                           <div className="vapt-finding-meta">
                             <SeverityBadge severity={sev}/>
                             {v.cve && <span className="vapt-finding-cve">{v.cve}</span>}
-                            <span className="vapt-finding-asset">{v.subdomain || v.domain || scope || 'Asset'}</span>
-                            <span className="vapt-finding-tool">{v.source_tool || 'Nuclei'}</span>
+                            <span className="vapt-finding-asset" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.12)', color: '#60a5fa', padding: '2px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                              <Globe size={11} />
+                              {assetsList.length > 1 ? `${assetsList.length} Affected Assets (${assetsList.slice(0, 2).join(', ')}${assetsList.length > 2 ? '…' : ''})` : assetsList[0]}
+                            </span>
                           </div>
                         </div>
                         <div className="vapt-finding-chevron">
@@ -936,6 +1016,19 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
                                 <h5>Remediation</h5><p>{v.remediation}</p>
                               </div>
                             )}
+                            <div className="vapt-detail-block" style={{ gridColumn: '1 / -1', background: 'rgba(15, 23, 42, 0.5)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                              <h5 style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontWeight: 800, color: '#f8fafc', margin: '0 0 10px 0', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                <Shield size={14} style={{ color: '#3b82f6' }} />
+                                Affected Assets ({assetsList.length})
+                              </h5>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                {assetsList.map((ast, aIdx) => (
+                                  <span key={aIdx} style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '6px', padding: '4px 10px', fontSize: '0.82rem', color: '#93c5fd', fontWeight: 600 }}>
+                                    <code>{ast}</code>
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                           <div className="vapt-detail-attrs">
                             <span><strong>CVSS:</strong> <span style={{ color: c.fg, fontWeight: 700 }}>{cvssScore.toFixed(1)}</span></span>
@@ -954,19 +1047,30 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
               {/* Print: compact table */}
               <table className="vapt-print-table print-only">
                 <thead>
-                  <tr><th>#</th><th>Finding</th><th>Severity</th><th>CVSS</th><th>Asset</th><th>CVE / CWE</th></tr>
+                  <tr><th>#</th><th>Finding</th><th>Severity</th><th>CVSS</th><th>Affected Assets</th><th>CVE / CWE</th></tr>
                 </thead>
                 <tbody>
                   {filteredVulns.map((v, idx) => {
                     const sev = (v.severity || 'LOW').toUpperCase();
                     const c = getSevColor(sev);
+                    const assetsList = (Array.isArray(v.affected_assets) && v.affected_assets.length > 0)
+                      ? v.affected_assets.filter(Boolean)
+                      : [v.subdomain || v.domain || v.url || scope || '—'];
                     return (
                       <tr key={v.id}>
                         <td className="vapt-pt-num">{idx + 1}</td>
                         <td className="vapt-pt-title">{v.finding || v.vulnerability_id || 'Security Finding'}</td>
                         <td><span className="vapt-pt-badge" style={{ color: c.fg, border: `1px solid ${c.fg}` }}>{sev}</span></td>
                         <td className="vapt-pt-cvss" style={{ color: c.fg }}>{getCVSS(sev, v.cvss_score).toFixed(1)}</td>
-                        <td className="vapt-pt-asset">{v.subdomain || v.domain || '—'}</td>
+                        <td className="vapt-pt-asset">
+                          <div className="vapt-asset-stack-list">
+                            {assetsList.map((ast, aIdx) => (
+                              <div key={aIdx} className="vapt-asset-stack-item">
+                                <code>{ast}</code>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
                         <td className="vapt-pt-cve">{[v.cve, v.cwe].filter(Boolean).join(' / ') || '—'}</td>
                       </tr>
                     );
@@ -1052,10 +1156,10 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
           </div>
           <div className="vapt-remediation-roadmap">
             {[
-              { timeline: 'Immediate (0–48 hrs)',    severity: 'CRITICAL', color: '#EF4444', icon: '🚨', count: countBySev.CRITICAL || 0,    guidance: 'Patch or mitigate all Critical vulnerabilities. Isolate affected assets and escalate to security leadership immediately.' },
-              { timeline: 'Short-term (7–14 days)',  severity: 'HIGH',     color: '#F97316', icon: '⚠️', count: countBySev.HIGH || 0,         guidance: 'Resolve High severity vulnerabilities and renew any expired SSL certificates. Implement compensating controls where patching is delayed.' },
-              { timeline: 'Medium-term (1–3 months)',severity: 'MEDIUM',   color: '#EAB308', icon: '🔶', count: countBySev.MEDIUM || 0,       guidance: 'Address Medium severity issues. Restrict sensitive open ports to VPN/allow-lists. Renew certificates expiring within 30 days.' },
-              { timeline: 'Long-term (3–6 months)',  severity: 'LOW / INFO',color: '#22C55E', icon: '📌', count: (countBySev.LOW || 0) + (countBySev.INFO || 0), guidance: 'Update outdated technology stacks, audit third-party components, and incorporate findings into regular security reviews.' },
+              { timeline: 'Immediate (0–48 hrs)',    severity: 'CRITICAL', color: '#F87171', icon: <AlertOctagon size={20} style={{ color: '#F87171' }} />, count: countBySev.CRITICAL || 0,    guidance: 'Patch or mitigate all Critical vulnerabilities. Isolate affected assets and escalate to security leadership immediately.' },
+              { timeline: 'Short-term (7–14 days)',  severity: 'HIGH',     color: '#EA580C', icon: <AlertTriangle size={20} style={{ color: '#EA580C' }} />, count: countBySev.HIGH || 0,         guidance: 'Resolve High severity vulnerabilities and renew any expired SSL certificates. Implement compensating controls where patching is delayed.' },
+              { timeline: 'Medium-term (1–3 months)',severity: 'MEDIUM',   color: '#38BDF8', icon: <Clock size={20} style={{ color: '#38BDF8' }} />, count: countBySev.MEDIUM || 0,       guidance: 'Address Medium severity issues. Restrict sensitive open ports to VPN/allow-lists. Renew certificates expiring within 30 days.' },
+              { timeline: 'Long-term (3–6 months)',  severity: 'LOW / INFO',color: '#4ADE80', icon: <CheckCircle2 size={20} style={{ color: '#4ADE80' }} />, count: (countBySev.LOW || 0) + (countBySev.INFO || 0), guidance: 'Update outdated technology stacks, audit third-party components, and incorporate findings into regular security reviews.' },
             ].map((item, i) => (
               <div key={i} className="vapt-roadmap-item" style={{ borderLeft: `4px solid ${item.color}` }}>
                 <div className="vapt-roadmap-header">
@@ -1073,12 +1177,12 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, selectedDomain, handleS
             <h3>General Asset Hardening Best Practices</h3>
             <div className="vapt-bp-grid">
               {[
-                { icon: '🔒', title: 'Reduce Attack Surface',    desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
-                { icon: '🔑', title: 'Authentication Controls',  desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
-                { icon: '🛡️', title: 'Security Headers',         desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
-                { icon: '📦', title: 'Dependency Management',    desc: 'Audit and update all detected technology stacks. Subscribe to CVE feeds.' },
-                { icon: '🔒', title: 'TLS Hygiene',              desc: 'Enforce TLS 1.2+. Disable older protocols. Automate certificate renewal with ACME/Let\'s Encrypt.' },
-                { icon: '🔍', title: 'Continuous Monitoring',    desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
+                { icon: <Lock size={18} style={{ color: '#3b82f6' }} />, title: 'Reduce Attack Surface',    desc: 'Decommission unused subdomains, close unnecessary ports, and remove stale endpoints.' },
+                { icon: <KeyRound size={18} style={{ color: '#3b82f6' }} />, title: 'Authentication Controls',  desc: 'Enforce MFA on all exposed management interfaces and admin panels.' },
+                { icon: <ShieldCheck size={18} style={{ color: '#3b82f6' }} />, title: 'Security Headers',         desc: 'Deploy HSTS, CSP, X-Frame-Options, and Referrer-Policy on all web assets.' },
+                { icon: <Box size={18} style={{ color: '#3b82f6' }} />, title: 'Dependency Management',    desc: 'Audit and update all detected technology stacks. Subscribe to CVE feeds.' },
+                { icon: <Lock size={18} style={{ color: '#3b82f6' }} />, title: 'TLS Hygiene',              desc: 'Enforce TLS 1.2+. Disable older protocols. Automate certificate renewal with ACME/Let\'s Encrypt.' },
+                { icon: <Search size={18} style={{ color: '#3b82f6' }} />, title: 'Continuous Monitoring',    desc: 'Schedule recurring ASM scans to detect new assets and configuration drift.' },
               ].map((bp, i) => (
                 <div key={i} className="card vapt-bp-card">
                   <span className="vapt-bp-icon">{bp.icon}</span>

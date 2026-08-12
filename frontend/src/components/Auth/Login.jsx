@@ -49,7 +49,10 @@ const Login = ({ onLogin, onNavigate }) => {
           setLoading(false);
         }
       } catch (err) {
-        setApiError(err.message || 'Invalid credentials provided');
+        const errorMsg = err.message === 'Failed to fetch'
+          ? 'Unable to connect to backend server. Please verify the backend service is running on port 8001.'
+          : (err.message || 'Invalid credentials provided');
+        setApiError(errorMsg);
         setLoading(false);
       }
     }

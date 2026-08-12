@@ -134,26 +134,15 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
 
   // Stats calculation
   const totalRoutes = endpoints.length;
-  const unauthHigh = endpoints.filter(ep => mapAuth(ep.http_status) === 'Unauthenticated' && ep.threat_count > 0).length;
-  const exposedConfigs = endpoints.filter(ep => ep.http_url.includes('config') || ep.http_url.includes('env') || ep.http_url.includes('.git')).length;
-  const failedRequests = endpoints.filter(ep => ep.http_status >= 400).length;
+  const criticalCount = endpoints.filter(ep => mapRisk(ep.threat_count) === 'CRITICAL').length;
+  const highCount = endpoints.filter(ep => mapRisk(ep.threat_count) === 'HIGH').length;
+  const mediumCount = endpoints.filter(ep => mapRisk(ep.threat_count) === 'MEDIUM').length;
+  const lowCount = endpoints.filter(ep => mapRisk(ep.threat_count) === 'LOW').length;
 
   return (
-    <div className="global-page-container">
+    <div className="global-page-container endpoints-page-container">
       <div className="global-max-width">
         
-        <PageHeaderCard 
-          badgeText="ENDPOINTS"
-          title="Endpoints"
-          subtitle="Discovered API endpoints and web routes across your assets."
-          stats={[
-            { label: 'Unauthenticated API', value: unauthHigh.toString(), subtext: 'Threat Detected' },
-            { label: 'Exposed Files/Configs', value: exposedConfigs.toString(), subtext: 'Needs review' },
-            { label: 'Active Routes', value: totalRoutes.toString(), subtext: 'Total cataloged' },
-            { label: 'Failed Requests', value: failedRequests.toString(), subtext: 'Error responses' }
-          ]}
-        />
-
         <ScanSelector 
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
@@ -161,6 +150,19 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
           scansList={scansList}
           activeScanId={activeScanId}
           handleSelectScan={handleSelectScan}
+        />
+
+        <PageHeaderCard 
+          badgeText="ENDPOINTS"
+          title="Endpoints"
+          subtitle="Discovered API endpoints and web routes across your assets."
+          stats={[
+            { label: 'ALL ROUTES', value: totalRoutes.toString(), subtext: 'Total cataloged', onClick: () => setRiskFilter('All Risks') },
+            { label: 'CRITICAL', value: criticalCount.toString(), subtext: 'Immediate action', onClick: () => setRiskFilter('Critical') },
+            { label: 'HIGH RISK', value: highCount.toString(), subtext: 'Prioritize review', onClick: () => setRiskFilter('High') },
+            { label: 'MEDIUM RISK', value: mediumCount.toString(), subtext: 'Monitor & plan', onClick: () => setRiskFilter('Medium') },
+            { label: 'LOW RISK', value: lowCount.toString(), subtext: 'Minimal impact', onClick: () => setRiskFilter('Low') }
+          ]}
         />
 
         {/* Filters and Controls */}

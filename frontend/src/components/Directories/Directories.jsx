@@ -154,13 +154,10 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       icon: getIcon(category)
     };
   }).filter(item => {
-    // Pill Filter
+    // Card Filter
     if (filterPill === 'Exposed' && item.status !== 'Exposed') return false;
     if (filterPill === 'Sensitive' && !item.isSensitive) return false;
-    if (filterPill === 'Admin' && item.category !== 'Admin Panel') return false;
-    if (filterPill === 'Backup Files' && item.category !== 'Backup File') return false;
-    if (filterPill === 'Directory Listings' && item.category !== 'Directory Listing') return false;
-    if (filterPill === 'Public' && item.status !== 'Public') return false;
+    if (filterPill === 'High / Critical Risk' && item.risk !== 'HIGH' && item.risk !== 'CRITICAL') return false;
 
     // Search Box
     if (searchQuery && !item.path.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -190,7 +187,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (status === 'Protected')   return 'st-protected';
     if (status === 'Restricted')  return 'st-restricted';
     if (status === 'Redirected')  return 'st-redirected';
-    if (status === 'Forbidden')   return 'st-notfound';
+    if (status === 'Forbidden')   return 'st-forbidden';
     if (status === 'Not Found')   return 'st-notfound';
     if (status === 'Error')       return 'st-notfound';
     if (status === 'Unreachable') return 'st-notfound';
@@ -202,6 +199,12 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (risk === 'HIGH') return 'risk-high';
     if (risk === 'MEDIUM') return 'risk-med';
     return 'risk-low';
+  };
+
+  const getHttpStyle = (status) => {
+    if (status === 200 || status === '200') return { color: '#4ADE80', backgroundColor: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)' };
+    if (status === 403 || status === '403') return { color: '#F87171', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' };
+    return { color: '#94A3B8', backgroundColor: 'rgba(148, 163, 184, 0.1)', border: '1px solid rgba(148, 163, 184, 0.2)' };
   };
 
   // Stats — aligned with backend classification
@@ -220,18 +223,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     <div className="global-page-container">
       <div className="global-max-width">
 
-        <PageHeaderCard
-          badgeText="DISCOVERY"
-          title="Directories"
-          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
-          stats={[
-            { label: 'Directories Found', value: totalCount.toString(), subtext: 'Verified accessible paths' },
-            { label: 'Exposed', value: exposedCount.toString(), subtext: 'Sensitive content accessible' },
-            { label: 'Sensitive Paths', value: sensitiveCount.toString(), subtext: 'Requires review' },
-            { label: 'High / Critical Risk', value: highRiskCount.toString(), subtext: 'Priority remediation' }
-          ]}
-        />
-
         <ScanSelector
           assignedDomains={assignedDomains}
           selectedDomain={selectedDomain}
@@ -241,18 +232,17 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
           handleSelectScan={handleSelectScan}
         />
 
-        {/* Filter Pills */}
-        <div className="global-filter-row">
-          {['All', 'Exposed', 'Sensitive', 'Admin', 'Backup Files', 'Directory Listings', 'Public'].map(pill => (
-            <div
-              key={pill}
-              className={`global-filter-pill ${filterPill === pill ? 'active' : ''}`}
-              onClick={() => setFilterPill(pill)}
-            >
-              {pill}
-            </div>
-          ))}
-        </div>
+        <PageHeaderCard
+          badgeText="DISCOVERY"
+          title="Directories"
+          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
+          stats={[
+            { label: 'ALL DIRECTORIES', value: totalCount.toString(), subtext: 'Verified accessible paths', onClick: () => setFilterPill('All') },
+            { label: 'EXPOSED', value: exposedCount.toString(), subtext: 'Sensitive content accessible', onClick: () => setFilterPill('Exposed') },
+            { label: 'SENSITIVE', value: sensitiveCount.toString(), subtext: 'Requires review', onClick: () => setFilterPill('Sensitive') },
+            { label: 'CRITICAL / HIGH RISK', value: highRiskCount.toString(), subtext: 'Priority remediation', onClick: () => setFilterPill('High / Critical Risk') }
+          ]}
+        />
 
         {/* Table Controls */}
         <div className="global-controls-row">
@@ -326,7 +316,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                       </div>
                     </td>
                     <td>
-                      <span className="dir-access" title={`HTTP ${item.httpStatus}`}>{getHttpLabel(item.httpStatus)}</span>
+                      <span className="dir-access" style={getHttpStyle(item.httpStatus)} title={`HTTP ${item.httpStatus}`}>{getHttpLabel(item.httpStatus)}</span>
                     </td>
                     <td>
                       <span className="dir-assets" style={{ fontSize: '0.8125rem', color: 'var(--text-primary)' }}>{item.subdomain_name || 'root domain'}</span>

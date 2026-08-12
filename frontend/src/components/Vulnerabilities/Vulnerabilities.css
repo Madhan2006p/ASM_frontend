@@ -281,6 +281,47 @@
 }
 
 /* Severity Badges (Pill with dot) */
+.owasp-code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  color: #A78BFA;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  font-family: var(--font-family);
+  white-space: nowrap;
+}
+
+/* CVE link badge — opens NVD entry in a new tab */
+.cve-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #F87171;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  font-family: var(--font-family);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.cve-link:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #FCA5A5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
 .severity-badge, .status-badge {
   display: inline-flex;
   align-items: center;
@@ -361,5 +402,119 @@
 
 .hover\:text-primary:hover {
   color: var(--text-primary);
+}
+
+/* ── Finding detail modal (popup replaces expandable rows) ─────────────── */
+.vuln-row-clickable {
+  transition: background 0.15s ease;
+}
+.vuln-row-clickable:hover {
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.vuln-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: vuln-modal-fade 0.18s ease;
+}
+
+.vuln-modal {
+  width: min(880px, 100%);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  animation: vuln-modal-rise 0.22s ease;
+}
+
+.vuln-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  background: var(--bg-main);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.vuln-modal-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.vuln-modal-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.vuln-modal-close:hover {
+  color: #F87171;
+  border-color: rgba(248, 113, 113, 0.4);
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.vuln-modal-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding: 0.8rem 1.5rem;
+  background: var(--bg-card-2, var(--bg-main));
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.vuln-modal-meta-item {
+  color: var(--text-secondary);
+}
+.vuln-modal-meta-item strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.vuln-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@keyframes vuln-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes vuln-modal-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 

@@ -1,83 +1,109 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, ChevronDown, Check, ArrowRight, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { Search, RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar } from 'lucide-react';
+import TechBadge from './TechBadge';
+import { parseTechEntry, getEolInfo, techCategoryIcon } from '../../utils/techUtils';
 import './Technologies.css';
 
-const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
+// Max technology badges shown inline per row before the "+N more" button.
+const INLINE_BADGE_LIMIT = 3;
+
+const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '' }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
-  const [eolFilter, setEolFilter] = useState('EOL Status: All');
-  const [riskFilter, setRiskFilter] = useState('All Risks');
+  const [selectedSubdomainModal, setSelectedSubdomainModal] = useState(null);
+  const [sortField, setSortField] = useState('subdomain');
+  const [sortDirection, setSortDirection] = useState('asc');
 
-  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
-  const [showEolMenu, setShowEolMenu] = useState(false);
-  const [showRiskMenu, setShowRiskMenu] = useState(false);
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
 
-  const categoryRef = useRef(null);
-  const eolRef = useRef(null);
-  const riskRef = useRef(null);
+  const closeModal = () => setSelectedSubdomainModal(null);
 
+  // Escape key + body scroll lock while the modal is open
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (categoryRef.current && !categoryRef.current.contains(event.target)) {
-        setShowCategoryMenu(false);
-      }
-      if (eolRef.current && !eolRef.current.contains(event.target)) {
-        setShowEolMenu(false);
-      }
-      if (riskRef.current && !riskRef.current.contains(event.target)) {
-        setShowRiskMenu(false);
-      }
+    if (!selectedSubdomainModal) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeModal();
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [selectedSubdomainModal]);
 
-  const categories = ['All Categories', 'Analytics', 'Programming languages', 'JavaScript libraries', 'Security', 'CDN', 'Font scripts', 'PaaS', 'Web servers', 'Miscellaneous'];
-  const eolStatuses = ['EOL Status: All', 'EOL Reached', 'Supported'];
-  const risks = ['All Risks', 'Critical', 'High', 'Medium', 'Low'];
-
-  const filteredData = (technologies || []).filter(item => {
-    // Search
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      if (!item.name.toLowerCase().includes(query) && !item.version.toLowerCase().includes(query)) {
-        return false;
-      }
+  const filteredData = (subdomainTechs || []).filter(item => {
+    // Domain filter from top dropdown
+    if (selectedDomain && selectedDomain !== 'ALL DOMAINS' && selectedDomain !== 'All Domains') {
+      const isMatch = item.parentDomain === selectedDomain || item.subdomain.endsWith(selectedDomain);
+      if (!isMatch) return false;
     }
 
-    // Category
-    if (categoryFilter !== 'All Categories' && item.category !== categoryFilter) return false;
-
-    // Risk
-    if (riskFilter !== 'All Risks' && item.risk !== riskFilter.toUpperCase()) return false;
-
-    // EOL Status
-    if (eolFilter !== 'EOL Status: All') {
-      const isReached = item.eol !== 'Supported';
-      if (eolFilter === 'EOL Reached' && !isReached) return false;
-      if (eolFilter === 'Supported' && isReached) return false;
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const matchSub = (item.subdomain || '').toLowerCase().includes(query);
+      const matchTitle = (item.title || '').toLowerCase().includes(query);
+      const matchStatus = (item.status || '').toLowerCase().includes(query);
+      const matchTech = (item.technologies || []).some(t => t.toLowerCase().includes(query));
+      if (!matchSub && !matchTitle && !matchStatus && !matchTech) return false;
     }
 
     return true;
   });
 
+  // Sort data
+  const sortedData = [...filteredData].sort((a, b) => {
+    let aVal = a[sortField];
+    let bVal = b[sortField];
+
+    if (sortField === 'technologies') {
+      aVal = (a.technologies || []).length;
+      bVal = (b.technologies || []).length;
+    } else if (typeof aVal === 'string') {
+      aVal = aVal.toLowerCase();
+      bVal = (bVal || '').toLowerCase();
+    }
+
+    if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
   useEffect(() => {
     if (onDataFiltered) {
-      onDataFiltered(filteredData);
+      onDataFiltered(sortedData);
     }
-  }, [searchQuery, categoryFilter, eolFilter, riskFilter, technologies]);
+  }, [searchQuery, subdomainTechs, selectedDomain, sortField, sortDirection]);
+
+  /* ── Modal summary stats ─────────────────────────────── */
+  const modalTechs = selectedSubdomainModal?.technologies || [];
+  const modalParsed = modalTechs.map(t => {
+    const { name, version, category } = parseTechEntry(t);
+    const eol = getEolInfo(name, version);
+    return { name, version, category, outdated: eol.outdated, eolNote: eol.note };
+  });
+  const modalWithVersion = modalParsed.filter(t => t.version).length;
+  const modalOutdated = modalParsed.filter(t => t.outdated).length;
 
   return (
     <div className="card tech-table-card">
-      
-      {/* Top Controls */}
+
+      {/* Search & Top Controls */}
       <div className="global-controls-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="global-search-box">
             <Search size={16} color="#94A3B8" />
-            <input 
-              type="text" 
-              placeholder="Search technology, version..." 
+            <input
+              type="text"
+              placeholder="Search domain, title, or technology..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -85,110 +111,257 @@ const TechTable = ({ onDataFiltered, technologies = [], loading }) => {
         </div>
       </div>
 
-      {/* Grouped Category Boxes */}
-      <div className="card global-table-wrapper" style={{ padding: '1.5rem', background: 'var(--bg-main)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
+      {/* 8-Column Reference Table */}
+      <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
             <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
-            Loading stack inventory from database...
+            Loading technologies inventory...
           </div>
-        ) : filteredData.length === 0 ? (
+        ) : sortedData.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-            No technologies found for this scan.
+            No records found matching the criteria.
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem', padding: '0.5rem' }}>
-            {Object.entries(
-              filteredData.reduce((acc, tech) => {
-                if (!acc[tech.category]) acc[tech.category] = [];
-                acc[tech.category].push(tech);
-                return acc;
-              }, {})
-            ).map(([category, techs]) => (
-              <div key={category}>
-                <h3 style={{ 
-                  fontSize: '1.2rem', 
-                  fontWeight: '700', 
-                  color: 'var(--text-primary)', 
-                  marginBottom: '1.5rem', 
-                  paddingBottom: '0.75rem', 
-                  borderBottom: '2px solid var(--border-color)', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '0.75rem' 
-                }}>
-                  <div style={{ width: '14px', height: '14px', borderRadius: '4px', background: '#3b82f6' }}></div>
-                  {category}
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', marginLeft: 'auto', fontWeight: '600' }}>
-                    {techs.length} item{techs.length !== 1 ? 's' : ''}
-                  </span>
-                </h3>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.2rem' }}>
-                  {techs.map((tech, idx) => {
-                    const char = tech.name ? tech.name.charAt(0).toUpperCase() : '?';
-                    const hues = [210, 280, 150, 320, 40, 190];
-                    const hue = hues[idx % hues.length];
-                    
-                    return (
-                      <div key={tech.id} style={{ 
-                        background: 'var(--bg-card)', 
-                        border: '1px solid var(--border-color)', 
-                        borderRadius: '16px', 
-                        padding: '1.25rem', 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        gap: '1.2rem',
-                        transition: 'all 0.2s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = `hsl(${hue}, 80%, 50%)`; e.currentTarget.style.boxShadow = `0 8px 24px hsla(${hue}, 80%, 50%, 0.15)`; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.boxShadow = 'none'; }}
-                      >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                            <div style={{ 
-                              width: '44px', height: '44px', 
-                              borderRadius: '12px', 
-                              background: `linear-gradient(135deg, hsla(${hue}, 80%, 60%, 0.15) 0%, hsla(${hue}, 80%, 60%, 0.05) 100%)`,
-                              border: `1px solid hsla(${hue}, 80%, 60%, 0.2)`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: `hsl(${hue}, 80%, 60%)`, fontWeight: '800', fontSize: '1.3rem'
-                            }}>
-                              {char}
-                            </div>
-                            <div>
-                              <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)' }}>{tech.name}</h4>
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '600' }}>{tech.category}</span>
-                            </div>
-                          </div>
+          <div className="tech-table-responsive-wrapper" style={{ border: 'none', margin: '0', borderRadius: '0' }}>
+            <table className="tech-table">
+              <thead>
+                <tr className="light-blue-header">
+                  <th style={{ width: '4%', textAlign: 'center' }}>
+                    S.No
+                  </th>
+                  <th style={{ width: '16%', cursor: 'pointer' }} onClick={() => handleSort('subdomain')}>
+                    <div className="th-content">
+                      Domain
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
+                  <th style={{ width: '8%', cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                    <div className="th-content">
+                      Status
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
+                  <th style={{ width: '11%', cursor: 'pointer' }} onClick={() => handleSort('title')}>
+                    <div className="th-content">
+                      Title
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
+                  <th style={{ width: '34%', cursor: 'pointer' }} onClick={() => handleSort('technologies')}>
+                    <div className="th-content">
+                      Technology ({sortedData.reduce((s, r) => s + (r.technologies || []).length, 0)})
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
+                  <th style={{ width: '8%', cursor: 'pointer' }} onClick={() => handleSort('createdDate')}>
+                    <div className="th-content">
+                      Created Date
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedData.map((row, index) => {
+                  const techs = row.technologies || [];
+
+                  return (
+                    <tr key={row.id || index} className="tech-table-row">
+                      <td style={{ textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                        {index + 1}
+                      </td>
+                      {/* Clickable domain → full-screen popup */}
+                      <td>
+                        <button
+                          className="tech-subdomain-link"
+                          onClick={() => setSelectedSubdomainModal(row)}
+                          title="Click to view all technologies for this domain"
+                        >
+                          <span className="tech-subdomain-text">{row.subdomain}</span>
+                          <span className="tech-subdomain-eye">
+                            <Eye size={13} />
+                          </span>
+                        </button>
+                      </td>
+                      <td>
+                        <span className="tech-status-badge active">
+                          <span className="status-dot"></span>
+                          {row.status || 'Active'}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }} title={row.title}>
+                        {row.title && row.title.length > 25 ? row.title.substring(0, 25) + '...' : (row.title || '-')}
+                      </td>
+                      <td>
+                        {/* Inline badges (capped) + "+N more" button → full popup */}
+                        <div className="tech-badges-wrap">
+                          {techs.slice(0, INLINE_BADGE_LIMIT).map((tech, tIdx) => (
+                            <TechBadge key={tIdx} raw={tech} />
+                          ))}
+                          {techs.length === 0 && (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No technologies</span>
+                          )}
+                          {techs.length > INLINE_BADGE_LIMIT && (
+                            <button
+                              className="tech-more-btn"
+                              onClick={() => setSelectedSubdomainModal(row)}
+                              title="Click to view all technologies with versions"
+                            >
+                              +{techs.length - INLINE_BADGE_LIMIT} more
+                            </button>
+                          )}
                         </div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Version:</span>
-                            {tech.version && tech.version !== '—' ? (
-                               <span style={{ background: 'var(--bg-main)', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-                                 v{tech.version}
-                               </span>
-                            ) : (
-                               <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>Unknown</span>
-                            )}
-                          </div>
-                          
-                          <div style={{ fontSize: '0.75rem', fontWeight: '700', color: tech.eol !== 'Supported' ? '#ef4444' : '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem', background: tech.eol !== 'Supported' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                            {tech.eol === 'Supported' ? 'Active' : 'EOL'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                        {row.createdDate || '—'}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
+
+      {/* ── Full-screen overlapping modal popup ──
+           Rendered through a portal to document.body so it covers the WHOLE
+           viewport (sidebar + header included). The page container applies a
+           persistent transform animation which would otherwise trap a
+           position:fixed overlay to the table area only. */}
+      {selectedSubdomainModal && createPortal(
+        <div className="tech-modal-overlay" onClick={closeModal}>
+          <div className="tech-modal-panel" onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="tech-modal-header">
+              <div className="tech-modal-title-block">
+                <span className="tech-modal-kicker">
+                  <Boxes size={12} /> TECHNOLOGY INVENTORY
+                </span>
+                <h3 className="tech-modal-title">{selectedSubdomainModal.subdomain}</h3>
+                <div className="tech-modal-meta">
+                  <span className="tech-modal-status">
+                    <span className="status-dot"></span>
+                    {selectedSubdomainModal.status || 'Active'}
+                  </span>
+                  <span className="tech-modal-meta-item">
+                    <Globe size={11} /> https://{selectedSubdomainModal.subdomain}
+                  </span>
+                  <span className="tech-modal-meta-item">
+                    {modalTechs.length} technologies detected
+                  </span>
+                  {selectedSubdomainModal.createdDate && (
+                    <span className="tech-modal-meta-item">
+                      <Calendar size={11} /> Scanned {selectedSubdomainModal.createdDate}
+                    </span>
+                  )}
+                  {selectedSubdomainModal.title && selectedSubdomainModal.title !== '-' && (
+                    <span className="tech-modal-meta-item">{selectedSubdomainModal.title}</span>
+                  )}
+                </div>
+              </div>
+              <button className="tech-modal-close" onClick={closeModal} title="Close (Esc)">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Summary strip */}
+            <div className="tech-modal-summary">
+              <div className="tech-modal-summary-item">
+                <span className="tech-modal-summary-num">{modalTechs.length}</span>
+                <span className="tech-modal-summary-lbl">Total Technologies</span>
+              </div>
+              <div className="tech-modal-summary-item">
+                <span className="tech-modal-summary-num">{modalWithVersion}</span>
+                <span className="tech-modal-summary-lbl">With Version</span>
+              </div>
+              <div className={`tech-modal-summary-item ${modalOutdated > 0 ? 'warn' : 'ok'}`}>
+                <span className="tech-modal-summary-num">{modalOutdated}</span>
+                <span className="tech-modal-summary-lbl">{modalOutdated > 0 ? 'Outdated / EOL' : 'All Supported'}</span>
+              </div>
+            </div>
+
+            {/* Body — every technology for this domain */}
+            <div className="tech-modal-body">
+              {modalParsed.length === 0 ? (
+                <div className="tech-modal-empty">
+                  <CheckCircle2 size={30} style={{ color: '#22C55E', opacity: 0.5 }} />
+                  <span>No technologies detected for this domain.</span>
+                </div>
+              ) : (
+                <>
+                  <div className="tech-modal-grid-head">
+                    <span>All technologies detected on this subdomain</span>
+                    <span className="tech-modal-grid-count">
+                      {modalParsed.filter(t => t.version).length} with version · {modalParsed.length} total
+                    </span>
+                  </div>
+                  <div className="tech-modal-grid">
+                    {modalParsed.map((t, idx) => (
+                      <div key={idx} className={`tech-modal-card ${t.outdated ? 'outdated' : ''}`}>
+                        <div className="tech-modal-card-top">
+                          <span
+                            className="tech-modal-card-icon"
+                            style={{ background: `${techCategoryIcon(t.category)}22`, borderColor: `${techCategoryIcon(t.category)}55` }}
+                          >
+                            <span
+                              className="tech-cat-dot"
+                              style={{ background: techCategoryIcon(t.category) }}
+                            />
+                          </span>
+                          <span className="tech-modal-card-name">{t.name}</span>
+                        </div>
+                        <div className="tech-modal-card-details">
+                          <div className={`tech-modal-card-version-row ${t.version ? (t.outdated ? 'outdated' : '') : 'unknown'}`}>
+                            <span className="tech-modal-card-detail-label">Version</span>
+                            <span className="tech-modal-card-detail-value">
+                              {t.version || 'Not disclosed'}
+                            </span>
+                          </div>
+                          <div className="tech-modal-card-cat">
+                            <span className="tech-modal-card-detail-label">Category</span>
+                            <span className="tech-modal-card-detail-value">{t.category || 'Uncategorized'}</span>
+                          </div>
+                        </div>
+                        <div className={`tech-modal-card-status ${t.outdated ? 'eol' : 'ok'}`}>
+                          {t.outdated ? (
+                            <><AlertTriangle size={12} /> {t.eolNote || 'Version reached end-of-life'}</>
+                          ) : (
+                            <><CheckCircle2 size={12} /> {t.version ? 'Supported version' : 'No version / no EOL concerns'}</>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="tech-modal-footer">
+              <span className="tech-modal-footer-hint">
+                Press <kbd>Esc</kbd> or click outside to close
+              </span>
+              <button className="tech-modal-footer-btn" onClick={closeModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

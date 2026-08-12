@@ -11,6 +11,49 @@
   padding-bottom: 3rem;
 }
 
+/* ── Running top header on each section ──────────────────────── */
+.vapt-running-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.76rem;
+  font-family: var(--font-family);
+}
+.vapt-rh-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.vapt-rh-icon {
+  color: var(--brand-primary);
+}
+.vapt-rh-provider {
+  color: #3B82F6;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+.vapt-rh-sep {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.vapt-rh-title {
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.vapt-rh-right {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+.vapt-rh-right strong {
+  color: var(--text-primary);
+}
+
 /* ── Header action row ──────────────────────────────────────── */
 .vapt-header-actions {
   display: flex;
@@ -220,51 +263,62 @@
 ═══════════════════════════════════════════════════════════════ */
 .vapt-cover-page {
   min-height: 480px;
-  background: linear-gradient(135deg, #0D1B33 0%, #060D1E 55%, #0A1733 100%);
-  border: 1px solid rgba(59,130,246,0.2);
+  background: linear-gradient(135deg, #0D1B33 0%, #060D1E 55%, #0A1733 100%) !important;
+  border: 1px solid rgba(59,130,246,0.3) !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  color: #FFFFFF !important;
+}
+.vapt-cover-page * {
+  color: inherit;
 }
 .vapt-cover-page::before {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 65% 55% at 50% 30%, rgba(59,130,246,0.07) 0%, transparent 70%);
+  background: radial-gradient(ellipse 65% 55% at 50% 30%, rgba(59,130,246,0.12) 0%, transparent 70%);
   pointer-events: none;
 }
 .vapt-cover-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 2rem 2.5rem 0;
+  align-items: center;
+  padding: 2.2rem 2.5rem 0;
+  color: #FFFFFF !important;
+  width: 100%;
 }
-.vapt-cover-logo { display: flex; align-items: center; }
-.vapt-org-logo { max-height: 60px; max-width: 160px; object-fit: contain; border-radius: 6px; }
+.vapt-cover-logo { display: flex; align-items: center; color: #FFFFFF !important; }
+.vapt-cover-logo span { color: #FFFFFF !important; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.vapt-org-logo { max-height: 55px; max-width: 180px; object-fit: contain; border-radius: 6px; }
 .vapt-cover-watermark {
   font-size: 0.65rem; font-weight: 900; letter-spacing: 0.2em;
-  color: rgba(239,68,68,0.4); border: 1px solid rgba(239,68,68,0.25);
-  padding: 0.25rem 0.75rem; border-radius: 4px; align-self: flex-start;
+  color: #EF4444 !important; border: 1px solid rgba(239,68,68,0.4) !important;
+  background: rgba(239,68,68,0.12) !important;
+  padding: 0.3rem 0.75rem; border-radius: 4px; align-self: center;
+  white-space: nowrap;
 }
-.vapt-cover-center { padding: 2.5rem 2.5rem 1rem; text-align: center; }
+.vapt-cover-center { padding: 2.5rem 2.5rem 1rem; text-align: center; color: #FFFFFF !important; }
 .vapt-cover-badge {
-  display: inline-block; font-size: 0.6rem; font-weight: 900;
-  letter-spacing: 0.15em; text-transform: uppercase; color: #93c5fd;
-  background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3);
-  padding: 0.3rem 1rem; border-radius: 20px; margin-bottom: 1.25rem;
+  display: inline-block; font-size: 0.65rem; font-weight: 900;
+  letter-spacing: 0.15em; text-transform: uppercase; color: #93c5fd !important;
+  background: rgba(59,130,246,0.18) !important; border: 1px solid rgba(59,130,246,0.4) !important;
+  padding: 0.35rem 1.1rem; border-radius: 20px; margin-bottom: 1.25rem;
+  width: auto !important; max-width: fit-content;
 }
-.vapt-cover-title { font-size: 1.9rem; font-weight: 900; color: #f8fafc; margin: 0 0 0.75rem; line-height: 1.2; }
-.vapt-cover-org { font-size: 0.9rem; color: #94a3b8; margin: 0; }
+.vapt-cover-title { font-size: 1.9rem; font-weight: 900; color: #ffffff !important; margin: 0 0 0.75rem; line-height: 1.2; text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+.vapt-cover-org { font-size: 0.95rem; color: #cbd5e1 !important; margin: 0; }
+.vapt-cover-org strong { color: #ffffff !important; }
 .vapt-cover-meta { padding: 1rem 2.5rem; }
 .vapt-cover-meta-grid {
   display: flex; flex-wrap: wrap; gap: 0.75rem 2rem;
-  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.12) !important;
   border-radius: 10px; padding: 1rem 1.25rem;
 }
-.vapt-cover-meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #cbd5e1; }
-.vapt-cover-meta-item b { color: #f1f5f9; }
-.vapt-cover-disclaimer { padding: 0.75rem 2.5rem 2rem; font-size: 0.7rem; color: rgba(148,163,184,0.55); line-height: 1.5; }
+.vapt-cover-meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: #cbd5e1 !important; }
+.vapt-cover-meta-item b { color: #ffffff !important; }
+.vapt-cover-disclaimer { padding: 0.75rem 2.5rem 2rem; font-size: 0.7rem; color: rgba(203,213,225,0.7) !important; line-height: 1.5; }
 
 /* ═══════════════════════════════════════════════════════════════
    EXECUTIVE SUMMARY

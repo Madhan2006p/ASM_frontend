@@ -1,25 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Key, Server, ShieldAlert } from 'lucide-react';
-import PageHeaderCard from '../common/PageHeaderCard';
-import ScanSelector from '../common/ScanSelector';
-import './EmailSecurity.css';
+﻿import React, { useState, useEffect } from 'react';
+import { Shield, ChevronDown, ChevronUp, Server, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../../utils/api';
+import './EmailSecurity.css';
+
+const StarttlsBadge = ({ starttls }) => {
+  if (!starttls || !starttls.checked) {
+    return (
+      <span className="starttls-badge failed">
+        <AlertTriangle size={14} /> Verification Failed
+      </span>
+    );
+  }
+  if (starttls.supported) {
+    return (
+      <span className="starttls-badge supported">
+        <CheckCircle2 size={14} /> Supported
+      </span>
+    );
+  }
+  return (
+    <span className="starttls-badge notsupported">
+      <XCircle size={14} /> Not Supported
+    </span>
+  );
+};
 
 const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [expanded, setExpanded] = useState({});
+  const toggleExpand = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const domainList = Array.from(new Set(assignedDomains || []));
+
+  useEffect(() => {
+    if (!selectedDomain && domainList.length > 0) {
+      setSelectedDomain(domainList[0]);
+    }
+  }, [selectedDomain, domainList, setSelectedDomain]);
 
   useEffect(() => {
     const loadEmailSecurity = async () => {
-      if (!activeScanId) {
+      if (!activeScanId && !selectedDomain) {
         setResult(null);
         return;
       }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/email-security/?scan=${activeScanId}`);
+        const queryParam = activeScanId ? `scan=${activeScanId}` : `domain=${selectedDomain}`;
+        const data = await api.get(`/api/attacksurface/email-security/?${queryParam}`);
         const list = Array.isArray(data) ? data : (data.results || []);
-        setResult(list.length > 0 ? list[0] : null);
+        if (list.length > 0) {
+          setResult(list[0]);
+        } else {
+          setResult(null);
+        }
       } catch (e) {
         console.error('Failed to load email security findings', e);
         setResult(null);
@@ -28,9 +63,8 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
       }
     };
     loadEmailSecurity();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
-  // -- Helpers --
   const hasRecord = (val) => {
     if (!val) return false;
     if (Array.isArray(val)) return val.length > 0;
@@ -38,233 +72,301 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   };
 
   const getRecordText = (val) => {
-    if (!val) return 'No record published.';
-    if (Array.isArray(val)) return val.length > 0 ? val.join('\n') : 'No record published.';
-    if (typeof val === 'object') return JSON.stringify(val, null, 2);
+    if (!val) return '';
+    if (Array.isArray(val)) return val.length > 0 ? val.join(' ') : '';
+    if (typeof val === 'object') return JSON.stringify(val);
     return String(val);
   };
 
-  // Score based purely on checkdmarc output
-  const calculateScore = () => {
-    if (!result) return 0;
+  const getScore = () => {
+    if (!result) return { score: 0, grade: 'F' };
     let score = 0;
-    if (hasRecord(result.spf))   score += 40;
-    if (hasRecord(result.dmarc)) score += 40;
-    if (hasRecord(result.mx))    score += 20;
-    return score;
+    if (hasRecord(result.spf)) score += 25;
+    if (hasRecord(result.dmarc)) score += 25;
+    if (hasRecord(result.dkim_default) || hasRecord(result.dkim_selector1)) score += 25;
+    if (hasRecord(result.bimi)) score += 15;
+    if (hasRecord(result.mx)) score += 10;
+    
+    let grade = 'B';
+    if (score >= 90) grade = 'A';
+    else if (score >= 70) grade = 'B';
+    else if (score >= 50) grade = 'C';
+    else if (score >= 30) grade = 'D';
+    else grade = 'F';
+
+    return { score, grade };
   };
 
-  const score = calculateScore();
-  const getGrade = (s) => {
-    if (s >= 90) return { grade: 'A', color: '#22C55E', text: 'Excellent' };
-    if (s >= 75) return { grade: 'B', color: '#3B82F6', text: 'Good' };
-    if (s >= 50) return { grade: 'C', color: '#F59E0B', text: 'Fair' };
-    if (s >= 25) return { grade: 'D', color: '#F97316', text: 'Poor' };
-    return { grade: 'F', color: '#EF4444', text: 'Critical' };
-  };
-  const healthInfo = getGrade(score);
+  const { score, grade } = getScore();
 
-  const StatusBadge = ({ isValid, trueText, falseText }) =>
-    isValid ? (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.6rem', borderRadius: '4px', background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontSize: '0.75rem', fontWeight: '700' }}>
-        <CheckCircle2 size={14} /> {trueText || 'Valid'}
-      </span>
-    ) : (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.6rem', borderRadius: '4px', background: 'rgba(239,68,68,0.1)', color: '#EF4444', fontSize: '0.75rem', fontWeight: '700' }}>
-        <XCircle size={14} /> {falseText || 'Missing / Invalid'}
-      </span>
-    );
-
-  /**
-   * StarttlsBadge distinguishes three states:
-   *   - supported=true, checked=true  → ✅ Supported
-   *   - supported=false, checked=true → ❌ Not Supported
-   *   - checked=false / data missing  → ⚠️ Verification Failed
-   */
-  const StarttlsBadge = ({ starttls }) => {
-    if (!starttls || !starttls.checked) {
-      return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.6rem', borderRadius: '4px', background: 'rgba(245,158,11,0.1)', color: '#F59E0B', fontSize: '0.75rem', fontWeight: '700' }}>
-          <AlertTriangle size={14} /> Verification Failed
-        </span>
-      );
+  const getStatusInfo = (hasRec, type, recordText = '') => {
+    if (!hasRec) return { pill: 'Not Configured', className: 'notconfigured' };
+    if (type === 'DMARC' && recordText && !recordText.toLowerCase().includes('p=reject')) {
+      return { pill: 'Mis Configured', className: 'misconfigured' };
     }
-    if (starttls.supported) {
-      return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.6rem', borderRadius: '4px', background: 'rgba(34,197,94,0.1)', color: '#22C55E', fontSize: '0.75rem', fontWeight: '700' }}>
-          <CheckCircle2 size={14} /> Supported
-        </span>
-      );
-    }
-    return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.35rem 0.6rem', borderRadius: '4px', background: 'rgba(239,68,68,0.1)', color: '#EF4444', fontSize: '0.75rem', fontWeight: '700' }}>
-        <XCircle size={14} /> Not Supported
-      </span>
-    );
+    return { pill: 'Configured', className: 'configured' };
   };
+
+  const truncate = (str, n) => {
+    if (!str) return '';
+    return str.length > n ? str.substr(0, n - 1) + '...' : str;
+  };
+
+  const dmarcText = getRecordText(result?.dmarc);
+  const spfText = getRecordText(result?.spf);
+  const dkimText = getRecordText(result?.dkim_default) || getRecordText(result?.dkim_selector1);
+  const bimiText = getRecordText(result?.bimi);
+
+  const dmarcStatus = getStatusInfo(hasRecord(result?.dmarc), 'DMARC', dmarcText);
+  const spfStatus = getStatusInfo(hasRecord(result?.spf), 'SPF', spfText);
+  const dkimStatus = getStatusInfo(hasRecord(result?.dkim_default) || hasRecord(result?.dkim_selector1), 'DKIM', dkimText);
+  const bimiStatus = getStatusInfo(hasRecord(result?.bimi), 'BIMI', bimiText);
+  const mxStatus = getStatusInfo(hasRecord(result?.mx), 'MX');
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'Not Available';
+    try {
+      return new Date(dateStr).toLocaleDateString('en-GB').replace(/\//g, '-');
+    } catch {
+      return 'Not Available';
+    }
+  };
+  
+  const discoverDate = result?.created_date ? formatDate(result.created_date) : (result ? formatDate(new Date()) : 'Not Available');
+  const updateDate = result?.last_update_date ? formatDate(result.last_update_date) : (result ? formatDate(new Date()) : 'Not Available');
+
+  const activeTargetDomain = selectedDomain || (domainList.length > 0 ? domainList[0] : (result?.domain || 'Unknown Domain'));
 
   return (
-    <div className="global-page-container page-animate">
-      <PageHeaderCard
-        badgeText="DOMAIN SECURITY"
-        title="Email Authentication & Compliance"
-        subtitle="DMARC, SPF, and MX analysis powered by checkdmarc."
-      />
-
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        <ScanSelector
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
-      </div>
+    <div className="email-security-v2">
+      {domainList.length > 0 && (
+        <div className="domain-tabs-v2">
+          {domainList.map((d) => (
+            <div
+              key={d}
+              className={`domain-tab-v2 ${selectedDomain === d || (!selectedDomain && d === domainList[0]) ? 'active' : ''}`}
+              onClick={() => setSelectedDomain && setSelectedDomain(d)}
+            >
+              {d}
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
-        <div className="card" style={{ padding: '4rem', display: 'flex', justifyContent: 'center', color: 'var(--text-secondary)' }}>
-          <RefreshCw className="spin" size={24} style={{ marginRight: '0.5rem' }} /> Analyzing authentication protocols...
-        </div>
+        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Loading email security data...</div>
       ) : result ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginTop: '1.5rem' }}>
-
-          {/* Score Overview */}
-          <div className="card" style={{ padding: '2rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg viewBox="0 0 36 36" style={{ width: '120px', height: '120px', transform: 'rotate(-90deg)' }}>
-                  <path strokeDasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--bg-main)" strokeWidth="3" />
-                  <path strokeDasharray={`${score}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke={healthInfo.color} strokeWidth="3" />
-                </svg>
-                <div style={{ position: 'absolute', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{score}</span>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: 600 }}>/ 100</span>
-                </div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.25rem' }}>Domain Security Rating</div>
-                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  {result.domain}
-                  <span style={{ padding: '0.2rem 0.6rem', background: `${healthInfo.color}15`, color: healthInfo.color, fontSize: '0.8rem', borderRadius: '20px', fontWeight: 700 }}>{healthInfo.text}</span>
-                </h2>
-                <p style={{ marginTop: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '400px' }}>
-                  Score based on DMARC (40 pts), SPF (40 pts), and MX records (20 pts) via checkdmarc.
-                </p>
-              </div>
+        <>
+          <div className="top-cards-row">
+            <div className="top-card score">
+              <div className="score-number">{score}</div>
+              <div className="score-badge">{grade}</div>
+            </div>
+            
+            <div className="top-card dmarc">
+              <div className={`status-pill ${dmarcStatus.className}`}>{dmarcStatus.pill}</div>
+              <div className="top-card-title">DMARC</div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', flex: 1, maxWidth: '400px' }}>
-              <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>DMARC STATUS</span>
-                <StatusBadge isValid={hasRecord(result.dmarc)} trueText="Protected" falseText="Unprotected" />
-              </div>
-              <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)' }}>SPF COMPLIANCE</span>
-                <StatusBadge isValid={hasRecord(result.spf)} trueText="Compliant" falseText="Action Needed" />
-              </div>
+            <div className="top-card spf">
+              <div className={`status-pill ${spfStatus.className}`}>{spfStatus.pill}</div>
+              <div className="top-card-title">SPF</div>
+            </div>
+
+            <div className="top-card dkim">
+              <div className={`status-pill ${dkimStatus.className}`}>{dkimStatus.pill}</div>
+              <div className="top-card-title">DKIM</div>
+            </div>
+
+            <div className="top-card bimi">
+              <div className={`status-pill ${bimiStatus.className}`}>{bimiStatus.pill}</div>
+              <div className="top-card-title">BIMI</div>
+            </div>
+
+            <div className="top-card mx">
+              <div className={`status-pill ${mxStatus.className}`}>{mxStatus.pill}</div>
+              <div className="top-card-title">MX</div>
             </div>
           </div>
 
-          {/* DMARC Panel */}
-          <div className="card" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F59E0B' }}>
-                  <Shield size={20} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>DMARC</h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Domain-based Message Authentication, Reporting, and Conformance</div>
-                </div>
-              </div>
-              <StatusBadge isValid={hasRecord(result.dmarc)} trueText="Record Found" falseText="No Record Found" />
-            </div>
-            <div style={{ padding: '1.5rem' }}>
-              <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Published Record</div>
-                <code style={{ fontSize: '0.9rem', color: 'var(--text-primary)', wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
-                  {getRecordText(result.dmarc)}
-                </code>
-              </div>
-            </div>
-          </div>
 
-          {/* SPF Panel */}
-          <div className="card" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3B82F6' }}>
-                  <Key size={20} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>SPF</h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sender Policy Framework</div>
-                </div>
-              </div>
-              <StatusBadge isValid={hasRecord(result.spf)} trueText="Record Found" falseText="No Record Found" />
-            </div>
-            <div style={{ padding: '1.5rem' }}>
-              <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Published Record</div>
-                <code style={{ fontSize: '0.9rem', color: 'var(--text-primary)', wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
-                  {getRecordText(result.spf)}
-                </code>
-              </div>
-            </div>
-          </div>
 
-          {/* MX Records Panel */}
-          <div className="card" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-            <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
-                  <Server size={20} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>MX Records</h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mail Exchange records discovered by checkdmarc</div>
-                </div>
+          <div className="details-grid">
+            {/* DMARC */}
+            <div className="detail-card">
+              <div className="detail-icon-col">
+                <Shield size={40} />
+                <div className="detail-icon-title">DMARC</div>
               </div>
-              <StatusBadge isValid={hasRecord(result.mx)} trueText="Records Found" falseText="No Records Found" />
-            </div>
-            <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {hasRecord(result.mx) ? (
-                (Array.isArray(result.mx) ? result.mx : [result.mx]).map((rec, i) => (
-                  <div key={i} style={{ background: 'var(--bg-main)', padding: '0.75rem 1rem', borderRadius: '6px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', minWidth: '20px' }}>#{i + 1}</span>
-                    <code style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>{rec}</code>
+              <div className="detail-content">
+                {dmarcStatus.className === 'notconfigured' ? (
+                  <div className="detail-desc" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    We couldn't find a DMARC record associated with your domain.
                   </div>
-                ))
-              ) : (
-                <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
-                  <code style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>No MX records published.</code>
-                </div>
-              )}
+                ) : (
+                  <>
+                    <div className="detail-desc">
+                      Your domain has a DMARC record {dmarcStatus.className === 'misconfigured' ? 'with a policy that could be stricter.' : 'that is properly configured.'}
+                    </div>
+                    <div className="record-val-label">Record value</div>
+                    <div className="record-val-box" onClick={() => toggleExpand('dmarc')} style={{ cursor: 'pointer' }}>
+                      <span>{expanded.dmarc ? (dmarcText || 'No record text found') : (truncate(dmarcText, 40) || 'No record text found')}</span>
+                      {expanded.dmarc ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                    <div className="dates-row">
+                      <div>Discover Date : <br/> {discoverDate}</div>
+                      <div>Last Update Date : <br/> {updateDate}</div>
+                    </div>
 
-              {/* STARTTLS from checkdmarc — three-state: supported / not supported / verification failed */}
-              <div style={{ marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--bg-main)' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-secondary)', flex: 1 }}>STARTTLS</span>
-                <StarttlsBadge starttls={result.smtp_starttls} />
-                {result.smtp_starttls && !result.smtp_starttls.checked && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>checkdmarc could not reach the mail server</span>
+                  </>
                 )}
               </div>
             </div>
-          </div>
 
-        </div>
-      ) : (
-        <div className="card" style={{ padding: '4rem 2rem', textAlign: 'center', marginTop: '1.5rem' }}>
-          <div style={{ width: '80px', height: '80px', background: 'var(--bg-main)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-            <ShieldAlert size={36} color="var(--text-secondary)" />
+            {/* SPF */}
+            <div className="detail-card">
+              <div className="detail-icon-col">
+                <Shield size={40} />
+                <div className="detail-icon-title">SPF</div>
+              </div>
+              <div className="detail-content">
+                {spfStatus.className === 'notconfigured' ? (
+                  <div className="detail-desc" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    We couldn't find an SPF record associated with your domain.
+                  </div>
+                ) : (
+                  <>
+                    <div className="detail-desc">
+                      Your domain has a valid SPF record. You can track, manage and level up your email authentication standards.
+                    </div>
+                    <div className="record-val-label">Record value</div>
+                    <div className="record-val-box" onClick={() => toggleExpand('spf')} style={{ cursor: 'pointer' }}>
+                      <span>{expanded.spf ? (spfText || 'No record text found') : (truncate(spfText, 40) || 'No record text found')}</span>
+                      {expanded.spf ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                    <div className="dates-row">
+                      <div>Discover Date : <br/> {discoverDate}</div>
+                      <div>Last Update Date : <br/> {updateDate}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* DKIM */}
+            <div className="detail-card">
+              <div className="detail-icon-col">
+                <Shield size={40} />
+                <div className="detail-icon-title">DKIM</div>
+              </div>
+              <div className="detail-content">
+                {dkimStatus.className === 'notconfigured' ? (
+                  <div className="detail-desc" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    We couldn't find a DKIM record associated with your domain.
+                  </div>
+                ) : (
+                  <>
+                    <div className="detail-desc">
+                      Your domain has a valid DKIM record configured.
+                    </div>
+                    <div className="record-val-label">Record value</div>
+                    <div className="record-val-box" onClick={() => toggleExpand('dkim')} style={{ cursor: 'pointer' }}>
+                      <span>{expanded.dkim ? (dkimText || 'No record text found') : (truncate(dkimText, 40) || 'No record text found')}</span>
+                      {expanded.dkim ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                    <div className="dates-row">
+                      <div>Discover Date : <br/> {discoverDate}</div>
+                      <div>Last Update Date : <br/> {updateDate}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* BIMI */}
+            <div className="detail-card">
+              <div className="detail-icon-col">
+                <Shield size={40} />
+                <div className="detail-icon-title">BIMI</div>
+              </div>
+              <div className="detail-content">
+                {bimiStatus.className === 'notconfigured' ? (
+                  <div className="detail-desc" style={{ marginTop: 'auto', marginBottom: 'auto' }}>
+                    We couldn't find a BIMI record associated with your domain.
+                  </div>
+                ) : (
+                  <>
+                    <div className="detail-desc">
+                      Your domain has a valid BIMI record configured.
+                    </div>
+                    <div className="record-val-label">Record value</div>
+                    <div className="record-val-box" onClick={() => toggleExpand('bimi')} style={{ cursor: 'pointer' }}>
+                      <span>{expanded.bimi ? (bimiText || 'No record text found') : (truncate(bimiText, 40) || 'No record text found')}</span>
+                      {expanded.bimi ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                    <div className="dates-row">
+                      <div>Discover Date : <br/> {discoverDate}</div>
+                      <div>Last Update Date : <br/> {updateDate}</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* MX Records & STARTTLS */}
+            <div className="detail-card full-width">
+              <div className="detail-icon-col">
+                <Server size={40} />
+                <div className="detail-icon-title">MX & TLS</div>
+              </div>
+              <div className="detail-content" style={{ flexDirection: 'row', gap: '3rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div className="detail-desc">
+                    Mail Exchange (MX) records direct email to servers for a domain.
+                  </div>
+                  
+                  <div className="record-val-label">Configured Mail Servers</div>
+                  {hasRecord(result?.mx) ? (
+                    (Array.isArray(result.mx) ? result.mx : [result.mx]).map((rec, i) => {
+                      const parts = typeof rec === 'string' ? rec.split(' ') : [];
+                      const displayPriority = i + 1;
+                      const host = parts.length > 1 && !isNaN(parts[0]) ? parts.slice(1).join(' ') : rec;
+                      return (
+                        <div key={i} className="mx-record-item">
+                          <div className="mx-priority-pill">{displayPriority}</div>
+                          <div className="mx-host-text">{host}</div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="mx-record-item">
+                      <div className="mx-host-text">No MX records published.</div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div className="detail-desc">
+                    STARTTLS guarantees that emails are encrypted during transit between mail servers.
+                  </div>
+                  <div className="record-val-label" style={{ marginBottom: '1rem' }}>STARTTLS Support</div>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <StarttlsBadge starttls={result?.smtp_starttls} />
+                    {result?.smtp_starttls && !result.smtp_starttls.checked && (
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Verification failed. Server unreachable.</span>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Data Available</h2>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto' }}>
-            {activeScanId
-              ? 'No email security data found for this scan. Run a new scan to generate a checkdmarc report.'
-              : 'Select a target domain to generate a checkdmarc authentication and compliance report.'}
-          </p>
+        </>
+      ) : (
+        <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+          {activeScanId ? 'No email security data found for this scan.' : 'Select a target domain or scan to view email security results.'}
         </div>
       )}
     </div>

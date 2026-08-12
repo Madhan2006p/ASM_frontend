@@ -37,10 +37,40 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
 
 
-  const filteredData = subdomains.filter(item =>
-    item.domain.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').includes(searchTerm)
-  );
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
+  // Helper to determine active/inactive status from item.status
+  const isSubdomainActive = (item) => {
+    const s = (item.status || 'active').toLowerCase();
+    return s === 'live' || s === 'active' || s === 'up';
+  };
+
+  // Counts for tabs
+  const allCount = subdomains.length;
+  const activeCount = subdomains.filter(isSubdomainActive).length;
+  const inactiveCount = subdomains.filter(item => !isSubdomainActive(item)).length;
+
+  const handleFilterChange = (filter) => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  };
+
+  const filteredData = subdomains.filter(item => {
+    // Status Filter
+    if (statusFilter === 'ACTIVE' && !isSubdomainActive(item)) return false;
+    if (statusFilter === 'INACTIVE' && isSubdomainActive(item)) return false;
+
+    // Search Term Filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      const domainMatch = (item.domain || '').toLowerCase().includes(term);
+      const ipMatch = (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').toLowerCase().includes(term);
+      const titleMatch = (item.title || '').toLowerCase().includes(term);
+      if (!domainMatch && !ipMatch && !titleMatch) return false;
+    }
+
+    return true;
+  });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -57,6 +87,13 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     return { label: 'Unknown', color: '#94A3B8', icon: <AlertCircle size={13}/> };
   };
 
+  const getEmptyStateText = () => {
+    if (searchTerm) return `No subdomains found matching "${searchTerm}".`;
+    if (statusFilter === 'ACTIVE') return 'No active subdomains found.';
+    if (statusFilter === 'INACTIVE') return 'No inactive subdomains found.';
+    return 'No subdomains found.';
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     try { return new Date(dateStr).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); }
@@ -67,19 +104,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     <div className="global-page-container">
       <div className="global-max-width">
         
-        {/* Banner Area */}
-        <PageHeaderCard 
-          badgeText="DISCOVERY"
-          title="Attack Surface Discovery"
-          subtitle="Monitor and enumerate every external-facing asset across your perimeter."
-          stats={[
-            { label: 'DISCOVERED ASSETS', value: subdomains.length.toString() },
-            { label: 'ACTIVE SCANS', value: scansList.filter(s => s.status === 'running' || s.status === 'pending').length.toString() },
-            { label: 'NEW THIS WEEK', value: '+18' },
-            { label: 'AVG. SCAN TIME', value: '42s' }
-          ]}
-        />
-
         {/* Active Scan Selector */}
         <ScanSelector 
           assignedDomains={assignedDomains}
@@ -88,6 +112,41 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
           scansList={scansList}
           activeScanId={activeScanId}
           handleSelectScan={handleSelectScan}
+        />
+
+        {/* Banner Area */}
+        <PageHeaderCard 
+          badgeText="DISCOVERY"
+          title="Attack Surface Discovery"
+          subtitle="Monitor and enumerate every external-facing asset across your perimeter."
+          stats={[
+            {
+              label: 'DISCOVERED ASSETS',
+              value: allCount.toString(),
+              subtext: statusFilter === 'ALL' ? 'Showing all assets' : 'Click to view all',
+              active: statusFilter === 'ALL',
+              onClick: () => handleFilterChange('ALL')
+            },
+            {
+              label: 'ACTIVE SUBDOMAINS',
+              value: activeCount.toString(),
+              subtext: statusFilter === 'ACTIVE' ? 'Filter: Active only' : 'Live / up assets',
+              active: statusFilter === 'ACTIVE',
+              onClick: () => handleFilterChange(statusFilter === 'ACTIVE' ? 'ALL' : 'ACTIVE')
+            },
+            {
+              label: 'INACTIVE SUBDOMAINS',
+              value: inactiveCount.toString(),
+              subtext: statusFilter === 'INACTIVE' ? 'Filter: Inactive only' : 'Down / unreachable',
+              active: statusFilter === 'INACTIVE',
+              onClick: () => handleFilterChange(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')
+            },
+            {
+              label: 'ACTIVE SCANS',
+              value: scansList.filter(s => s.status === 'running' || s.status === 'pending').length.toString(),
+              subtext: 'Running background'
+            }
+          ]}
         />
 
         {/* Table Container */}
@@ -113,42 +172,79 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
           <table className="sub-table">
             <thead>
               <tr>
-                <th>DOMAIN / ASSET</th>
-                <th>SCAN STATUS</th>
-                <th>HOSTED</th>
-                <th>UPDATED AT</th>
+                <th style={{ width: '5%' }}>S.No</th>
+                <th style={{ width: '20%' }}>Domain</th>
+                <th style={{ width: '10%' }}>Status</th>
+                <th style={{ width: '15%' }}>Title</th>
+                <th style={{ width: '15%' }}>IP Addresses</th>
+                <th style={{ width: '10%' }}>Ports</th>
+                <th style={{ width: '15%' }}>Screenshot</th>
+                <th style={{ width: '10%' }}>Location</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Fetching subdomain intelligence...
                   </td>
                 </tr>
-              ) : currentData.map(item => {
+              ) : currentData.map((item, index) => {
                 const statusCfg = getScanStatus(item);
-                const hosted = (Array.isArray(item.ip) && item.ip.length > 0) 
-                  ? item.ip[0] 
-                  : (item.ip && item.ip !== '—' ? item.ip : '-');
+                
+                const ips = Array.isArray(item.ip) ? item.ip : (typeof item.ip === 'string' ? item.ip.split(',') : []);
+                const firstIp = ips.length > 0 ? ips[0].trim() : '-';
+                const extraIps = ips.length > 1 ? ips.length - 1 : 0;
+                
+                const ports = Array.isArray(item.ports) ? item.ports : (typeof item.ports === 'string' ? item.ports.split(',') : []);
+                const firstPort = ports.length > 0 ? ports[0].trim() : '-';
+                const extraPorts = ports.length > 1 ? ports.length - 1 : 0;
+                
+                const title = item.title && item.title.length > 20 ? item.title.substring(0, 20) + '...' : (item.title || '-');
+
                 return (
-                  <tr key={item.id}>
+                  <tr key={item.id || index}>
+                    <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                      {startIndex + index + 1}
+                    </td>
                     <td className="td-domain">
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{item.domain}</span>
                       </div>
                     </td>
                     <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: statusCfg.color, fontWeight: 600, fontSize: '0.8rem' }}>
-                        {statusCfg.icon} {statusCfg.label}
+                      <span className="sub-status-pill" style={{ display: 'inline-flex', alignItems: 'center', padding: '0.2rem 0.6rem', borderRadius: '4px', background: `${statusCfg.color}15`, color: statusCfg.color, fontWeight: 600, fontSize: '0.75rem' }}>
+                        {statusCfg.label}
                       </span>
                     </td>
-                    <td style={{ color: '#94A3B8', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                      {hosted}
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }} title={item.title}>
+                      {title}
                     </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
-                      {formatDate(item.updated_at || item.created_at)}
+                    <td style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        {firstIp !== '-' && firstIp}
+                        {firstIp === '-' && '-'}
+                        {extraIps > 0 && <span className="sub-badge-count">+{extraIps}</span>}
+                      </div>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <span style={{ background: 'var(--bg-main)', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}>{firstPort !== '-' ? `${firstPort}` : '-'}</span>
+                        {extraPorts > 0 && <span className="sub-badge-count">+{extraPorts}</span>}
+                      </div>
+                    </td>
+                    <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                      {item.screenshot_url ? (
+                        <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer">
+                          <img src={item.screenshot_url} alt="Screenshot" style={{ height: '24px', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                        </a>
+                      ) : 'No screenshot'}
+                    </td>
+                    <td style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        {item.location ? item.location : '-'}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -156,8 +252,8 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="4" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
-                    No subdomains found.
+                  <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                    {getEmptyStateText()}
                   </td>
                 </tr>
               )}
