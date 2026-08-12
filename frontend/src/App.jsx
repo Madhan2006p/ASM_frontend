@@ -17,6 +17,7 @@ import SurfaceWebDashboard from './components/SurfaceWeb/SurfaceWebDashboard';
 import SuspiciousDomains from './components/SuspiciousDomains/SuspiciousDomains';
 import EmailSecurity from './components/EmailSecurity/EmailSecurity';
 import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDashboard';
+import EmailSecurityRecommendations from './components/EmailSecurity/EmailSecurityRecommendations';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
 
@@ -52,7 +53,7 @@ function App() {
   const [activeScanId, setActiveScanId] = useState(null);
   const [activeTarget, setActiveTarget] = useState('');
   const [scansList, setScansList] = useState([]);
-  const [assignedDomains, setAssignedDomains] = useState(['kct.ac.in', 'hackersinfotech.com']);
+  const [assignedDomains, setAssignedDomains] = useState([]);
 
   const handleLogin = (userData) => {
     if (userData) {
@@ -68,11 +69,13 @@ function App() {
         features: userData.features || [],
         profile_photo_url: userData.profile_photo_url || null,
       });
-      // Store admin-assigned domains from login payload
-      if (Array.isArray(userData.assigned_domains) && userData.assigned_domains.length > 0) {
+      // Store admin-assigned domains from login payload. Users with no
+      // assigned domains get an empty list — never fall back to hardcoded
+      // defaults.
+      if (Array.isArray(userData.assigned_domains)) {
         setAssignedDomains(userData.assigned_domains);
       } else {
-        setAssignedDomains(['kct.ac.in', 'hackersinfotech.com']);
+        setAssignedDomains([]);
       }
       
       if (userData.is_superuser) {
@@ -151,6 +154,7 @@ function App() {
   }, [isAuthenticated]);
 
   const [selectedDomain, setSelectedDomain] = useState('');
+  const [emailSecRec, setEmailSecRec] = useState(null);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
@@ -247,7 +251,13 @@ function App() {
           {activePage === 'SSL/TLS Discovery'     && <SSLTLSDiscovery />}
           {activePage === 'Active Directory'      && <ActiveDirectory />}
           {activePage === 'Email Security Dashboard' && <EmailSecurityDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
-          {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Email Security'        && <EmailSecurity activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} setActivePage={setActivePage} setEmailSecRec={setEmailSecRec} />}
+          {activePage === 'Email Security Recommendation' && (
+            <EmailSecurityRecommendations
+              rec={emailSecRec}
+              onBack={() => setActivePage('Email Security')}
+            />
+          )}
 
           {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}

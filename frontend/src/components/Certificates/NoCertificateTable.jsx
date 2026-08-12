@@ -38,73 +38,7 @@ const NoCertificateTable = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
-      {/* 1. Toolbar */}
-      <div className="ssl-toolbar-container">
-        <div className="ssl-toolbar-left">
-          <div className="ssl-search-box">
-            <Search size={16} className="ssl-search-icon" />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="ssl-search-input"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-            />
-          </div>
 
-          {searchQuery && (
-            <button
-              className="ssl-btn-clear-all"
-              onClick={() => {
-                setSearchQuery('');
-              }}
-            >
-              Clear All <X size={14} />
-            </button>
-          )}
-        </div>
-
-        <div className="ssl-toolbar-right">
-          <div className="ssl-pagination-rows">
-            <span>Show by</span>
-            <select
-              className="ssl-rows-select"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-            >
-              <option value={10}>10 Rows</option>
-              <option value={20}>20 Rows</option>
-              <option value={50}>50 Rows</option>
-            </select>
-          </div>
-
-          <div className="ssl-pagination-controls">
-            <button
-              className="ssl-page-btn"
-              disabled={validPage <= 1 || totalRows === 0}
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <span>
-              {totalRows === 0 ? '0 - 0 of 0' : `${startIndex + 1} - ${Math.min(startIndex + pageSize, totalRows)} of ${totalRows}`}
-            </span>
-            <button
-              className="ssl-page-btn"
-              disabled={validPage >= totalPages || totalRows === 0}
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      </div>
 
       {/* 3. Table */}
       <div className="ssl-table-card">

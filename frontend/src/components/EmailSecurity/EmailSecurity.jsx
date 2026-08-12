@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, ChevronDown, ChevronUp, Server, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../../utils/api';
 import './EmailSecurity.css';
+import EmailSecurityRecommendations, { buildRecommendations } from './EmailSecurityRecommendations';
 
 const StarttlsBadge = ({ starttls }) => {
   if (!starttls || !starttls.checked) {
@@ -25,10 +26,11 @@ const StarttlsBadge = ({ starttls }) => {
   );
 };
 
-const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
+const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan, setActivePage, setEmailSecRec }) => {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState({});
+  const [activeRec, setActiveRec] = useState(null);
   const toggleExpand = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
   const domainList = Array.from(new Set(assignedDomains || []));
@@ -98,6 +100,23 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   };
 
   const { score, grade } = getScore();
+
+  // Per-protocol recommendations derived from live result — no new API calls
+  const allRecs = result ? buildRecommendations(result) : [];
+  const getRecFor = (prefix) => allRecs.find(r => r.id.startsWith(prefix)) || null;
+  const dmarcRec    = getRecFor('dmarc');
+  const spfRec      = getRecFor('spf');
+  const dkimRec     = getRecFor('dkim');
+  const bimiRec     = getRecFor('bimi');
+  const mxRec       = getRecFor('mx');
+  const starttlsRec = getRecFor('starttls');
+
+  // Open recommendation modal popup for the selected module
+  const viewRecommendation = (rec) => {
+    if (!rec) return;
+    setActiveRec(rec);
+    if (setEmailSecRec) setEmailSecRec(rec);
+  };
 
   const getStatusInfo = (hasRec, type, recordText = '') => {
     if (!hasRec) return { pill: 'Not Configured', className: 'notconfigured' };
@@ -189,8 +208,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
             </div>
           </div>
 
-
-
           <div className="details-grid">
             {/* DMARC */}
             <div className="detail-card">
@@ -217,8 +234,14 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Discover Date : <br/> {discoverDate}</div>
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
-
                   </>
+                )}
+                {dmarcRec && (
+                  <div className="es-rec-btn-row">
+                    <button className="es-view-rec-btn" onClick={() => viewRecommendation(dmarcRec)}>
+                      View Recommendation
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -250,6 +273,13 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
+                {spfRec && (
+                  <div className="es-rec-btn-row">
+                    <button className="es-view-rec-btn" onClick={() => viewRecommendation(spfRec)}>
+                      View Recommendation
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -279,6 +309,13 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div>Last Update Date : <br/> {updateDate}</div>
                     </div>
                   </>
+                )}
+                {dkimRec && (
+                  <div className="es-rec-btn-row">
+                    <button className="es-view-rec-btn" onClick={() => viewRecommendation(dkimRec)}>
+                      View Recommendation
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -310,6 +347,13 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
+                {bimiRec && (
+                  <div className="es-rec-btn-row">
+                    <button className="es-view-rec-btn" onClick={() => viewRecommendation(bimiRec)}>
+                      View Recommendation
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -324,7 +368,6 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                   <div className="detail-desc">
                     Mail Exchange (MX) records direct email to servers for a domain.
                   </div>
-                  
                   <div className="record-val-label">Configured Mail Servers</div>
                   {hasRecord(result?.mx) ? (
                     (Array.isArray(result.mx) ? result.mx : [result.mx]).map((rec, i) => {
@@ -343,20 +386,33 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                       <div className="mx-host-text">No MX records published.</div>
                     </div>
                   )}
+                  {mxRec && (
+                    <div className="es-rec-btn-row" style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
+                      <button className="es-view-rec-btn" onClick={() => viewRecommendation(mxRec)}>
+                        View Recommendation
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <div className="detail-desc">
                     STARTTLS guarantees that emails are encrypted during transit between mail servers.
                   </div>
                   <div className="record-val-label" style={{ marginBottom: '1rem' }}>STARTTLS Support</div>
-                  
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                     <StarttlsBadge starttls={result?.smtp_starttls} />
                     {result?.smtp_starttls && !result.smtp_starttls.checked && (
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Verification failed. Server unreachable.</span>
                     )}
                   </div>
+                  {starttlsRec && (
+                    <div className="es-rec-btn-row" style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
+                      <button className="es-view-rec-btn" onClick={() => viewRecommendation(starttlsRec)}>
+                        View Recommendation
+                      </button>
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -368,6 +424,14 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
           {activeScanId ? 'No email security data found for this scan.' : 'Select a target domain or scan to view email security results.'}
         </div>
+      )}
+
+      {/* Recommendation Modal Popup */}
+      {activeRec && (
+        <EmailSecurityRecommendations
+          rec={activeRec}
+          onClose={() => setActiveRec(null)}
+        />
       )}
     </div>
   );

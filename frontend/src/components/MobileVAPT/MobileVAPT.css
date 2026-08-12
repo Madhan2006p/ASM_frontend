@@ -261,6 +261,64 @@
 
 
 /* TABLE */
+.mv-table-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mv-table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0 1.5rem;
+}
+
+.mv-table-toolbar-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mv-table-toolbar-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary, #FFFFFF);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mv-table-toolbar-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #7094C0);
+  background: var(--bg-main, #060D1E);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid var(--border-color, rgba(59, 130, 246, 0.18));
+}
+
+.mv-severity-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mv-severity-filter label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary, #CBD5E1);
+}
+
+.mv-severity-filter select {
+  min-width: 160px;
+}
+
 .mv-table-wrapper {
   background: var(--bg-card, #0D1B33);
   border-radius: var(--radius-lg, 12px);
