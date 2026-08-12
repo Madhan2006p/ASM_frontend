@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, ChevronDown, ChevronUp, Server, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
 import { api } from '../../utils/api';
 import './EmailSecurity.css';
-import { buildRecommendations } from './EmailSecurityRecommendations';
+import EmailSecurityRecommendations, { buildRecommendations } from './EmailSecurityRecommendations';
 
 const StarttlsBadge = ({ starttls }) => {
   if (!starttls || !starttls.checked) {
@@ -30,6 +30,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState({});
+  const [activeRec, setActiveRec] = useState(null);
   const toggleExpand = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
   const domainList = Array.from(new Set(assignedDomains || []));
@@ -110,11 +111,11 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const mxRec       = getRecFor('mx');
   const starttlsRec = getRecFor('starttls');
 
-  // Navigate to the recommendation page for the selected module
+  // Open recommendation modal popup for the selected module
   const viewRecommendation = (rec) => {
-    if (!rec || !setActivePage || !setEmailSecRec) return;
-    setEmailSecRec(rec);
-    setActivePage('Email Security Recommendation');
+    if (!rec) return;
+    setActiveRec(rec);
+    if (setEmailSecRec) setEmailSecRec(rec);
   };
 
   const getStatusInfo = (hasRec, type, recordText = '') => {
@@ -423,6 +424,14 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
         <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
           {activeScanId ? 'No email security data found for this scan.' : 'Select a target domain or scan to view email security results.'}
         </div>
+      )}
+
+      {/* Recommendation Modal Popup */}
+      {activeRec && (
+        <EmailSecurityRecommendations
+          rec={activeRec}
+          onClose={() => setActiveRec(null)}
+        />
       )}
     </div>
   );
