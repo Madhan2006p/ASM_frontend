@@ -39,12 +39,14 @@ const Certificates = ({
   // Fetch certificate & vulnerability data when activeScanId changes
   useEffect(() => {
     const fetchData = async () => {
-      if (!activeScanId) return;
       setLoading(true);
 
       try {
         // Fetch SSL certificates from backend
-        const certData = await api.get(`/api/attacksurface/ssl-certificates/?scan=${activeScanId}`).catch(() => []);
+        const certEndpoint = activeScanId
+          ? `/api/attacksurface/ssl-certificates/?scan=${activeScanId}`
+          : `/api/attacksurface/ssl-certificates/`;
+        const certData = await api.get(certEndpoint).catch(() => []);
         const certResults = Array.isArray(certData) ? certData : (certData.results || []);
 
         {
@@ -86,7 +88,10 @@ const Certificates = ({
         }
 
         // Fetch SSL vulnerabilities from backend
-        const vulnData = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`).catch(() => []);
+        const vulnEndpoint = activeScanId
+          ? `/api/attacksurface/vulnerabilities/?scan=${activeScanId}`
+          : `/api/attacksurface/vulnerabilities/`;
+        const vulnData = await api.get(vulnEndpoint).catch(() => []);
         const vulnResults = Array.isArray(vulnData) ? vulnData : (vulnData.results || []);
         
         const sslVulnsOnly = vulnResults.filter(v => 
@@ -130,20 +135,29 @@ const Certificates = ({
   // Domain Filtered Datasets
   const domainFilteredCerts = useMemo(() => {
     if (selectedDomain === 'Overall') return certs;
-    const targetQuery = selectedDomain.toLowerCase().replace(/\.in|\.com/g, '');
-    return certs.filter(c => c.domain.toLowerCase().includes(targetQuery));
+    const cleanDomain = selectedDomain.toLowerCase().trim();
+    return certs.filter(c => {
+      const cDom = (c.domain || '').toLowerCase();
+      return cDom === cleanDomain || cDom.endsWith('.' + cleanDomain) || cDom.includes(cleanDomain);
+    });
   }, [certs, selectedDomain]);
 
   const domainFilteredVulns = useMemo(() => {
     if (selectedDomain === 'Overall') return vulnerabilities;
-    const targetQuery = selectedDomain.toLowerCase().replace(/\.in|\.com/g, '');
-    return vulnerabilities.filter(v => v.domain.toLowerCase().includes(targetQuery));
+    const cleanDomain = selectedDomain.toLowerCase().trim();
+    return vulnerabilities.filter(v => {
+      const vDom = (v.domain || '').toLowerCase();
+      return vDom === cleanDomain || vDom.endsWith('.' + cleanDomain) || vDom.includes(cleanDomain);
+    });
   }, [vulnerabilities, selectedDomain]);
 
   const domainFilteredNoCerts = useMemo(() => {
     if (selectedDomain === 'Overall') return noCerts;
-    const targetQuery = selectedDomain.toLowerCase().replace(/\.in|\.com/g, '');
-    return noCerts.filter(n => n.domain.toLowerCase().includes(targetQuery));
+    const cleanDomain = selectedDomain.toLowerCase().trim();
+    return noCerts.filter(n => {
+      const nDom = (n.domain || '').toLowerCase();
+      return nDom === cleanDomain || nDom.endsWith('.' + cleanDomain) || nDom.includes(cleanDomain);
+    });
   }, [noCerts, selectedDomain]);
 
   // Compute Summary Card Counts for Certificate View
