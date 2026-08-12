@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './SubdomainDiscovery.css';
-import { Search, RefreshCw, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Globe2, Network, Server, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Search, RefreshCw, ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -10,13 +10,8 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedRow, setExpandedRow] = useState(null);
   
   const itemsPerPage = 10;
-
-  const toggleExpand = (id) => {
-    setExpandedRow(prev => (prev === id ? null : id));
-  };
 
   // Load subdomains when activeScanId or selectedDomain changes.
   // silent=true skips the loading spinner so background polls don't flicker.
@@ -24,7 +19,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     try {
       if (!silent) {
         setLoading(true);
-        setExpandedRow(null); // fresh load (scan/domain switch) → collapse any open row
       }
       let allData = [];
       const seenIds = new Set();
@@ -214,16 +208,17 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
             </div>
           </div>
 
+          <div className="sub-table-scroll">
           <table className="sub-table">
             <thead>
               <tr>
-                <th style={{ width: '5%' }}>S.No</th>
-                <th style={{ width: '20%' }}>Domain</th>
-                <th style={{ width: '10%' }}>Status</th>
-                <th style={{ width: '15%' }}>Title</th>
-                <th style={{ width: '15%' }}>IP Addresses</th>
-                <th style={{ width: '10%' }}>Ports</th>
-                <th style={{ width: '15%' }}>Screenshot</th>
+                <th style={{ width: '4%' }}>S.No</th>
+                <th style={{ width: '18%' }}>Domain</th>
+                <th style={{ width: '8%' }}>Status</th>
+                <th style={{ width: '12%' }}>Title</th>
+                <th style={{ width: '21%' }}>IP Addresses</th>
+                <th style={{ width: '15%' }}>Ports</th>
+                <th style={{ width: '12%' }}>Screenshot</th>
                 <th style={{ width: '10%' }}>Location</th>
               </tr>
             </thead>
@@ -239,17 +234,13 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                 const statusCfg = getScanStatus(item);
                 
                 const ips = Array.isArray(item.ip) ? item.ip : (typeof item.ip === 'string' ? item.ip.split(',') : []);
-                const extraIps = ips.length > 1 ? ips.length - 1 : 0;
                 
                 const ports = Array.isArray(item.ports) ? item.ports : (typeof item.ports === 'string' ? item.ports.split(',') : []);
-                const shownPorts = ports.slice(0, 3);
-                const extraPorts = ports.length > 3 ? ports.length - 3 : 0;
                 
                 const title = item.title && item.title.length > 20 ? item.title.substring(0, 20) + '...' : (item.title || '-');
 
                 return (
-                  <React.Fragment key={item.id || index}>
-                  <tr>
+                  <tr key={item.id || index}>
                     <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
                       {startIndex + index + 1}
                     </td>
@@ -266,39 +257,27 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }} title={item.title}>
                       {title}
                     </td>
-                    <td style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
-                      <button
-                        className="sub-more-btn"
-                        onClick={() => toggleExpand(item.id)}
-                        title={expandedRow === item.id ? 'Hide all IPs' : 'Show all IPs'}
-                        aria-expanded={expandedRow === item.id}
-                        aria-label={`${expandedRow === item.id ? 'Hide' : 'Show'} all IP addresses for ${item.domain}`}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          {ips.length > 0 ? ips.slice(0, 2).map(s => String(s).trim()).join(', ') : '-'}
-                          {extraIps > 0 && <span className="sub-badge-count">+{extraIps}</span>}
-                          {ips.length > 0 && (expandedRow === item.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />)}
+                    <td className="td-ip" style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
+                      {ips.length > 0 ? (
+                        <div className="sub-ip-list">
+                          {ips.map((ip, i) => (
+                            <span key={i} className="sub-ip-chip">{String(ip).trim()}</span>
+                          ))}
                         </div>
-                      </button>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                      )}
                     </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      <button
-                        className="sub-more-btn"
-                        onClick={() => toggleExpand(item.id)}
-                        title={expandedRow === item.id ? 'Hide all ports' : 'Show all ports'}
-                        aria-expanded={expandedRow === item.id}
-                        aria-label={`${expandedRow === item.id ? 'Hide' : 'Show'} all open ports for ${item.domain}`}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flexWrap: 'wrap' }}>
-                          {ports.length === 0 ? (
-                            <span style={{ color: 'var(--text-muted)' }}>-</span>
-                          ) : shownPorts.map((p, i) => (
+                    <td className="td-ports" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      {ports.length > 0 ? (
+                        <div className="sub-port-list">
+                          {ports.map((p, i) => (
                             <span key={i} className="sub-port-pill">{String(p).trim()}</span>
                           ))}
-                          {extraPorts > 0 && <span className="sub-badge-count">+{extraPorts}</span>}
-                          {ports.length > 0 && (expandedRow === item.id ? <ChevronUp size={13} /> : <ChevronDown size={13} />)}
                         </div>
-                      </button>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                      )}
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       {item.screenshot_url ? (
@@ -315,46 +294,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                       </div>
                     </td>
                   </tr>
-                
-                  {expandedRow === item.id && (
-                    <tr className="sub-expand-row">
-                      <td colSpan="8" style={{ padding: 0, borderBottom: '1px solid var(--border-color)' }}>
-                        <div className="sub-expand-panel">
-                          {/* All IP Addresses */}
-                          <div className="sub-expand-card">
-                            <div className="sub-expand-title">
-                              <Network size={14} color="#8B5CF6" />
-                              IP Addresses
-                              <span className="sub-expand-count">{ips.length}</span>
-                            </div>
-                            <div className="sub-expand-chips">
-                              {ips.length > 0 ? ips.map((ip, i) => (
-                                <span key={i} className="sub-expand-chip sub-chip-ip">{String(ip).trim()}</span>
-                              )) : (
-                                <span className="sub-expand-empty">No IPs resolved</span>
-                              )}
-                            </div>
-                          </div>
-                          {/* All Open Ports */}
-                          <div className="sub-expand-card">
-                            <div className="sub-expand-title">
-                              <Server size={14} color="#A78BFA" />
-                              Open Ports
-                              <span className="sub-expand-count">{ports.length}</span>
-                            </div>
-                            <div className="sub-expand-chips">
-                              {ports.length > 0 ? ports.map((p, i) => (
-                                <span key={i} className="sub-expand-chip sub-chip-port">{String(p).trim()}</span>
-                              )) : (
-                                <span className="sub-expand-empty">No open ports detected</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                  </React.Fragment>);
+                  );
               })}
 
               {!loading && currentData.length === 0 && (
@@ -367,6 +307,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
                           </tbody>
           </table>
+          </div>
 
           {/* Footer Area */}
           <div className="table-footer">
