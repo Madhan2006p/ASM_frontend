@@ -9,6 +9,17 @@ import {
 import { api } from '../../utils/api';
 import './MobileVAPT.css';
 
+/* Severity filter groups (CRITICAL & DANGEROUS share the same pill style; SIGNATURE renders as NORMAL) */
+const SEVERITY_GROUPS = {
+  CRITICAL: ['CRITICAL', 'DANGEROUS'],
+  HIGH: ['HIGH'],
+  MEDIUM: ['MEDIUM'],
+  WARNING: ['WARNING'],
+  LOW: ['LOW'],
+  INFO: ['INFO'],
+  NORMAL: ['NORMAL', 'SIGNATURE'],
+};
+
 /* ── Severity pill (Open Ports style: rounded tab with colored dot) ── */
 const SevPill = ({ severity }) => {
   const s = ((severity || 'NORMAL') + '').toUpperCase();
@@ -56,6 +67,7 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [detail, setDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('App Permission');
+  const [severityFilter, setSeverityFilter] = useState('ALL');
 
   const fileRef = useRef(null);
 
@@ -176,6 +188,15 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
   
   const tableData = getTableData();
 
+  const isPerm = selectedCategory === 'App Permission';
+  const filteredTableData = severityFilter === 'ALL'
+    ? tableData
+    : tableData.filter(row => {
+        const sev = (isPerm ? (row.status || 'Normal') : row.severity || '').toUpperCase();
+        const group = SEVERITY_GROUPS[severityFilter] || [];
+        return group.includes(sev);
+      });
+
   return (
     <div className="global-page-container page-animate">
 
@@ -292,7 +313,34 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
           </div>
 
           {/* TABLE (Endpoints / Open Ports UI) */}
-          <div className="mv-table-wrapper">
+          <div className="mv-table-area">
+            <div className="mv-table-toolbar">
+              <div className="mv-table-toolbar-left">
+                <span className="mv-table-toolbar-title">{selectedCategory}</span>
+                <span className="mv-table-toolbar-count">
+                  {filteredTableData.length} / {tableData.length} findings
+                </span>
+              </div>
+              <div className="mv-severity-filter">
+                <label htmlFor="mv-sev-filter">Severity</label>
+                <select
+                  id="mv-sev-filter"
+                  className="mv-app-select"
+                  value={severityFilter}
+                  onChange={(e) => setSeverityFilter(e.target.value)}
+                >
+                  <option value="ALL">All Severities</option>
+                  <option value="CRITICAL">Critical</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="LOW">Low</option>
+                  <option value="INFO">Info</option>
+                  <option value="NORMAL">Normal</option>
+                </select>
+              </div>
+            </div>
+            <div className="mv-table-wrapper">
             <table className="mv-table">
               <thead>
                 <tr>
@@ -304,11 +352,14 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
                 </tr>
               </thead>
               <tbody>
-                {tableData.length === 0 && (
-                  <tr><td colSpan="5" style={{textAlign:'center', padding:'3rem', color:'#64748B'}}>No items found for {selectedCategory}.</td></tr>
+                {filteredTableData.length === 0 && (
+                  <tr><td colSpan="5" style={{textAlign:'center', padding:'3rem', color:'#64748B'}}>
+                    {tableData.length === 0
+                      ? `No items found for ${selectedCategory}.`
+                      : 'No findings match the selected severity filter.'}
+                  </td></tr>
                 )}
-                {tableData.map((row, idx) => {
-                  const isPerm = selectedCategory === 'App Permission';
+                {filteredTableData.map((row, idx) => {
                   const title = isPerm ? row.permission_name : row.vulnerability;
                   const severity = isPerm ? (row.status || 'Normal') : row.severity;
 
@@ -341,6 +392,7 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
                 })}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       )}

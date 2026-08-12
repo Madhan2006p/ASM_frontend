@@ -536,8 +536,6 @@
   border-color: rgba(22, 163, 74, 0.18) !important;
 }
 
-.sub-badge-count { background-color: rgba(139, 92, 246, 0.1); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.2); padding: 0.1rem 0.4rem; border-radius: 12px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem; }
-
 /* Status Filter Tabs */
 .sub-status-tabs {
   display: flex;
@@ -603,6 +601,12 @@
   font-weight: 600;
   font-family: ui-monospace, SFMono-Regular, monospace;
   white-space: nowrap;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.sub-port-pill:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(139, 92, 246, 0.14);
 }
 
 /* Screenshot thumbnail with hover zoom */
@@ -640,114 +644,55 @@
   font-style: italic;
 }
 
-/* ── Expandable detail row (all IPs / all Ports) ─────────────── */
-.sub-more-btn {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0.35rem;
-  border-radius: 6px;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  transition: background 0.15s ease;
-}
-.sub-more-btn:hover {
-  background: rgba(139, 92, 246, 0.08);
-}
-.sub-more-btn:hover .sub-badge-count {
-  background-color: rgba(139, 92, 246, 0.28);
-  transform: scale(1.1);
-}
-.sub-badge-count {
-  transition: background-color 0.15s ease, transform 0.15s ease;
+/* ── Inline IP & Port chips (all shown, no expand row) ─────────────── */
+/* Horizontal scroll wrapper — columns keep their width; scrolls instead of crushing */
+.sub-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.sub-expand-row td {
-  background: var(--bg-card-2);
+.sub-table {
+  min-width: 1080px;
 }
 
-.sub-expand-panel {
+/* Slightly tighter padding for the two chip columns */
+.sub-table td.td-ip,
+.sub-table td.td-ports {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* IPs — 2 per line, remaining IPs wrap to the next line */
+.sub-ip-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-  padding: 1rem 1.25rem 1.25rem;
-  animation: subExpandIn 0.22s ease;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem 0.5rem;
 }
 
-@keyframes subExpandIn {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.sub-expand-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 0.85rem 1rem;
-}
-
-.sub-expand-title {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-primary);
-  margin-bottom: 0.7rem;
-}
-
-.sub-expand-count {
-  margin-left: auto;
-  background: rgba(139, 92, 246, 0.12);
-  color: #c4b5fd;
-  border: 1px solid rgba(139, 92, 246, 0.28);
-  padding: 0.05rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
-  font-weight: 700;
-}
-
-.sub-expand-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.sub-expand-chip {
+.sub-ip-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  min-width: 0;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  padding: 0.28rem 0.65rem;
-  border-radius: 7px;
-  border: 1px solid transparent;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
-}
-
-.sub-expand-chip:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-}
-
-.sub-chip-ip {
-  background: rgba(59, 130, 246, 0.1);
   color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+  border-radius: 6px;
+  padding: 0.18rem 0.45rem;
+  overflow-wrap: anywhere;   /* never clip an IP — wrap it instead */
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.sub-chip-port {
-  background: rgba(139, 92, 246, 0.1);
-  color: #c4b5fd;
-  border-color: rgba(139, 92, 246, 0.25);
+.sub-ip-chip:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.14);
 }
 
-.sub-expand-empty {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-style: italic;
+/* Ports — 3–4 per line, remaining ports wrap to the next line */
+.sub-port-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.4rem;
 }
