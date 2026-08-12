@@ -39,7 +39,7 @@ Ensure the host system meets the following requirements:
 
 ```env
 # --- Django Core Settings ---
-SECRET_KEY=generate-a-strong-random-secret-key
+SECRET_KEY=django-insecure-asm-key-%9x!&p8#2q@v$m4*z7+L1w^e5(r0)t6y3u_i=o-p
 DEBUG=True
 ALLOWED_HOSTS=*
 
