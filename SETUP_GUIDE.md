@@ -6,12 +6,12 @@ This document provides complete instructions for setting up, configuring, and ru
 
 ## 📋 System Prerequisites
 
-Ensure the target host system meets the following requirements:
+Ensure the host system meets the following requirements:
 
-- **OS**: Linux (Ubuntu 20.04/22.04 LTS recommended) or macOS / WSL2 (Windows)
+- **OS**: Linux (Ubuntu 20.04/22.04 LTS recommended), macOS, or WSL2 (Windows)
 - **Python**: Version 3.10 or higher
 - **Node.js**: Version 18.x or higher & npm
-- **Redis Server**: Version 6.x or higher (used as Celery message broker)
+- **Redis Server**: Version 6.x or higher (used as Celery task broker)
 - **Database**: SQLite3 (default for local development) or PostgreSQL 14+ (recommended for production)
 - **Reconnaissance Tools (Installed in system PATH)**:
   - `subfinder`
@@ -77,18 +77,13 @@ ALERT_EMAIL_TO=admin@localhost
 VIRUSTOTAL_API_KEY=your_virustotal_api_key_here
 WHATCMS_API_KEY=your_whatcms_api_key_here
 
-# --- Faraday Security Platform (Optional Integration) ---
-FARADAY_PIPELINE_URL=http://localhost:8001
-FARADAY_AUTO_IMPORT_NUCLEI=True
-FARADAY_URL=http://localhost:5985
-FARADAY_USERNAME=faraday
-FARADAY_PASSWORD=changeme
-FARADAY_WORKSPACE=nuclei-asm
-FARADAY_VERIFY_SSL=false
-
-# --- MISP Threat Intelligence (Optional Integration) ---
-MISP_URL=http://localhost:80
-MISP_API_KEY=your_misp_api_key_here
+# --- Recon Tool Paths (Leave blank to auto-detect from system PATH) ---
+SUBFINDER_PATH=
+ASSETFINDER_PATH=
+FINDOMAIN_PATH=
+NAABU_PATH=
+GITLEAKS_PATH=
+NUCLEI_TEMPLATES_PATH=
 ```
 
 ### 1.2 Frontend Environment Setup (`frontend/.env`)
@@ -153,7 +148,7 @@ MISP_API_KEY=your_misp_api_key_here
 
 ## 🏃 Step 3: Starting the Application Services
 
-The ASM system requires 4 running processes: **Redis**, **Celery Worker**, **Django Backend Server**, and **Frontend Dev Server**.
+The ASM system uses **Celery and Redis** for managing asynchronous background tasks (scans, asset discovery, port scanning, etc.).
 
 ### 3.1 Start Redis Broker
 Ensure Redis server is running locally:
@@ -165,7 +160,7 @@ sudo systemctl start redis-server
 docker run -d -p 6379:6379 --name asm-redis redis:alpine
 ```
 
-### 3.2 Start Celery Worker (Asynchronous Scan Execution)
+### 3.2 Start Celery Worker (Asynchronous Task Runner)
 In a terminal window (with `backend/venv` activated):
 ```bash
 cd backend
@@ -173,15 +168,9 @@ source venv/bin/activate
 celery -A core worker -l info
 ```
 
-### 3.3 (Optional) Start Celery Beat (Scheduled Asset Monitoring)
-In a separate terminal window:
-```bash
-cd backend
-source venv/bin/activate
-celery -A core beat -l info
-```
+*(Note: Celery tasks can also run in synchronous mode when `CELERY_TASK_ALWAYS_EAGER = True` is set in `core/settings.py` for lightweight standalone environments without dedicated Celery workers).*
 
-### 3.4 Start Django API Server
+### 3.3 Start Django API Server
 In a separate terminal window:
 ```bash
 cd backend
@@ -221,7 +210,7 @@ The REST API will be available at: `http://localhost:8000`
 
 ---
 
-## 🧪 Summary of Workflow Commands
+## 🧪 Summary of Operating Commands
 
 ```bash
 # --- Terminal 1: Redis ---

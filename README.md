@@ -40,8 +40,11 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### 2. Start Backend & Services
+### 2. Start Backend Services (Redis, Celery, & Django API)
 ```bash
+# Start Redis Server
+sudo systemctl start redis-server
+
 # Set up Python environment
 cd backend
 python3 -m venv venv
@@ -56,7 +59,7 @@ python seed_data.py
 # Start Celery Worker (In background or separate terminal)
 celery -A core worker -l info
 
-# Start Django Server
+# Start Django API Server
 python manage.py runserver 0.0.0.0:8000
 ```
 
@@ -80,4 +83,4 @@ npm run dev
 
 ## 📖 Complete Documentation
 
-Please refer to [`SETUP_GUIDE.md`](file:///home/madhan/Desktop/ASM-New/SETUP_GUIDE.md) for full configuration details including external security tool integrations (Subfinder, Naabu, Gitleaks, VirusTotal, Faraday, MISP).
+Please refer to [`SETUP_GUIDE.md`](file:///home/madhan/Desktop/ASM-New/SETUP_GUIDE.md) for full configuration details.
