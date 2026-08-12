@@ -16,7 +16,7 @@ A comprehensive Attack Surface Management platform designed to discover, track, 
 │   ├── brand_monitoring/  # Phishing & Brand Protection logic
 │   ├── owasp_scanner/     # OWASP Vulnerability Scanner module
 │   ├── reconnaissance/    # Subdomain, DNS, & Port Scanners integration
-│   ├── seed_data.py       # Database Initialization & Admin Seeding
+│   ├── seed_data.py       # PostgreSQL Database Initialization & Admin Seeding
 │   └── .env.example       # Backend Configuration Template
 ├── frontend/               # React + Vite Web Application Interface
 │   ├── src/               # React UI Components, Dashboards & Hooks
@@ -29,9 +29,18 @@ A comprehensive Attack Surface Management platform designed to discover, track, 
 
 ## 🚀 Quick Setup Instructions
 
-For step-by-step documentation, see [SETUP_GUIDE.md](file:///home/madhan/Desktop/ASM-New/SETUP_GUIDE.md).
+For complete step-by-step documentation, see [SETUP_GUIDE.md](file:///home/madhan/Desktop/ASM-New/SETUP_GUIDE.md).
 
-### 1. Configure Environment Variables
+### 1. Database & Services Setup (PostgreSQL & Redis)
+```bash
+sudo systemctl start postgresql
+sudo systemctl start redis-server
+
+# Create PostgreSQL database
+sudo -u postgres psql -c "CREATE DATABASE asm_db;"
+```
+
+### 2. Configure Environment Variables
 ```bash
 # Backend Environment
 cp backend/.env.example backend/.env
@@ -40,30 +49,26 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### 2. Start Backend Services (Redis, Celery, & Django API)
+### 3. Start Backend Services (Django API & Celery)
 ```bash
-# Start Redis Server
-sudo systemctl start redis-server
-
-# Set up Python environment
 cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 playwright install chromium
 
-# Migrate Database & Seed Initial Admin Account
+# Migrate PostgreSQL Database & Seed Admin Account
 python manage.py migrate
 python seed_data.py
 
-# Start Celery Worker (In background or separate terminal)
+# Start Celery Worker (Separate terminal)
 celery -A core worker -l info
 
-# Start Django API Server
+# Start Django Server
 python manage.py runserver 0.0.0.0:8000
 ```
 
-### 3. Start Frontend UI
+### 4. Start Frontend UI
 ```bash
 cd frontend
 npm install

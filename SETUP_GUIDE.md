@@ -1,6 +1,6 @@
 # Attack Surface Management (ASM) - Setup & Deployment Guide
 
-This document provides complete instructions for setting up, configuring, and running the **Attack Surface Management (ASM)** application (Backend API, Celery Workers, Redis, Database, and Frontend).
+This document provides complete instructions for setting up, configuring, and running the **Attack Surface Management (ASM)** application (Backend API, Celery Workers, Redis, PostgreSQL Database, and Frontend).
 
 ---
 
@@ -11,8 +11,8 @@ Ensure the host system meets the following requirements:
 - **OS**: Linux (Ubuntu 20.04/22.04 LTS recommended), macOS, or WSL2 (Windows)
 - **Python**: Version 3.10 or higher
 - **Node.js**: Version 18.x or higher & npm
+- **Database**: PostgreSQL 14+ (Required)
 - **Redis Server**: Version 6.x or higher (used as Celery task broker)
-- **Database**: SQLite3 (default for local development) or PostgreSQL 14+ (recommended for production)
 - **Reconnaissance Tools (Installed in system PATH)**:
   - `subfinder`
   - `assetfinder`
@@ -23,9 +23,24 @@ Ensure the host system meets the following requirements:
 
 ---
 
-## ⚙️ Step 1: Environment Variables Configuration (`.env`)
+## 🗄️ Step 1: PostgreSQL Database Setup
 
-### 1.1 Backend Environment Setup (`backend/.env`)
+1. Start PostgreSQL server:
+   ```bash
+   sudo systemctl start postgresql
+   ```
+2. Create PostgreSQL database and user:
+   ```bash
+   sudo -u postgres psql -c "CREATE DATABASE asm_db;"
+   sudo -u postgres psql -c "CREATE USER postgres WITH PASSWORD 'postgres';"
+   sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE asm_db TO postgres;"
+   ```
+
+---
+
+## ⚙️ Step 2: Environment Variables Configuration (`.env`)
+
+### 2.1 Backend Environment Setup (`backend/.env`)
 
 1. Navigate to the backend directory:
    ```bash
@@ -43,18 +58,13 @@ SECRET_KEY=django-insecure-asm-key-%9x!&p8#2q@v$m4*z7+L1w^e5(r0)t6y3u_i=o-p
 DEBUG=True
 ALLOWED_HOSTS=*
 
-# --- Database Configuration ---
-# Default SQLite3 setup:
-DB_ENGINE=django.db.backends.sqlite3
-DB_NAME=db.sqlite3
-
-# For PostgreSQL setup (Optional):
-# DB_ENGINE=django.db.backends.postgresql
-# DB_NAME=asm_db
-# DB_USER=postgres
-# DB_PASSWORD=your_postgres_password
-# DB_HOST=localhost
-# DB_PORT=5432
+# --- Database Configuration (PostgreSQL) ---
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=asm_db
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
 
 # --- Redis Broker & Celery ---
 REDIS_URL=redis://localhost:6379/0
@@ -86,7 +96,7 @@ GITLEAKS_PATH=
 NUCLEI_TEMPLATES_PATH=
 ```
 
-### 1.2 Frontend Environment Setup (`frontend/.env`)
+### 2.2 Frontend Environment Setup (`frontend/.env`)
 
 1. Navigate to the frontend directory:
    ```bash
@@ -98,15 +108,14 @@ NUCLEI_TEMPLATES_PATH=
    ```
 3. Configure `frontend/.env`:
    ```env
-   # API Backend URL (Leave empty if using Vite dev proxy, or specify server URL)
    VITE_API_URL=http://localhost:8000
    ```
 
 ---
 
-## 🚀 Step 2: Backend Setup & Execution
+## 🚀 Step 3: Backend Setup & Execution
 
-### 2.1 Virtual Environment & Dependency Installation
+### 3.1 Virtual Environment & Dependency Installation
 
 1. Enter the `backend` directory:
    ```bash
@@ -120,23 +129,23 @@ NUCLEI_TEMPLATES_PATH=
    ```bash
    source venv/bin/activate
    ```
-4. Upgrade pip & install Python dependencies:
+4. Upgrade pip & install Python dependencies (includes `psycopg2-binary` for PostgreSQL):
    ```bash
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
-5. Install Playwright browser dependencies (required for automated website screenshots & technology scans):
+5. Install Playwright browser dependencies:
    ```bash
    playwright install chromium
    ```
 
-### 2.2 Database Initialization & Data Seeding
+### 3.2 Database Migrations & Data Seeding (PostgreSQL)
 
-1. Apply Django database migrations:
+1. Apply Django database migrations to PostgreSQL:
    ```bash
    python manage.py migrate
    ```
-2. Seed the database with initial admin credentials and default settings:
+2. Seed the PostgreSQL database with initial admin credentials and default settings:
    ```bash
    python seed_data.py
    ```
@@ -146,21 +155,17 @@ NUCLEI_TEMPLATES_PATH=
 
 ---
 
-## 🏃 Step 3: Starting the Application Services
+## 🏃 Step 4: Starting the Application Services
 
-The ASM system uses **Celery and Redis** for managing asynchronous background tasks (scans, asset discovery, port scanning, etc.).
+The ASM system uses **Celery and Redis** for asynchronous background tasks.
 
-### 3.1 Start Redis Broker
-Ensure Redis server is running locally:
+### 4.1 Start Redis Broker
+Ensure Redis server is running:
 ```bash
-# Ubuntu/Debian service
 sudo systemctl start redis-server
-
-# Or run via Docker:
-docker run -d -p 6379:6379 --name asm-redis redis:alpine
 ```
 
-### 3.2 Start Celery Worker (Asynchronous Task Runner)
+### 4.2 Start Celery Worker
 In a terminal window (with `backend/venv` activated):
 ```bash
 cd backend
@@ -168,22 +173,20 @@ source venv/bin/activate
 celery -A core worker -l info
 ```
 
-*(Note: Celery tasks can also run in synchronous mode when `CELERY_TASK_ALWAYS_EAGER = True` is set in `core/settings.py` for lightweight standalone environments without dedicated Celery workers).*
-
-### 3.3 Start Django API Server
+### 4.3 Start Django API Server
 In a separate terminal window:
 ```bash
 cd backend
 source venv/bin/activate
 python manage.py runserver 0.0.0.0:8000
 ```
-The REST API will be available at: `http://localhost:8000`
+The REST API will be available at `http://localhost:8000`.
 
 ---
 
-## 💻 Step 4: Frontend Setup & Execution
+## 💻 Step 5: Frontend Setup & Execution
 
-1. Open a new terminal and navigate to the `frontend` directory:
+1. Open a terminal and navigate to `frontend`:
    ```bash
    cd frontend
    ```
@@ -195,25 +198,24 @@ The REST API will be available at: `http://localhost:8000`
    ```bash
    npm run dev
    ```
-4. Access the web interface in your browser at `http://localhost:5173`.
+4. Access the UI in browser at `http://localhost:5173`.
 
 ---
 
-## 🔑 Default Login Credentials
+## 🔑 Default Access Credentials
 
 | Role | Username | Default Password |
 | :--- | :--- | :--- |
 | **Super Admin** | `admin` | `changeme` |
 | **Standard User** | `user` | `changeme` |
 
-*Note: Please update default passwords after first login!*
-
 ---
 
 ## 🧪 Summary of Operating Commands
 
 ```bash
-# --- Terminal 1: Redis ---
+# --- Terminal 1: PostgreSQL & Redis Services ---
+sudo systemctl start postgresql
 sudo systemctl start redis-server
 
 # --- Terminal 2: Celery Worker ---
