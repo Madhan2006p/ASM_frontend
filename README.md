@@ -49,7 +49,7 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-### 3. Start Backend Services (Django API & Celery)
+### 3. Start Backend Services (Django API on Port 8001 & Celery)
 ```bash
 cd backend
 python3 -m venv venv
@@ -64,8 +64,8 @@ python seed_data.py
 # Start Celery Worker (Separate terminal)
 celery -A core worker -l info
 
-# Start Django Server
-python manage.py runserver 0.0.0.0:8000
+# Start Django Server on Port 8001
+python manage.py runserver 0.0.0.0:8001
 ```
 
 ### 4. Start Frontend UI

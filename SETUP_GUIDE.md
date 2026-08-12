@@ -108,7 +108,7 @@ NUCLEI_TEMPLATES_PATH=
    ```
 3. Configure `frontend/.env`:
    ```env
-   VITE_API_URL=http://localhost:8000
+   VITE_API_URL=http://localhost:8001
    ```
 
 ---
@@ -173,14 +173,14 @@ source venv/bin/activate
 celery -A core worker -l info
 ```
 
-### 4.3 Start Django API Server
+### 4.3 Start Django API Server (Port 8001)
 In a separate terminal window:
 ```bash
 cd backend
 source venv/bin/activate
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8001
 ```
-The REST API will be available at `http://localhost:8000`.
+The REST API will be available at `http://localhost:8001`.
 
 ---
 
@@ -222,9 +222,9 @@ sudo systemctl start redis-server
 cd backend && source venv/bin/activate
 celery -A core worker -l info
 
-# --- Terminal 3: Backend API ---
+# --- Terminal 3: Backend API (Port 8001) ---
 cd backend && source venv/bin/activate
-python manage.py runserver 0.0.0.0:8000
+python manage.py runserver 0.0.0.0:8001
 
 # --- Terminal 4: Frontend UI ---
 cd frontend
