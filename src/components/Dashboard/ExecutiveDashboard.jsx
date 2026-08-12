@@ -238,7 +238,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
 
           <div style={{ flex: 1, minHeight: '180px' }}>
             {trends.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={trends} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorAssets" x1="0" y1="0" x2="0" y2="1">
@@ -320,7 +320,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">MANAGED VS UNMANAGED</div>
           
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={managedChartData}
@@ -371,7 +371,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">VULNERABILITIES BY RISK SCORE</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={riskChartData}
@@ -442,7 +442,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">DOMAIN ASSETS DISTRIBUTION</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={domainChartData}
@@ -543,7 +543,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">MOBILE FINDINGS BY SEVERITY</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={mobileFindingsChartData}
@@ -644,7 +644,7 @@ const ExecutiveDashboard = ({ assignedDomains = [], selectedDomain, setSelectedD
           <div className="exec-widget-title">VIRUSTOTAL REPUTATION SHIELD</div>
 
           <div style={{ position: 'relative', height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie
                   data={vtChartData}
