@@ -2,19 +2,13 @@ import React from 'react';
 import { Lock } from 'lucide-react';
 import './TargetDomainTabs.css';
 
-const DEFAULT_DOMAINS = ['kct.ac.in', 'hackersinfotech.com'];
-
 const TargetDomainTabs = ({
   assignedDomains = [],
   selectedDomain = '',
   setSelectedDomain
 }) => {
-  // Combine assigned domains with default required domains ensuring kct.ac.in & hackersinfotech.com are present
-  const baseList = (Array.isArray(assignedDomains) && assignedDomains.length > 0)
-    ? assignedDomains
-    : DEFAULT_DOMAINS;
-
-  const domainList = Array.from(new Set([...baseList, 'kct.ac.in', 'hackersinfotech.com']));
+  // Only show domains the user is actually assigned — no hardcoded defaults.
+  const domainList = Array.isArray(assignedDomains) ? Array.from(new Set(assignedDomains)) : [];
 
   const tabs = [
     { label: 'All Domains', value: '' },
