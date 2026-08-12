@@ -1,203 +1,255 @@
 import React from 'react';
-import { Filter, ArrowRight } from 'lucide-react';
+import { Layers, AlertCircle, Hourglass } from 'lucide-react';
 import './CertDashboard.css';
-import PageHeaderCard from '../common/PageHeaderCard';
-import ScanSelector from '../common/ScanSelector';
 
-const CertDashboard = ({ certs = [], loading, assignedDomains, selectedDomain, setSelectedDomain, scansList, activeScanId, handleSelectScan }) => {
-  const activeCount = certs.length;
-  const expiringSoonCount = certs.filter(c => c.days !== null && c.days > 0 && c.days <= 30).length;
-  const expiredCount = certs.filter(c => c.days === 0).length;
-  const weakCount = certs.filter(c => ['C', 'D', 'E', 'F'].includes(c.sslGrade)).length;
-
-  // Calculate dynamic security health score
-  let score = 0;
-  let healthLabel = 'N/A';
-  if (certs.length > 0) {
-    score = 100;
-    score -= expiredCount * 15;
-    score -= expiringSoonCount * 5;
-    score -= weakCount * 8;
-    score -= certs.filter(c => !c.isTrusted).length * 20;
-    score = Math.max(30, score);
-
-    healthLabel = 'HEALTHY';
-    if (score < 50) healthLabel = 'CRITICAL';
-    else if (score < 80) healthLabel = 'WARNING';
-  }
-
-  // Expiring soon or critical list
-  const expiringList = [...certs]
-    .filter(c => c.days !== null)
-    .sort((a, b) => a.days - b.days)
-    .slice(0, 3);
-
-  // TLS distributions
-  const count13 = certs.filter(c => c.tls === 'TLS 1.3').length;
-  const count12 = certs.filter(c => c.tls === 'TLS 1.2').length;
-  const count10 = certs.filter(c => c.tls === 'TLS 1.0').length;
-  const totalCerts = certs.length || 1;
-  const pct13 = Math.round((count13 / totalCerts) * 100);
-  const pct12 = Math.round((count12 / totalCerts) * 100);
-  const pct10 = Math.round((count10 / totalCerts) * 100);
-
-  // CSV export handler
-  const handleExport = () => {
-    if (certs.length === 0) return;
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Domain,Issuer,Cert Type,TLS Version,Expiration Date,Days Left,Health Status,Grade,Trusted\n"
-      + certs.map(c => 
-          `"${c.domain}","${c.issuer}","${c.type}","${c.tls}","${c.expires}",${c.days},"${c.health}","${c.sslGrade}",${c.isTrusted}`
-        ).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "ssl_certificates_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+// Speedometer / Gauge Icon matching Screenshot 0
+const SpeedometerIcon = ({ color = '#3B82F6', percent = 50 }) => {
+  // Angle mapped from 0% (left) to 100% (right) across top half circle
+  const angle = 180 + (percent * 1.8);
+  const rad = (angle * Math.PI) / 180;
+  const needleX = 32 + 14 * Math.cos(rad);
+  const needleY = 36 + 14 * Math.sin(rad);
 
   return (
-    <div className="cert-dashboard-wrapper">
-      
-      <div style={{ marginBottom: '1.5rem' }}>
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
-      </div>
-
-      <PageHeaderCard 
-        badgeText="SECURITY"
-        title="SSL Certificates"
-        subtitle="Monitor certificate health, expiration dates, issuers, encryption strength, and SSL security posture across your attack surface."
-        stats={[
-          { label: 'Active Certificates', value: activeCount.toString(), subtext: 'Monitored hostnames' },
-          { label: 'Expiring Soon', value: expiringSoonCount.toString(), subtext: 'Next 30 days' },
-          { label: 'Expired', value: expiredCount.toString(), subtext: 'Requires immediate action' },
-          { label: 'Weak Configurations', value: weakCount.toString(), subtext: 'Protocol or cipher issues' }
-        ]}
+    <svg width="52" height="52" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="28" style={{ fill: 'var(--bg-card-2)', stroke: 'var(--border-color)' }} strokeWidth="2" />
+      {/* Track arc */}
+      <path
+        d="M 14 40 A 20 20 0 1 1 50 40"
+        style={{ stroke: 'var(--border-color)' }}
+        strokeWidth="6"
+        strokeLinecap="round"
+        fill="none"
       />
+      {/* Color filled arc */}
+      <path
+        d="M 14 40 A 20 20 0 1 1 50 40"
+        stroke={color}
+        strokeWidth="6"
+        strokeLinecap="round"
+        strokeDasharray="95"
+        strokeDashoffset={Math.max(0, 95 - (95 * Math.max(percent, 10)) / 100)}
+        fill="none"
+      />
+      {/* Pivot point */}
+      <circle cx="32" cy="36" r="3.5" style={{ fill: 'var(--text-secondary)' }} />
+      {/* Gauge Needle */}
+      <line
+        x1="32"
+        y1="36"
+        x2={needleX}
+        y2={needleY}
+        style={{ stroke: 'var(--text-primary)' }}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};
 
-      <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-        
+const CertDashboard = ({
+  domainsList = ['Overall'],
+  selectedDomain = 'Overall',
+  setSelectedDomain,
+  activeView = 'Certificate', // 'No Certificate' | 'Certificate' | 'SSL Vulnerability'
+  setActiveView,
+  // Certificate Summary Counts
+  certCounts = { overall: 0, expired: 0, yetToExpire: 0 },
+  selectedCertFilter = 'overall',
+  setSelectedCertFilter,
+  // Vulnerability Severity Counts
+  vulnCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+  selectedSeverityFilter = 'ALL',
+  setSelectedSeverityFilter
+}) => {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      
+      {/* 1. Main Page Header */}
+      <div className="ssl-page-header">
+        <h1 className="ssl-page-title">SSL Certificates</h1>
       </div>
 
-      {/* Middle Grid: Score & Timeline */}
-      <div className="cert-middle-grid">
-        
-        {/* Dark Score Card */}
-        <div className="score-card card-dark">
-          <h3 className="score-title">SSL Security Score</h3>
-          <p className="score-subtitle">Overall certificate portfolio health.</p>
+      {/* 2. Top Domain Navigation Bar */}
+      <div className="ssl-domain-nav-container">
+        <div className="ssl-domain-tabs">
+          {domainsList.map((domain) => (
+            <button
+              key={domain}
+              className={`ssl-domain-tab ${selectedDomain === domain ? 'active' : ''}`}
+              onClick={() => setSelectedDomain(domain)}
+            >
+              {domain}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Sub-View Switcher Navigation Tabs */}
+      <div className="ssl-view-switcher-container">
+        <div className="ssl-view-tabs">
+          <button
+            className={`ssl-view-tab ${activeView === 'No Certificate' ? 'active' : ''}`}
+            onClick={() => setActiveView('No Certificate')}
+          >
+            No Certificate
+          </button>
+          <button
+            className={`ssl-view-tab ${activeView === 'Certificate' ? 'active' : ''}`}
+            onClick={() => setActiveView('Certificate')}
+          >
+            Certificate
+          </button>
+          <button
+            className={`ssl-view-tab ${activeView === 'SSL Vulnerability' ? 'active' : ''}`}
+            onClick={() => setActiveView('SSL Vulnerability')}
+          >
+            SSL Vulnerability
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Dynamic Summary Cards based on Active View */}
+
+      {/* VIEW A: Certificate View - 3 Summary Cards */}
+      {activeView === 'Certificate' && (
+        <div className="ssl-cert-summary-grid">
           
-          <div className="gauge-container">
-            <div className="score-gauge">
-              <svg width="140" height="140" viewBox="0 0 140 140">
-                <circle cx="70" cy="70" r="60" stroke="#1E293B" strokeWidth="12" fill="none" />
-                <circle cx="70" cy="70" r="60" stroke="#3B82F6" strokeWidth="12" fill="none" strokeDasharray="377" strokeDashoffset={377 - (377 * score) / 100} strokeLinecap="round" />
-              </svg>
-              <div className="gauge-text">
-                <span className="score-num">{score}</span>
-                <span className="score-lbl">{healthLabel}</span>
-              </div>
+          {/* Card 1: Overall */}
+          <div
+            className={`ssl-cert-card ${selectedCertFilter === 'overall' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedCertFilter('overall')}
+          >
+            <div className="ssl-cert-card-icon cyan">
+              <Layers size={24} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Overall</span>
+              <span className="ssl-cert-card-value">{certCounts.overall}</span>
             </div>
           </div>
 
-          <div className="score-metrics">
-            <div className="metric-row">
-              <span className="metric-lbl">🗓️ Expiration Health</span>
-              <span className={`metric-val ${expiredCount > 0 ? 'val-fair' : expiringSoonCount > 0 ? 'val-good' : 'val-excellent'}`}>
-                {expiredCount > 0 ? 'Poor' : expiringSoonCount > 0 ? 'Good' : 'Excellent'}
-              </span>
+          {/* Card 2: Expired */}
+          <div
+            className={`ssl-cert-card ${selectedCertFilter === 'expired' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedCertFilter('expired')}
+          >
+            <div className="ssl-cert-card-icon red">
+              <AlertCircle size={24} />
             </div>
-            <div className="metric-row">
-              <span className="metric-lbl">🔒 Cipher Strength</span>
-              <span className={`metric-val ${weakCount > 0 ? 'val-good' : 'val-excellent'}`}>
-                {weakCount > 0 ? 'Fair' : 'Excellent'}
-              </span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-lbl">✅ Certificate Trust</span>
-              <span className={`metric-val ${certs.some(c => !c.isTrusted) ? 'val-fair' : 'val-excellent'}`}>
-                {certs.some(c => !c.isTrusted) ? 'Untrusted present' : 'Trusted'}
-              </span>
-            </div>
-            <div className="metric-row">
-              <span className="metric-lbl">⚙️ TLS Config</span>
-              <span className="metric-val val-excellent">Excellent</span>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Expired</span>
+              <span className="ssl-cert-card-value">{certCounts.expired}</span>
             </div>
           </div>
-        </div>
 
-        {/* Expiring List */}
-        <div className="bottom-card border-orange">
-           <h3 className="bottom-card-title">
-             <span style={{color: '#F97316'}}>⏱️</span> Expiring Certificates
-           </h3>
-           <p className="bottom-card-subtitle">Critically close to expiration boundaries.</p>
-           
-           <div className="expiring-list">
-             {expiringList.map((c, i) => (
-               <div key={i} className={`expiring-item ${c.days === 0 ? 'critical' : 'warning'}`}>
-                 <div>
-                   <div className="item-domain">{c.domain}</div>
-                   <div className={`item-expires ${c.days === 0 ? 'color-red' : 'color-orange'}`}>
-                     {c.days === 0 ? 'Expired' : `Expires in ${c.days} Days`}
-                   </div>
-                 </div>
-                 <ArrowRight size={16} color="#94A3B8" />
-               </div>
-             ))}
-             {expiringList.length === 0 && (
-               <div className="text-secondary" style={{ padding: '2rem 0', textAlign: 'center', fontSize: '0.85rem' }}>
-                 No certificates found.
-               </div>
-             )}
-           </div>
-        </div>
+          {/* Card 3: Yet To Expire */}
+          <div
+            className={`ssl-cert-card ${selectedCertFilter === 'yetToExpire' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedCertFilter('yetToExpire')}
+          >
+            <div className="ssl-cert-card-icon amber">
+              <Hourglass size={24} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Yet To Expire</span>
+              <span className="ssl-cert-card-value">{certCounts.yetToExpire}</span>
+            </div>
+          </div>
 
-        {/* Bar Chart */}
-        <div className="bottom-card">
-           <h3 className="bottom-card-title">TLS Version</h3>
-           <p className="bottom-card-subtitle">Protocol version active.</p>
-           
-           <div className="tls-bars">
-             <div className="bar-row">
-               <span className="bar-lbl">TLS 1.3</span>
-               <div className="bar-track">
-                 <div className="bar-fill" style={{width: `${pct13}%`}}></div>
-               </div>
-             </div>
-             <div className="bar-row">
-               <span className="bar-lbl">TLS 1.2</span>
-               <div className="bar-track">
-                 <div className="bar-fill" style={{width: `${pct12}%`}}></div>
-               </div>
-             </div>
-             <div className="bar-row">
-               <span className="bar-lbl">TLS 1.0 / 1.1</span>
-               <div className="bar-track">
-                 <div className="bar-fill" style={{width: `${pct10}%`}}></div>
-               </div>
-             </div>
-             
-             <div className="bar-axis">
-               <span>0</span>
-               <span>25</span>
-               <span>50</span>
-               <span>75</span>
-               <span>100</span>
-             </div>
-           </div>
         </div>
+      )}
 
-      </div>
+      {/* VIEW B: SSL Vulnerability View - 6 Status Summary Cards */}
+      {activeView === 'SSL Vulnerability' && (
+        <div className="ssl-vuln-status-grid">
+          
+          {/* Card 1: Overall */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'overall' || selectedSeverityFilter === 'ALL' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter('ALL')}
+          >
+            <div className="ssl-cert-card-icon cyan">
+              <Layers size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Overall</span>
+              <span className="ssl-cert-card-value">{vulnCounts.overall || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 2: Unreviewed */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'Unreviewed' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Unreviewed' ? 'ALL' : 'Unreviewed')}
+          >
+            <div className="ssl-cert-card-icon red">
+              <AlertCircle size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Unreviewed</span>
+              <span className="ssl-cert-card-value">{vulnCounts.unreviewed || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 3: In Progress */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'In Progress' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'In Progress' ? 'ALL' : 'In Progress')}
+          >
+            <div className="ssl-cert-card-icon amber">
+              <Hourglass size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">In Progress</span>
+              <span className="ssl-cert-card-value">{vulnCounts.inProgress || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 4: Muted */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'Muted' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Muted' ? 'ALL' : 'Muted')}
+          >
+            <div className="ssl-cert-card-icon slate">
+              <Hourglass size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Muted</span>
+              <span className="ssl-cert-card-value">{vulnCounts.muted || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 5: False Positive */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'False Positive' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'False Positive' ? 'ALL' : 'False Positive')}
+          >
+            <div className="ssl-cert-card-icon purple">
+              <AlertCircle size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">False Positive</span>
+              <span className="ssl-cert-card-value">{vulnCounts.falsePositive || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 6: Closed */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'Closed' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Closed' ? 'ALL' : 'Closed')}
+          >
+            <div className="ssl-cert-card-icon green">
+              <Layers size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Closed</span>
+              <span className="ssl-cert-card-value">{vulnCounts.closed || 0}</span>
+            </div>
+          </div>
+
+        </div>
+      )}
 
     </div>
   );

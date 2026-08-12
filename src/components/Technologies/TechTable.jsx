@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RefreshCw, X, ArrowUpDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Search, RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar } from 'lucide-react';
+import TechBadge from './TechBadge';
+import { parseTechEntry, getEolInfo, techCategoryIcon } from '../../utils/techUtils';
 import './Technologies.css';
+
+// Max technology badges shown inline per row before the "+N more" button.
+const INLINE_BADGE_LIMIT = 3;
 
 const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '' }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +23,22 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
     }
   };
 
+  const closeModal = () => setSelectedSubdomainModal(null);
+
+  // Escape key + body scroll lock while the modal is open
+  useEffect(() => {
+    if (!selectedSubdomainModal) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    window.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [selectedSubdomainModal]);
+
   const filteredData = (subdomainTechs || []).filter(item => {
     // Domain filter from top dropdown
     if (selectedDomain && selectedDomain !== 'ALL DOMAINS' && selectedDomain !== 'All Domains') {
@@ -30,9 +52,8 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
       const matchSub = (item.subdomain || '').toLowerCase().includes(query);
       const matchTitle = (item.title || '').toLowerCase().includes(query);
       const matchStatus = (item.status || '').toLowerCase().includes(query);
-      const matchTeam = (item.actionTeam || '').toLowerCase().includes(query);
       const matchTech = (item.technologies || []).some(t => t.toLowerCase().includes(query));
-      if (!matchSub && !matchTitle && !matchStatus && !matchTeam && !matchTech) return false;
+      if (!matchSub && !matchTitle && !matchStatus && !matchTech) return false;
     }
 
     return true;
@@ -62,17 +83,27 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
     }
   }, [searchQuery, subdomainTechs, selectedDomain, sortField, sortDirection]);
 
+  /* ── Modal summary stats ─────────────────────────────── */
+  const modalTechs = selectedSubdomainModal?.technologies || [];
+  const modalParsed = modalTechs.map(t => {
+    const { name, version, category } = parseTechEntry(t);
+    const eol = getEolInfo(name, version);
+    return { name, version, category, outdated: eol.outdated, eolNote: eol.note };
+  });
+  const modalWithVersion = modalParsed.filter(t => t.version).length;
+  const modalOutdated = modalParsed.filter(t => t.outdated).length;
+
   return (
     <div className="card tech-table-card">
-      
+
       {/* Search & Top Controls */}
       <div className="global-controls-row">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <div className="global-search-box">
             <Search size={16} color="#94A3B8" />
-            <input 
-              type="text" 
-              placeholder="Search domain, title, or technology..." 
+            <input
+              type="text"
+              placeholder="Search domain, title, or technology..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -96,10 +127,10 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
             <table className="tech-table">
               <thead>
                 <tr className="light-blue-header">
-                  <th style={{ width: '5%', textAlign: 'center' }}>
+                  <th style={{ width: '4%', textAlign: 'center' }}>
                     S.No
                   </th>
-                  <th style={{ width: '18%', cursor: 'pointer' }} onClick={() => handleSort('subdomain')}>
+                  <th style={{ width: '16%', cursor: 'pointer' }} onClick={() => handleSort('subdomain')}>
                     <div className="th-content">
                       Domain
                       <span className="th-icons">
@@ -107,7 +138,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                       </span>
                     </div>
                   </th>
-                  <th style={{ width: '10%', cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                  <th style={{ width: '8%', cursor: 'pointer' }} onClick={() => handleSort('status')}>
                     <div className="th-content">
                       Status
                       <span className="th-icons">
@@ -115,7 +146,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                       </span>
                     </div>
                   </th>
-                  <th style={{ width: '15%', cursor: 'pointer' }} onClick={() => handleSort('title')}>
+                  <th style={{ width: '11%', cursor: 'pointer' }} onClick={() => handleSort('title')}>
                     <div className="th-content">
                       Title
                       <span className="th-icons">
@@ -123,31 +154,15 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                       </span>
                     </div>
                   </th>
-                  <th style={{ width: '22%', cursor: 'pointer' }} onClick={() => handleSort('technologies')}>
+                  <th style={{ width: '34%', cursor: 'pointer' }} onClick={() => handleSort('technologies')}>
                     <div className="th-content">
-                      Technology
+                      Technology ({sortedData.reduce((s, r) => s + (r.technologies || []).length, 0)})
                       <span className="th-icons">
                         <ArrowUpDown size={12} className="header-icon" />
                       </span>
                     </div>
                   </th>
-                  <th style={{ width: '10%', cursor: 'pointer' }} onClick={() => handleSort('actionTeam')}>
-                    <div className="th-content">
-                      Action Team
-                      <span className="th-icons">
-                        <ArrowUpDown size={12} className="header-icon" />
-                      </span>
-                    </div>
-                  </th>
-                  <th style={{ width: '10%', cursor: 'pointer' }} onClick={() => handleSort('actionStatus')}>
-                    <div className="th-content">
-                      Action Status
-                      <span className="th-icons">
-                        <ArrowUpDown size={12} className="header-icon" />
-                      </span>
-                    </div>
-                  </th>
-                  <th style={{ width: '10%', cursor: 'pointer' }} onClick={() => handleSort('createdDate')}>
+                  <th style={{ width: '8%', cursor: 'pointer' }} onClick={() => handleSort('createdDate')}>
                     <div className="th-content">
                       Created Date
                       <span className="th-icons">
@@ -160,19 +175,24 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
               <tbody>
                 {sortedData.map((row, index) => {
                   const techs = row.technologies || [];
-                  const totalTechs = techs.length;
-                  const displayedTechs = techs.slice(0, 3);
-                  const remainingCount = totalTechs - 3;
 
                   return (
                     <tr key={row.id || index} className="tech-table-row">
                       <td style={{ textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>
                         {index + 1}
                       </td>
+                      {/* Clickable domain → full-screen popup */}
                       <td>
-                        <span className="tech-subdomain-text">
-                          {row.subdomain}
-                        </span>
+                        <button
+                          className="tech-subdomain-link"
+                          onClick={() => setSelectedSubdomainModal(row)}
+                          title="Click to view all technologies for this domain"
+                        >
+                          <span className="tech-subdomain-text">{row.subdomain}</span>
+                          <span className="tech-subdomain-eye">
+                            <Eye size={13} />
+                          </span>
+                        </button>
                       </td>
                       <td>
                         <span className="tech-status-badge active">
@@ -184,33 +204,24 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                         {row.title && row.title.length > 25 ? row.title.substring(0, 25) + '...' : (row.title || '-')}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
-                          {displayedTechs.map((tech, tIdx) => (
-                            <span key={tIdx} className="tech-tag-badge">
-                              {tech}
-                            </span>
+                        {/* Inline badges (capped) + "+N more" button → full popup */}
+                        <div className="tech-badges-wrap">
+                          {techs.slice(0, INLINE_BADGE_LIMIT).map((tech, tIdx) => (
+                            <TechBadge key={tIdx} raw={tech} />
                           ))}
-
-                          {remainingCount > 0 && (
+                          {techs.length === 0 && (
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No technologies</span>
+                          )}
+                          {techs.length > INLINE_BADGE_LIMIT && (
                             <button
-                              onClick={() => setSelectedSubdomainModal(row)}
                               className="tech-more-btn"
-                              title="Click to view all technologies for this domain"
+                              onClick={() => setSelectedSubdomainModal(row)}
+                              title="Click to view all technologies with versions"
                             >
-                              +{remainingCount} more
+                              +{techs.length - INLINE_BADGE_LIMIT} more
                             </button>
                           )}
                         </div>
-                      </td>
-                      <td>
-                        <span className="action-team-badge">
-                          {row.actionTeam || 'Unassigned'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="action-status-badge">
-                          {row.actionStatus || 'Open'}
-                        </span>
                       </td>
                       <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                         {row.createdDate || '—'}
@@ -224,128 +235,132 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
         )}
       </div>
 
-      {/* Modal Popup for Subdomain Technologies */}
-      {selectedSubdomainModal && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '1rem'
-          }}
-          onClick={() => setSelectedSubdomainModal(null)}
-        >
-          <div 
-            style={{
-              backgroundColor: 'var(--bg-card, #ffffff)',
-              border: '1px solid var(--border-color, #e2e8f0)',
-              borderRadius: '12px',
-              width: '100%',
-              maxWidth: '520px',
-              maxHeight: '85vh',
-              display: 'flex',
-              flexDirection: 'column',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
-              overflow: 'hidden'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div style={{
-              padding: '1.25rem 1.5rem',
-              borderBottom: '1px solid var(--border-color, #e2e8f0)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              background: 'var(--bg-main, #f8fafc)'
-            }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary, #0f172a)' }}>
-                  Technologies
-                </h3>
-                <span style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: '#3b82f6', fontWeight: '600', display: 'block', marginTop: '0.25rem' }}>
-                  {selectedSubdomainModal.subdomain}
+      {/* ── Full-screen overlapping modal popup ──
+           Rendered through a portal to document.body so it covers the WHOLE
+           viewport (sidebar + header included). The page container applies a
+           persistent transform animation which would otherwise trap a
+           position:fixed overlay to the table area only. */}
+      {selectedSubdomainModal && createPortal(
+        <div className="tech-modal-overlay" onClick={closeModal}>
+          <div className="tech-modal-panel" onClick={(e) => e.stopPropagation()}>
+
+            {/* Header */}
+            <div className="tech-modal-header">
+              <div className="tech-modal-title-block">
+                <span className="tech-modal-kicker">
+                  <Boxes size={12} /> TECHNOLOGY INVENTORY
                 </span>
+                <h3 className="tech-modal-title">{selectedSubdomainModal.subdomain}</h3>
+                <div className="tech-modal-meta">
+                  <span className="tech-modal-status">
+                    <span className="status-dot"></span>
+                    {selectedSubdomainModal.status || 'Active'}
+                  </span>
+                  <span className="tech-modal-meta-item">
+                    <Globe size={11} /> https://{selectedSubdomainModal.subdomain}
+                  </span>
+                  <span className="tech-modal-meta-item">
+                    {modalTechs.length} technologies detected
+                  </span>
+                  {selectedSubdomainModal.createdDate && (
+                    <span className="tech-modal-meta-item">
+                      <Calendar size={11} /> Scanned {selectedSubdomainModal.createdDate}
+                    </span>
+                  )}
+                  {selectedSubdomainModal.title && selectedSubdomainModal.title !== '-' && (
+                    <span className="tech-modal-meta-item">{selectedSubdomainModal.title}</span>
+                  )}
+                </div>
               </div>
-              <button 
-                onClick={() => setSelectedSubdomainModal(null)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-secondary, #64748b)',
-                  cursor: 'pointer',
-                  padding: '0.25rem',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              >
+              <button className="tech-modal-close" onClick={closeModal} title="Close (Esc)">
                 <X size={20} />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', marginBottom: '1rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                All Detected Technologies ({selectedSubdomainModal.technologies?.length || 0})
+            {/* Summary strip */}
+            <div className="tech-modal-summary">
+              <div className="tech-modal-summary-item">
+                <span className="tech-modal-summary-num">{modalTechs.length}</span>
+                <span className="tech-modal-summary-lbl">Total Technologies</span>
               </div>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '0.75rem' }}>
-                {(selectedSubdomainModal.technologies || []).map((tech, idx) => (
-                  <div key={idx} style={{
-                    padding: '0.6rem 0.85rem',
-                    borderRadius: '8px',
-                    background: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.25)',
-                    color: 'var(--text-primary, #1e293b)',
-                    fontSize: '0.875rem',
-                    fontWeight: '700',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6' }}></div>
-                    {tech}
-                  </div>
-                ))}
+              <div className="tech-modal-summary-item">
+                <span className="tech-modal-summary-num">{modalWithVersion}</span>
+                <span className="tech-modal-summary-lbl">With Version</span>
+              </div>
+              <div className={`tech-modal-summary-item ${modalOutdated > 0 ? 'warn' : 'ok'}`}>
+                <span className="tech-modal-summary-num">{modalOutdated}</span>
+                <span className="tech-modal-summary-lbl">{modalOutdated > 0 ? 'Outdated / EOL' : 'All Supported'}</span>
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div style={{
-              padding: '1rem 1.5rem',
-              borderTop: '1px solid var(--border-color, #e2e8f0)',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              background: 'var(--bg-main, #f8fafc)'
-            }}>
-              <button
-                onClick={() => setSelectedSubdomainModal(null)}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  borderRadius: '6px',
-                  background: '#2563eb',
-                  color: '#ffffff',
-                  border: 'none',
-                  fontSize: '0.875rem',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
+            {/* Body — every technology for this domain */}
+            <div className="tech-modal-body">
+              {modalParsed.length === 0 ? (
+                <div className="tech-modal-empty">
+                  <CheckCircle2 size={30} style={{ color: '#22C55E', opacity: 0.5 }} />
+                  <span>No technologies detected for this domain.</span>
+                </div>
+              ) : (
+                <>
+                  <div className="tech-modal-grid-head">
+                    <span>All technologies detected on this subdomain</span>
+                    <span className="tech-modal-grid-count">
+                      {modalParsed.filter(t => t.version).length} with version · {modalParsed.length} total
+                    </span>
+                  </div>
+                  <div className="tech-modal-grid">
+                    {modalParsed.map((t, idx) => (
+                      <div key={idx} className={`tech-modal-card ${t.outdated ? 'outdated' : ''}`}>
+                        <div className="tech-modal-card-top">
+                          <span
+                            className="tech-modal-card-icon"
+                            style={{ background: `${techCategoryIcon(t.category)}22`, borderColor: `${techCategoryIcon(t.category)}55` }}
+                          >
+                            <span
+                              className="tech-cat-dot"
+                              style={{ background: techCategoryIcon(t.category) }}
+                            />
+                          </span>
+                          <span className="tech-modal-card-name">{t.name}</span>
+                        </div>
+                        <div className="tech-modal-card-details">
+                          <div className={`tech-modal-card-version-row ${t.version ? (t.outdated ? 'outdated' : '') : 'unknown'}`}>
+                            <span className="tech-modal-card-detail-label">Version</span>
+                            <span className="tech-modal-card-detail-value">
+                              {t.version || 'Not disclosed'}
+                            </span>
+                          </div>
+                          <div className="tech-modal-card-cat">
+                            <span className="tech-modal-card-detail-label">Category</span>
+                            <span className="tech-modal-card-detail-value">{t.category || 'Uncategorized'}</span>
+                          </div>
+                        </div>
+                        <div className={`tech-modal-card-status ${t.outdated ? 'eol' : 'ok'}`}>
+                          {t.outdated ? (
+                            <><AlertTriangle size={12} /> {t.eolNote || 'Version reached end-of-life'}</>
+                          ) : (
+                            <><CheckCircle2 size={12} /> {t.version ? 'Supported version' : 'No version / no EOL concerns'}</>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="tech-modal-footer">
+              <span className="tech-modal-footer-hint">
+                Press <kbd>Esc</kbd> or click outside to close
+              </span>
+              <button className="tech-modal-footer-btn" onClick={closeModal}>
                 Close
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
