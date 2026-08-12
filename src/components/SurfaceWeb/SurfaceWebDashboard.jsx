@@ -249,7 +249,7 @@ const totalResults = stats?.total_results || 0;
                   </div>
                 </div>
                 <div style={{ flex: 1, borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={160}>
                     <AreaChart data={trendData} margin={{ top: 0, right: 0, bottom: 0, left: -30 }}>
                        <YAxis tick={{fill:'#64748b', fontSize:9}} axisLine={false} tickLine={false}/>
                        <Area type="monotone" dataKey="count" stroke={COLORS.info} fill={COLORS.info} fillOpacity={0.1} />

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './SubdomainDiscovery.css';
-import { Search, RefreshCw, ChevronLeft, ChevronRight, Globe2, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { Search, RefreshCw, ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -13,27 +13,66 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   
   const itemsPerPage = 10;
 
-  // Load subdomains when activeScanId changes
-  useEffect(() => {
-    const loadSubdomains = async () => {
-      if (!activeScanId) {
-        setSubdomains([]);
-        return;
-      }
-      try {
+  // Load subdomains when activeScanId or selectedDomain changes.
+  // silent=true skips the loading spinner so background polls don't flicker.
+  const loadSubdomains = useCallback(async (silent = false) => {
+    try {
+      if (!silent) {
         setLoading(true);
+      }
+      let allData = [];
+      const seenIds = new Set();
+
+      if (selectedDomain && activeScanId) {
+        // Specific domain: fetch from that scan only
         const data = await api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`);
         const list = Array.isArray(data) ? data : (data.results || []);
-        setSubdomains(list);
-      } catch (e) {
-        console.error("Failed to load subdomains", e);
-        setSubdomains([]);
-      } finally {
-        setLoading(false);
+        list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
+      } else if (!selectedDomain && scansList && scansList.length > 0) {
+        // All Domains: fetch from ALL scans and combine
+        for (const scan of scansList) {
+          try {
+            const data = await api.get(`/api/attacksurface/subdomains/?scan=${scan.id}`);
+            const list = Array.isArray(data) ? data : (data.results || []);
+            list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
+          } catch (e) { /* skip failed */ }
+        }
       }
-    };
+
+      setSubdomains(allData);
+    } catch (e) {
+      console.error("Failed to load subdomains", e);
+      setSubdomains([]);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [activeScanId, selectedDomain, scansList]);
+
+  // Load when the active scan / selected domain changes
+  useEffect(() => {
+    if (!selectedDomain && (!scansList || scansList.length === 0)) {
+      setSubdomains([]);
+      setLoading(false);
+      return;
+    }
+    if (selectedDomain && !activeScanId) {
+      setSubdomains([]);
+      setLoading(false);
+      return;
+    }
+
     loadSubdomains();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain, scansList, loadSubdomains]);
+
+  // Auto-refresh while a scan is still running so late-phase results
+  // (ports, screenshots, statuses) appear without a manual page reload.
+  useEffect(() => {
+    if (!activeScanId) return undefined;
+    const activeScan = scansList.find(s => s.id === Number(activeScanId));
+    if (!activeScan || (activeScan.status !== 'running' && activeScan.status !== 'pending')) return undefined;
+    const interval = setInterval(() => loadSubdomains(true), 5000);
+    return () => clearInterval(interval);
+  }, [activeScanId, scansList, loadSubdomains]);
 
 
 
@@ -169,16 +208,17 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
             </div>
           </div>
 
+          <div className="sub-table-scroll">
           <table className="sub-table">
             <thead>
               <tr>
-                <th style={{ width: '5%' }}>S.No</th>
-                <th style={{ width: '20%' }}>Domain</th>
-                <th style={{ width: '10%' }}>Status</th>
-                <th style={{ width: '15%' }}>Title</th>
-                <th style={{ width: '15%' }}>IP Addresses</th>
-                <th style={{ width: '10%' }}>Ports</th>
-                <th style={{ width: '15%' }}>Screenshot</th>
+                <th style={{ width: '4%' }}>S.No</th>
+                <th style={{ width: '18%' }}>Domain</th>
+                <th style={{ width: '8%' }}>Status</th>
+                <th style={{ width: '12%' }}>Title</th>
+                <th style={{ width: '21%' }}>IP Addresses</th>
+                <th style={{ width: '15%' }}>Ports</th>
+                <th style={{ width: '12%' }}>Screenshot</th>
                 <th style={{ width: '10%' }}>Location</th>
               </tr>
             </thead>
@@ -194,12 +234,8 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                 const statusCfg = getScanStatus(item);
                 
                 const ips = Array.isArray(item.ip) ? item.ip : (typeof item.ip === 'string' ? item.ip.split(',') : []);
-                const firstIp = ips.length > 0 ? ips[0].trim() : '-';
-                const extraIps = ips.length > 1 ? ips.length - 1 : 0;
                 
                 const ports = Array.isArray(item.ports) ? item.ports : (typeof item.ports === 'string' ? item.ports.split(',') : []);
-                const firstPort = ports.length > 0 ? ports[0].trim() : '-';
-                const extraPorts = ports.length > 1 ? ports.length - 1 : 0;
                 
                 const title = item.title && item.title.length > 20 ? item.title.substring(0, 20) + '...' : (item.title || '-');
 
@@ -221,25 +257,36 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }} title={item.title}>
                       {title}
                     </td>
-                    <td style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        {firstIp !== '-' && firstIp}
-                        {firstIp === '-' && '-'}
-                        {extraIps > 0 && <span className="sub-badge-count">+{extraIps}</span>}
-                      </div>
+                    <td className="td-ip" style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontWeight: 500 }}>
+                      {ips.length > 0 ? (
+                        <div className="sub-ip-list">
+                          {ips.map((ip, i) => (
+                            <span key={i} className="sub-ip-chip">{String(ip).trim()}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                      )}
                     </td>
-                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <span style={{ background: 'var(--bg-main)', padding: '0.15rem 0.4rem', borderRadius: '4px', border: '1px solid var(--border-color)', fontSize: '0.75rem' }}>{firstPort !== '-' ? `${firstPort}` : '-'}</span>
-                        {extraPorts > 0 && <span className="sub-badge-count">+{extraPorts}</span>}
-                      </div>
+                    <td className="td-ports" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                      {ports.length > 0 ? (
+                        <div className="sub-port-list">
+                          {ports.map((p, i) => (
+                            <span key={i} className="sub-port-pill">{String(p).trim()}</span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                      )}
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       {item.screenshot_url ? (
-                        <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer">
-                          <img src={item.screenshot_url} alt="Screenshot" style={{ height: '24px', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                        <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" className="shot-thumb" title="Open full screenshot">
+                          <img src={item.screenshot_url} alt={`Screenshot of ${item.domain}`} loading="lazy" className="shot-img" />
                         </a>
-                      ) : 'No screenshot'}
+                      ) : (
+                        <span className="shot-empty">No screenshot</span>
+                      )}
                     </td>
                     <td style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -247,7 +294,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                       </div>
                     </td>
                   </tr>
-                );
+                  );
               })}
 
               {!loading && currentData.length === 0 && (
@@ -257,8 +304,10 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                   </td>
                 </tr>
               )}
-            </tbody>
+
+                          </tbody>
           </table>
+          </div>
 
           {/* Footer Area */}
           <div className="table-footer">

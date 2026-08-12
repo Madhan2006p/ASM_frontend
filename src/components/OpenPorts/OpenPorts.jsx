@@ -51,6 +51,10 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         const flat = [];
         list.forEach((item) => {
           const ports = Array.isArray(item.ports) ? item.ports : [];
+          // IP Address(es) resolved by the backend (same values as Subdomain Discovery)
+          const ipList = Array.isArray(item.ip) ? item.ip : (typeof item.ip === 'string' && item.ip ? item.ip.split(',').map(s => s.trim()).filter(Boolean) : []);
+          // Keep the raw list for stacked per-line rendering; join for CSV export
+          const ipStr = ipList.length > 0 ? ipList.join(', ') : '-';
           ports.forEach((p, idx) => {
             // Check if p is integer or dict
             const portNum = typeof p === 'object' ? p.port : p;
@@ -62,7 +66,8 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             flat.push({
               id: `${item.id}-${idx}`,
               host: item.domain,
-              ip: '-', // backend model does not explicitly store IP on PortResult, default to dash
+              ip: ipList,
+              ipStr: ipStr,
               port: portNum,
               protocol: `/${(proto || 'tcp').toUpperCase()}`,
               service: service || 'unknown',
@@ -95,7 +100,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const exportToCSV = () => {
     const headers = ['Host', 'IP Address', 'Port', 'Protocol', 'Service', 'Severity', 'Risk Score', 'Status', 'Last Seen'];
     const csvRows = filteredData.map(item => [
-      item.host, item.ip, item.port, item.protocol, item.service, item.severity, item.risk, item.status, item.lastSeen
+      item.host, item.ipStr || item.ip, item.port, item.protocol, item.service, item.severity, item.risk, item.status, item.lastSeen
     ].map(val => `"${val}"`).join(','));
     
     const csvContent = [headers.join(','), ...csvRows].join('\n');
@@ -146,7 +151,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         />
 
         {/* Table */}
-        <div className="global-table-wrapper">
+        <div className="global-table-wrapper op-table-scroll">
           <table className="op-table">
             <thead>
               <tr>
@@ -171,11 +176,28 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
               ) : filteredData.map(item => (
                 <tr key={item.id}>
                   <td className="op-host">{item.host}</td>
-                  <td className="op-ip">{item.ip}</td>
+                  <td className="op-ip">
+                    {(Array.isArray(item.ip) && item.ip.length > 0) ? item.ip.map((ip, i) => (
+                      <span key={i} className="op-ip-line">{ip}</span>
+                    )) : <span className="op-ip-line">-</span>}
+                  </td>
                   <td>
                     <span className="op-port">{item.port}</span> <span className="op-protocol">{item.protocol}</span>
                   </td>
-                  <td className="op-service">{item.service}</td>
+                  <td className="op-service">
+                    {item.service !== 'unknown' ? (
+                      <>
+                        <span className="op-svc-name">{item.service}</span>
+                        {(item.product || item.version) && (
+                          <span className="op-svc-detail">
+                            {[item.product, item.version].filter(Boolean).join(' ')}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="op-svc-unknown">unknown</span>
+                    )}
+                  </td>
                   <td>
                     <span className={`op-sev-pill ${
                       item.severity === 'CRITICAL' ? 'sev-crit' : 
