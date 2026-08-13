@@ -261,7 +261,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                       {ips.length > 0 ? (
                         <div className="sub-ip-list">
                           {ips.map((ip, i) => (
-                            <span key={i} className="sub-ip-chip">{String(ip).trim()}</span>
+                            <span key={i} className="sub-ip-chip" title={String(ip).trim()}>{String(ip).trim()}</span>
                           ))}
                         </div>
                       ) : (
