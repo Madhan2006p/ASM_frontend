@@ -24,7 +24,7 @@ const menuGroups = [
   {
     title: 'VULNERABILITY MANAGEMENT',
     items: [
-      { name: 'Vulnerabilities', icon: <ShieldAlert size={16} /> },
+      { name: 'Vulnerability Management', icon: <ShieldAlert size={16} /> },
     ]
   },
   {
