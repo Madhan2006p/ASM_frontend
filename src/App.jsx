@@ -20,6 +20,11 @@ import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDash
 import EmailSecurityRecommendations from './components/EmailSecurity/EmailSecurityRecommendations';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
+import VulnerabilityDashboard from './components/VulnerabilityManagement/VulnerabilityDashboard';
+import MyVulnerabilities from './components/VulnerabilityManagement/MyVulnerabilities';
+import MyFindings from './components/VulnerabilityManagement/MyFindings';
+import CVEView from './components/VulnerabilityManagement/CVEView';
+import RemediationTracker from './components/VulnerabilityManagement/RemediationTracker';
 
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
@@ -271,7 +276,12 @@ function App() {
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
-          {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'VM Dashboard'          && <VulnerabilityDashboard />}
+          {activePage === 'My Vulnerabilities'    && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
+          {activePage === 'Vulnerabilities'       && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
+          {activePage === 'My Findings'           && <MyFindings />}
+          {activePage === 'CVE View'              && <CVEView />}
+          {activePage === 'Task / Remediation Tracker' && <RemediationTracker />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
