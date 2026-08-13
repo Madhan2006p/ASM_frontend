@@ -276,12 +276,7 @@ function App() {
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
-          {activePage === 'VM Dashboard'          && <VulnerabilityDashboard />}
-          {activePage === 'My Vulnerabilities'    && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
-          {activePage === 'Vulnerabilities'       && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
-          {activePage === 'My Findings'           && <MyFindings />}
-          {activePage === 'CVE View'              && <CVEView />}
-          {activePage === 'Task / Remediation Tracker' && <RemediationTracker />}
+          {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
