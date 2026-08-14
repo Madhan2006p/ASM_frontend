@@ -8,7 +8,6 @@ import { api } from '../../utils/api';
 const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelectScan, fetchScans, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [subdomains, setSubdomains] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
   const itemsPerPage = 10;
@@ -99,15 +98,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     if (statusFilter === 'ACTIVE' && !isSubdomainActive(item)) return false;
     if (statusFilter === 'INACTIVE' && isSubdomainActive(item)) return false;
 
-    // Search Term Filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const domainMatch = (item.domain || '').toLowerCase().includes(term);
-      const ipMatch = (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').toLowerCase().includes(term);
-      const titleMatch = (item.title || '').toLowerCase().includes(term);
-      if (!domainMatch && !ipMatch && !titleMatch) return false;
-    }
-
     return true;
   });
 
@@ -117,7 +107,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
-  const handleSearchChange = (e) => { setSearchTerm(e.target.value); setCurrentPage(1); };
 
   const getScanStatus = (item) => {
     const s = (item.status || 'active').toLowerCase();
@@ -127,7 +116,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   };
 
   const getEmptyStateText = () => {
-    if (searchTerm) return `No subdomains found matching "${searchTerm}".`;
     if (statusFilter === 'ACTIVE') return 'No active subdomains found.';
     if (statusFilter === 'INACTIVE') return 'No inactive subdomains found.';
     return 'No subdomains found.';
@@ -155,9 +143,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
         {/* Banner Area */}
         <PageHeaderCard 
-          badgeText="DISCOVERY"
           title="Attack Surface Discovery"
-          subtitle="Monitor and enumerate every external-facing asset across your perimeter."
           stats={[
             {
               label: 'DISCOVERED ASSETS',
@@ -196,15 +182,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
               <div className="t-subtitle" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                 {loading ? "Loading from backend..." : `Showing ${currentData.length} of ${filteredData.length} assets`}
               </div>
-            </div>
-            <div className="global-search-box">
-              <Search size={16} color="#94A3B8" />
-              <input 
-                type="text" 
-                placeholder="Filter domains or IPs..." 
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
             </div>
           </div>
 
@@ -261,11 +238,13 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                       {ips.length > 0 ? (
                         <div className="sub-ip-list">
                           {ips.map((ip, i) => (
-                            <span key={i} className="sub-ip-chip">{String(ip).trim()}</span>
+                            <span key={i} className="sub-ip-chip" title={String(ip).trim()}>{String(ip).trim()}</span>
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        <span style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          DNS Not Found
+                        </span>
                       )}
                     </td>
                     <td className="td-ports" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -311,15 +290,16 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
           {/* Footer Area */}
           <div className="table-footer">
-            <div className="footer-sync">
-              <RefreshCw size={14} color="#94A3B8" /> Realtime sync enabled
+            <div className="footer-info">
+              Showing {filteredData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} subdomains
             </div>
             <div className="footer-pagination">
               <button 
                 className="page-btn" 
                 onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                style={{opacity: currentPage === 1 ? 0.3 : 1}}
+                disabled={currentPage <= 1}
+                style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+                title="Previous page"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -327,8 +307,9 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
               <button 
                 className="page-btn" 
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages || totalPages === 0}
-                style={{opacity: (currentPage === totalPages || totalPages === 0) ? 0.3 : 1}}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+                title="Next page"
               >
                 <ChevronRight size={16} />
               </button>

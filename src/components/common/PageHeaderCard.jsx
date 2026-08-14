@@ -38,18 +38,12 @@ const getStatColor = (label = '', subtext = '', index = 0) => {
   return borderColors[index % borderColors.length];
 };
 
-const PageHeaderCard = ({ badgeText, title, subtitle, actions, stats }) => {
+const PageHeaderCard = ({ title, actions, stats }) => {
   return (
     <div className="phc-container">
-      <div className="phc-badge">
-        <div className="dot"></div>
-        {badgeText}
-      </div>
-
       <div className="phc-header-row">
         <div>
           <h1 className="phc-title">{title}</h1>
-          <p className="phc-subtitle">{subtitle}</p>
         </div>
         {actions && (
           <div className="phc-actions">

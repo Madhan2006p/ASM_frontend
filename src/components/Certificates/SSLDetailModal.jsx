@@ -1,28 +1,49 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, CheckCircle2, AlertTriangle, Lock, Server, 
-  Globe, Key, Clock, Search
+  Globe, Key, Clock
 } from 'lucide-react';
 import './Certificates.css';
 
 const SSLDetailModal = ({ cert, onClose }) => {
-  const [sanSearch, setSanSearch] = useState('');
-
   if (!cert) return null;
 
   const domainName = cert.domain || cert.subdomain || '—';
   
-  // Extract root domain dynamically
+  // Extract root domain dynamically (handling ccTLDs like .ac.in, .co.in, .gov.in)
   const parts = domainName.split('.').filter(Boolean);
-  const baseTarget = parts.length >= 2 ? parts.slice(-2).join('.') : domainName;
+  const secondLevelTlds = ['ac.in', 'co.in', 'gov.in', 'org.in', 'net.in', 'co.uk', 'com.au', 'edu.au', 'gov.au'];
+  const lastTwo = parts.slice(-2).join('.');
+  const baseTarget = parts.length >= 3 && secondLevelTlds.includes(lastTwo)
+    ? parts.slice(-3).join('.')
+    : (parts.length >= 2 ? parts.slice(-2).join('.') : domainName);
 
   const ipAddress = cert.ip || 'DNS Resolved';
   const rawIssuer = cert.issuer || "Let's Encrypt";
-  const issuer = rawIssuer.includes("organizationName") 
-    ? (rawIssuer.match(/(?:organizationName|O)[=+]([^;]+)/i)?.[1]?.trim() || rawIssuer)
-    : rawIssuer;
+  
+  // Format raw X.509 LDAP Distinguished Name (DN) strings into clean, readable CA names
+  const cleanIssuerName = (raw) => {
+    if (!raw || typeof raw !== 'string') return "Let's Encrypt";
+    const unescaped = raw.replace(/\\,/g, ',').trim();
+    const orgMatch = unescaped.match(/(?:organizationName|O)\s*=\s*([^;,]+)/i);
+    if (orgMatch && orgMatch[1]) {
+      const val = orgMatch[1].trim();
+      if (val && !val.toLowerCase().includes('http') && val.toLowerCase() !== 'inc.' && val.length > 1) {
+        return val;
+      }
+    }
+    const cnMatch = unescaped.match(/(?:commonName|CN)\s*=\s*([^;,]+)/i);
+    if (cnMatch && cnMatch[1]) {
+      const val = cnMatch[1].trim();
+      if (val && !val.toLowerCase().includes('http') && val.length > 1) {
+        return val;
+      }
+    }
+    return unescaped.split(/;|,/)[0].replace(/^[\w\s.]+=/, '').trim() || unescaped;
+  };
 
+  const issuer = cleanIssuerName(rawIssuer);
   const daysLeft = cert.daysLeft !== undefined ? cert.daysLeft : (cert.days !== null && cert.days !== undefined ? cert.days : 61);
   const isHealthy = cert.health === 'Healthy' || daysLeft > 30;
 
@@ -40,10 +61,6 @@ const SSLDetailModal = ({ cert, onClose }) => {
         `app.${baseTarget}`,
         `portal.${baseTarget}`
       ];
-
-  const filteredSans = rawSans.filter(san => 
-    san.toLowerCase().includes(sanSearch.toLowerCase())
-  );
 
   const tlsVersion = cert.tls || 'TLS 1.3';
   const cipherSuite = cert.cipher || '';
@@ -199,11 +216,11 @@ const SSLDetailModal = ({ cert, onClose }) => {
             <div className="ssl-pro-grid-2col">
               <div className="ssl-pro-info-tile">
                 <span className="ssl-pro-tile-label">Valid From</span>
-                <span className="ssl-pro-tile-val font-mono">{cert.purchase_date || cert.validFrom || '—'}</span>
+                <span className="ssl-pro-tile-val font-mono">{cert.purchase_date || cert.purchaseDate || cert.validFrom || '—'}</span>
               </div>
               <div className="ssl-pro-info-tile">
                 <span className="ssl-pro-tile-label">Valid Until</span>
-                <span className="ssl-pro-tile-val font-mono">{cert.expires || cert.expiry_date || cert.validUntil || '—'}</span>
+                <span className="ssl-pro-tile-val font-mono">{cert.expiry_date || cert.expireDate || cert.expires || cert.validUntil || '—'}</span>
               </div>
             </div>
           </div>
@@ -216,26 +233,17 @@ const SSLDetailModal = ({ cert, onClose }) => {
                 <span>Subject Alternative Names (SANs)</span>
                 <span className="ssl-pro-badge-count">{rawSans.length}</span>
               </div>
-              <div className="ssl-pro-search-box">
-                <Search size={14} />
-                <input 
-                  type="text" 
-                  placeholder="Filter SANs..." 
-                  value={sanSearch}
-                  onChange={(e) => setSanSearch(e.target.value)}
-                />
-              </div>
             </div>
 
             <div className="ssl-pro-sans-grid">
-              {filteredSans.map((san, idx) => (
+              {rawSans.map((san, idx) => (
                 <div key={idx} className={`ssl-pro-san-chip ${san === domainName ? 'active-target' : ''}`}>
                   <span className="ssl-pro-san-dot" />
                   <span className="font-mono">{san}</span>
                 </div>
               ))}
-              {filteredSans.length === 0 && (
-                <div className="ssl-pro-empty-sans">No alternative names match "{sanSearch}"</div>
+              {rawSans.length === 0 && (
+                <div className="ssl-pro-empty-sans">No alternative names available.</div>
               )}
             </div>
           </div>
@@ -261,7 +269,6 @@ const SSLDetailModal = ({ cert, onClose }) => {
               </div>
             </div>
           </div>
-
           {/* Potential SSL Vulnerabilities & Configuration Audit */}
           <div className="ssl-pro-panel">
             <div className="ssl-pro-panel-header">

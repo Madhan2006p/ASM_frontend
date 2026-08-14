@@ -1,6 +1,6 @@
 const rawBase = (typeof import.meta !== 'undefined' && import.meta.env)
-  ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000')
-  : 'http://localhost:8000';
+  ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001')
+  : 'http://localhost:8001';
 const BASE_URL = rawBase.replace(/\/api\/?$/, '');
 
 class ApiClient {

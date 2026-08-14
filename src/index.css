@@ -1203,6 +1203,62 @@ select {
 .section-divider { height: 1px; background-color: var(--border-color); width: 100%; margin: 1rem 0; }
 
 /* ====================================================
+   UNIVERSAL TABLE PAGINATION FOOTER
+   ==================================================== */
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  background-color: var(--bg-card);
+  border-top: 1px solid var(--border-color);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.footer-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.footer-pagination .page-btn {
+  background: var(--bg-card-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.footer-pagination .page-btn:hover:not(:disabled) {
+  background: var(--brand-primary-light, rgba(59, 130, 246, 0.15));
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.footer-pagination .page-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+/* ====================================================
    SCROLLBAR
    ==================================================== */
 ::-webkit-scrollbar { width: 5px; height: 5px; }

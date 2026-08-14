@@ -31,9 +31,7 @@ const AntiPhishingScan = ({ activeTarget, assignedDomains, selectedDomain, setSe
   return (
     <div className="global-page-container page-animate">
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
         title="Anti Phishing Analysis"
-        subtitle="Analyze URLs using AlienVault OTX Threat Intelligence, MISP IoC Validation, and Phishing heuristics."
         stats={[
           { label: 'Total Scans', value: reports.length.toString() },
           { label: 'Malicious', value: reports.filter(r => r.classification?.toLowerCase() === 'malicious' || r.ecosystem_classification?.toLowerCase().includes('malicious')).length.toString() },

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar } from 'lucide-react';
+import { RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import TechBadge from './TechBadge';
 import { parseTechEntry, getEolInfo, techCategoryIcon } from '../../utils/techUtils';
 import './Technologies.css';
@@ -8,11 +8,14 @@ import './Technologies.css';
 // Max technology badges shown inline per row before the "+N more" button.
 const INLINE_BADGE_LIMIT = 3;
 
-const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '' }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '', techFilter = 'ALL', setTechFilter }) => {
   const [selectedSubdomainModal, setSelectedSubdomainModal] = useState(null);
   const [sortField, setSortField] = useState('subdomain');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const closeModal = () => setSelectedSubdomainModal(null);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -22,8 +25,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
       setSortDirection('asc');
     }
   };
-
-  const closeModal = () => setSelectedSubdomainModal(null);
 
   // Escape key + body scroll lock while the modal is open
   useEffect(() => {
@@ -40,20 +41,25 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   }, [selectedSubdomainModal]);
 
   const filteredData = (subdomainTechs || []).filter(item => {
-    // Domain filter from top dropdown
-    if (selectedDomain && selectedDomain !== 'ALL DOMAINS' && selectedDomain !== 'All Domains') {
-      const isMatch = item.parentDomain === selectedDomain || item.subdomain.endsWith(selectedDomain);
-      if (!isMatch) return false;
+    // Stat Card interactive filter
+    if (techFilter === 'ACTIVE') {
+      const s = (item.status || 'active').toLowerCase();
+      const isActive = s === 'live' || s === 'active' || s === 'up';
+      if (!isActive) return false;
+    } else if (techFilter === 'INACTIVE') {
+      const s = (item.status || '').toLowerCase();
+      const isInactive = s === 'inactive' || s === 'down';
+      if (!isInactive) return false;
+    } else if (techFilter === 'OTHER') {
+      const s = (item.status || '').toLowerCase();
+      const isStandard = s === 'live' || s === 'active' || s === 'up' || s === 'inactive' || s === 'down';
+      if (isStandard) return false;
     }
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchSub = (item.subdomain || '').toLowerCase().includes(query);
-      const matchTitle = (item.title || '').toLowerCase().includes(query);
-      const matchStatus = (item.status || '').toLowerCase().includes(query);
-      const matchTech = (item.technologies || []).some(t => t.toLowerCase().includes(query));
-      if (!matchSub && !matchTitle && !matchStatus && !matchTech) return false;
+    // Domain filter from top dropdown
+    if (selectedDomain && selectedDomain !== 'ALL DOMAINS' && selectedDomain !== 'All Domains' && selectedDomain !== 'Overall') {
+      const isMatch = item.parentDomain === selectedDomain || item.subdomain.endsWith(selectedDomain);
+      if (!isMatch) return false;
     }
 
     return true;
@@ -81,7 +87,21 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
     if (onDataFiltered) {
       onDataFiltered(sortedData);
     }
-  }, [searchQuery, subdomainTechs, selectedDomain, sortField, sortDirection]);
+  }, [subdomainTechs, selectedDomain, sortField, sortDirection, techFilter]);
+
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [techFilter, selectedDomain, sortField, sortDirection, subdomainTechs]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const validPage = Math.min(Math.max(currentPage, 1), totalPages || 1);
+  const startIndex = (validPage - 1) * itemsPerPage;
+  const currentData = sortedData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
 
   /* ── Modal summary stats ─────────────────────────────── */
   const modalTechs = selectedSubdomainModal?.technologies || [];
@@ -95,21 +115,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
 
   return (
     <div className="card tech-table-card">
-
-      {/* Search & Top Controls */}
-      <div className="global-controls-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div className="global-search-box">
-            <Search size={16} color="#94A3B8" />
-            <input
-              type="text"
-              placeholder="Search domain, title, or technology..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* 8-Column Reference Table */}
       <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
@@ -173,26 +178,22 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                 </tr>
               </thead>
               <tbody>
-                {sortedData.map((row, index) => {
+                {currentData.map((row, index) => {
                   const techs = row.technologies || [];
 
                   return (
-                    <tr key={row.id || index} className="tech-table-row">
+                    <tr
+                      key={row.id || index}
+                      className="tech-table-row"
+                      onClick={() => setSelectedSubdomainModal(row)}
+                      title="Click row to view all detected technologies"
+                    >
                       <td style={{ textAlign: 'center', fontWeight: '600', color: 'var(--text-secondary)' }}>
-                        {index + 1}
+                        {startIndex + index + 1}
                       </td>
-                      {/* Clickable domain → full-screen popup */}
+                      {/* Clickable domain */}
                       <td>
-                        <button
-                          className="tech-subdomain-link"
-                          onClick={() => setSelectedSubdomainModal(row)}
-                          title="Click to view all technologies for this domain"
-                        >
-                          <span className="tech-subdomain-text">{row.subdomain}</span>
-                          <span className="tech-subdomain-eye">
-                            <Eye size={13} />
-                          </span>
-                        </button>
+                        <span className="tech-subdomain-text">{row.subdomain}</span>
                       </td>
                       <td>
                         <span className="tech-status-badge active">
@@ -233,6 +234,34 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
             </table>
           </div>
         )}
+
+        {/* Pagination Footer */}
+        <div className="table-footer">
+          <div className="footer-info">
+            Showing {sortedData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, sortedData.length)} of {sortedData.length} entries
+          </div>
+          <div className="footer-pagination">
+            <button 
+              className="page-btn" 
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+              style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+              title="Previous page"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span>Page {totalPages === 0 ? 0 : validPage} of {totalPages}</span>
+            <button 
+              className="page-btn" 
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages || totalPages === 0}
+              style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+              title="Next page"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* ── Full-screen overlapping modal popup ──

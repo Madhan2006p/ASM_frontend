@@ -118,9 +118,7 @@ const MobileVAPTDashboard = ({ assignedDomains, selectedDomain, setSelectedDomai
       />
 
       <PageHeaderCard
-        badgeText="MOBILE SECURITY"
         title="Mobile VAPT Dashboard"
-        subtitle="Enterprise mobile application security posture overview."
         
       />
 

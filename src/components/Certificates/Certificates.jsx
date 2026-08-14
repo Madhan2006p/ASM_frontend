@@ -4,6 +4,7 @@ import CertificatesTable from './CertificatesTable';
 import CertVulnerabilitiesTable from './CertVulnerabilitiesTable';
 import NoCertificateTable from './NoCertificateTable';
 import SSLDetailModal from './SSLDetailModal';
+import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
 
 const Certificates = ({
@@ -15,9 +16,9 @@ const Certificates = ({
   // Main view switcher: 'Certificate' | 'SSL Vulnerability' | 'No Certificate'
   const [activeView, setActiveView] = useState('Certificate');
 
-  // Top Domain Navigation selected tab (default 'Overall')
-  const [localDomain, setLocalDomain] = useState('Overall');
-  const selectedDomain = propSelectedDomain || localDomain;
+  // Top Domain Navigation selected tab
+  const [localDomain, setLocalDomain] = useState('');
+  const selectedDomain = propSelectedDomain !== undefined ? propSelectedDomain : localDomain;
   const setSelectedDomain = (domain) => {
     setLocalDomain(domain);
     if (propSetSelectedDomain) propSetSelectedDomain(domain);
@@ -26,7 +27,7 @@ const Certificates = ({
   // Data states (start empty — never show placeholder/mock data)
   const [certs, setCerts] = useState([]);
   const [vulnerabilities, setVulnerabilities] = useState([]);
-  const [noCerts] = useState([]);
+  const [noCerts, setNoCerts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Filter selection states for Summary Cards
@@ -52,35 +53,50 @@ const Certificates = ({
         {
           const mappedCerts = certResults.map((c, idx) => {
             const isError = c.cipher_suite?.startsWith('Connection error') || c.cipher_suite?.startsWith('Error');
-            let daysLeft = 90;
+            let daysLeft = 0;
+            let isExpired = false;
             if (c.expiry_date) {
               const parts = c.expiry_date.split('-');
               if (parts.length === 3) {
                 const expiry = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
                 if (!isNaN(expiry.getTime())) {
-                  daysLeft = Math.max(0, Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24)));
+                  const diff = Math.ceil((expiry - new Date()) / (1000 * 60 * 60 * 24));
+                  daysLeft = Math.max(0, diff);
+                  if (expiry < new Date()) {
+                    isExpired = true;
+                  }
                 }
               }
+            } else if (c.days_left !== undefined) {
+              daysLeft = c.days_left;
+              if (daysLeft <= 0) isExpired = true;
             }
+
+            const certStatus = isExpired ? 'Expired' : (isError ? 'Invalid' : (c.status || 'Valid'));
 
             return {
               id: c.id || `api-cert-${idx}`,
               sNo: idx + 1,
               domain: c.subdomain || c.domain,
-              ip: c.ip || '103.243.32.9',
+              ip: c.ip || '—',
               rdns: c.rdns || '--',
               sslGrade: isError ? 'F' : (c.ssl_grade || 'A'),
-              issuer: c.issuer_name || 'GlobalSign RSA OV SSL CA 2018 (GlobalSign nv-sa from BE)',
-              expireDate: c.expiry_date || '28-9-2025',
-              purchaseDate: c.purchase_date || '27-8-2024',
+              issuer: c.issuer_name || '—',
+              expireDate: c.expiry_date || '—',
+              purchaseDate: c.purchase_date || '—',
+              expiry_date: c.expiry_date || '—',
+              purchase_date: c.purchase_date || '—',
+              validFrom: c.purchase_date || '—',
+              validUntil: c.expiry_date || '—',
+              status: certStatus,
               location: c.location || 'India',
               locationFlag: c.location?.includes('US') ? '🇺🇸' : '🇮🇳',
-              created: c.created_at ? new Date(c.created_at).toLocaleDateString() : '21-12-2024',
-              updated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '20-3-2025',
+              created: c.created_at ? new Date(c.created_at).toLocaleDateString() : '—',
+              updated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—',
               daysLeft,
-              isTrusted: c.is_trusted !== undefined ? c.is_trusted : true,
-              tlsVersion: 'TLS 1.3',
-              cipherSuite: c.cipher_suite || 'TLS_AES_256_GCM_SHA384'
+              isTrusted: c.is_trusted !== undefined ? c.is_trusted : !isExpired,
+              tlsVersion: isError ? 'None' : 'TLS 1.3',
+              cipherSuite: c.cipher_suite || '—'
             };
           });
 
@@ -115,6 +131,35 @@ const Certificates = ({
 
           setVulnerabilities(mappedVulns);
         }
+
+        // Fetch subdomains to derive targets without SSL certificates
+        const subEndpoint = activeScanId
+          ? `/api/attacksurface/subdomains/?scan=${activeScanId}`
+          : `/api/attacksurface/subdomains/`;
+        const subData = await api.get(subEndpoint).catch(() => []);
+        const subResults = Array.isArray(subData) ? subData : (subData.results || []);
+
+        const certDomains = new Set(certResults.map(c => (c.subdomain || c.domain || '').toLowerCase().trim()));
+        const missingCerts = subResults.filter(s => {
+          const d = (s.domain || s.subdomain || '').toLowerCase().trim();
+          return d && !certDomains.has(d);
+        });
+
+        const mappedNoCerts = missingCerts.map((s, idx) => ({
+          id: s.id || `no-cert-${idx}`,
+          sNo: idx + 1,
+          domain: s.domain || s.subdomain,
+          ip: Array.isArray(s.ip) && s.ip.length > 0 ? s.ip.join(', ') : (s.ip || 'DNS Not Found'),
+          status: 'Unencrypted (HTTP)',
+          action: 'Issue Cert',
+          teamAction: 'Unassigned',
+          location: s.location || 'India',
+          locationFlag: s.location?.includes('US') ? '🇺🇸' : '🇮🇳',
+          created: s.created_at ? new Date(s.created_at).toLocaleDateString() : '—',
+          updated: s.updated_at ? new Date(s.updated_at).toLocaleDateString() : '—'
+        }));
+
+        setNoCerts(mappedNoCerts);
 
       } catch (err) {
         console.error("Failed to load SSL certificates data", err);
@@ -160,10 +205,26 @@ const Certificates = ({
     });
   }, [noCerts, selectedDomain]);
 
+  // Helper to determine if a certificate is expired
+  const isCertExpired = (c) => {
+    if (c.daysLeft !== undefined && c.daysLeft <= 0) return true;
+    const dStr = c.expiry_date || c.expireDate;
+    if (dStr) {
+      const parts = String(dStr).split('-');
+      if (parts.length === 3) {
+        const expDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        if (!isNaN(expDate.getTime())) {
+          return expDate < new Date();
+        }
+      }
+    }
+    return false;
+  };
+
   // Compute Summary Card Counts for Certificate View
   const certCounts = useMemo(() => {
     const total = domainFilteredCerts.length;
-    const expired = domainFilteredCerts.filter(c => c.daysLeft <= 0 || c.expireDate?.includes('2024')).length;
+    const expired = domainFilteredCerts.filter(isCertExpired).length;
     const yetToExpire = Math.max(0, total - expired);
 
     return {
@@ -172,6 +233,17 @@ const Certificates = ({
       yetToExpire: yetToExpire
     };
   }, [domainFilteredCerts]);
+
+  // Filter certs based on selectedCertFilter ('overall' | 'expired' | 'yetToExpire')
+  const displayedCerts = useMemo(() => {
+    if (selectedCertFilter === 'expired') {
+      return domainFilteredCerts.filter(isCertExpired);
+    }
+    if (selectedCertFilter === 'yetToExpire') {
+      return domainFilteredCerts.filter(c => !isCertExpired(c));
+    }
+    return domainFilteredCerts;
+  }, [domainFilteredCerts, selectedCertFilter]);
 
   // Compute Status Card Counts for SSL Vulnerability View (Overall, Unreviewed, In Progress, Muted, False Positive, Closed)
   const vulnCounts = useMemo(() => {
@@ -200,6 +272,13 @@ const Certificates = ({
   return (
     <div className="global-page-container">
       <div className="global-max-width">
+        <div style={{ marginBottom: '1.25rem' }}>
+          <ScanSelector 
+            assignedDomains={assignedDomains}
+            selectedDomain={selectedDomain}
+            setSelectedDomain={setSelectedDomain}
+          />
+        </div>
         <div className="ssl-module-wrapper">
           
           {/* Top Dashboard Navigation & Hero Summary Cards */}
@@ -220,7 +299,7 @@ const Certificates = ({
           {/* Render Active View Table */}
           {activeView === 'Certificate' && (
             <CertificatesTable
-              certs={domainFilteredCerts}
+              certs={displayedCerts}
               loading={loading}
               onSelectCert={(cert) => setSelectedCertModal(cert)}
             />

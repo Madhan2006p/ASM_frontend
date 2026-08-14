@@ -291,9 +291,7 @@ const VaptReport = ({ activeScanId, scansList, assignedDomains, selectedDomain, 
 
       {/* ── Page Header ──────────────────────── */}
       <PageHeaderCard
-        badgeText="REPORT"
         title="VAPT Report"
-        subtitle="Comprehensive Vulnerability Assessment & Penetration Testing report."
         stats={[
           { label: 'Total Findings',  value: totalFindings.toString(), subtext: 'all scopes' },
           { label: 'Critical / High', value: ((countBySev.CRITICAL||0)+(countBySev.HIGH||0)).toString(), subtext: 'immediate action' },

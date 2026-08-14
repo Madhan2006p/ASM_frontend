@@ -53,13 +53,16 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           if (cleaned.length) techMap[host] = cleaned;
         });
 
-        // 2) Build the row list: every subdomain of the scan, plus any
-        //    tech-only hosts (e.g. the parent domain) that aren't subdomains.
+        // 2) Build the row list: ONLY subdomains which actually have detected technologies
         const rowsByHost = {};
         const addRow = (host, src) => {
           if (!host || rowsByHost[host]) return;
           const rawTechs = Array.isArray(src.technologies) ? src.technologies : [];
           const cleanedTechs = Array.from(new Set(rawTechs.map(t => (t || '').trim()).filter(Boolean)));
+          const finalTechs = techMap[host] || cleanedTechs;
+
+          // Only include subdomains which actually have technologies
+          if (!finalTechs || finalTechs.length === 0) return;
 
           let dateStr;
           const rawDate = src.created_at || src.created_date || src.discovered_at || src.created;
@@ -80,9 +83,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             status: src.status || 'Active',
             title: src.title || '-',
             createdDate: dateStr,
-            // Tech from the technology phase wins; otherwise use the
-            // subdomain's own stored technologies field.
-            technologies: techMap[host] || cleanedTechs,
+            technologies: finalTechs,
           };
         };
 
@@ -101,46 +102,39 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
     loadTechnologies();
   }, [activeScanId]);
 
-  const handleExport = () => {
-    if (filteredData.length === 0) {
-      alert("No data to export!");
-      return;
-    }
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Subdomain,Technologies\n"
-      + filteredData.filter(row => (row.technologies || []).length > 0).map(row => 
-          `"${row.subdomain}","${(row.technologies || []).join('; ')}"`
-        ).join("\n");
-    
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "technologies_export.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const [techFilter, setTechFilter] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'INACTIVE' | 'WITH_VERSION'
 
   return (
     <div className="global-page-container">
       <div className="global-max-width">
-        <ScanSelector 
-          assignedDomains={assignedDomains}
-          selectedDomain={selectedDomain}
-          setSelectedDomain={setSelectedDomain}
-          scansList={scansList}
-          activeScanId={activeScanId}
-          handleSelectScan={handleSelectScan}
-        />
+        <div style={{ marginBottom: '1.25rem' }}>
+          <ScanSelector 
+            assignedDomains={assignedDomains}
+            selectedDomain={selectedDomain}
+            setSelectedDomain={setSelectedDomain}
+            scansList={scansList}
+            activeScanId={activeScanId}
+            handleSelectScan={handleSelectScan}
+          />
+        </div>
 
-        <TechDashboard onExport={handleExport} technologies={subdomainTechs} loading={loading} />
-
-        <TechTable 
-          onDataFiltered={setFilteredData} 
-          subdomainTechs={subdomainTechs} 
+        <TechDashboard 
+          technologies={subdomainTechs} 
           loading={loading} 
-          selectedDomain={selectedDomain} 
+          techFilter={techFilter}
+          setTechFilter={setTechFilter}
         />
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <TechTable 
+            onDataFiltered={setFilteredData} 
+            subdomainTechs={subdomainTechs} 
+            loading={loading} 
+            selectedDomain={selectedDomain} 
+            techFilter={techFilter}
+            setTechFilter={setTechFilter}
+          />
+        </div>
       </div>
     </div>
   );

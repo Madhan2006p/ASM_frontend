@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
   ChevronDown,
   X,
   Plus,
@@ -17,7 +16,6 @@ const CertVulnerabilitiesTable = ({
   selectedSeverityFilter = 'ALL'
 }) => {
   // Local state
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedVulnType, setSelectedVulnType] = useState('All');
   const [showFilterPopover, setShowFilterPopover] = useState(false);
 
@@ -48,26 +46,14 @@ const CertVulnerabilitiesTable = ({
         }
       }
 
-      // 2. Search Query
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const matchesVuln = item.vulnerability?.toLowerCase().includes(q);
-        const matchesDomain = item.domain?.toLowerCase().includes(q);
-        const matchesIp = item.ip?.toLowerCase().includes(q);
-        const matchesStatus = item.status?.toLowerCase().includes(q);
-        if (!matchesVuln && !matchesDomain && !matchesIp && !matchesStatus) {
-          return false;
-        }
-      }
-
-      // 3. Vulnerability Type Dropdown Filter
+      // 2. Vulnerability Type Dropdown Filter
       if (selectedVulnType !== 'All' && item.vulnerability !== selectedVulnType) {
         return false;
       }
 
       return true;
     });
-  }, [vulnerabilities, selectedSeverityFilter, searchQuery, selectedVulnType]);
+  }, [vulnerabilities, selectedSeverityFilter, selectedVulnType]);
 
   // Sorting logic
   const sortedVulns = useMemo(() => {
@@ -103,7 +89,6 @@ const CertVulnerabilitiesTable = ({
 
   // Clear all filters handler
   const handleClearAll = () => {
-    setSearchQuery('');
     setSelectedVulnType('All');
     setCurrentPage(1);
     setShowFilterPopover(false);
@@ -113,53 +98,19 @@ const CertVulnerabilitiesTable = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
 
-
       {/* 3. Vulnerability Data Table */}
       <div className="ssl-table-card">
         <div className="ssl-table-wrapper">
           <table className="ssl-table">
             <thead>
               <tr>
-                <th style={{ width: '60px' }}>
-                  <div className="ssl-th-content" onClick={() => handleSort('sNo')}>
-                    S.No <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('domain')}>
-                    Domain <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('ip')}>
-                    IP <Filter size={12} />
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('sslGrade')}>
-                    SSL Grade <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('vulnerability')}>
-                    Vulnerability <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('severity')}>
-                    Severity <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content">
-                    Action
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('status')}>
-                    Status <span>⇅</span>
-                  </div>
-                </th>
+                <th style={{ width: '60px' }}>S.No</th>
+                <th>Domain</th>
+                <th>IP</th>
+                <th>SSL Grade</th>
+                <th>Vulnerability</th>
+                <th>Severity</th>
+                <th>Status</th>
               </tr>
             </thead>
 
@@ -192,20 +143,6 @@ const CertVulnerabilitiesTable = ({
                       </span>
                     </td>
                     <td>
-                      <select
-                        className="ssl-action-select"
-                        value={row.action || 'Remediate'}
-                        onChange={(e) => {
-                          row.action = e.target.value;
-                        }}
-                      >
-                        <option value="Remediate">Remediate</option>
-                        <option value="Re-scan">Re-scan</option>
-                        <option value="Mark False Positive">Mark False Positive</option>
-                        <option value="Mute">Mute</option>
-                      </select>
-                    </td>
-                    <td>
                       <span className={`ssl-status-badge ${row.status?.toLowerCase().replace(/\s+/g, '-') || 'unreviewed'}`}>
                         {row.status || 'Unreviewed'}
                       </span>
@@ -216,7 +153,7 @@ const CertVulnerabilitiesTable = ({
 
               {paginatedVulns.length === 0 && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={7}>
                     <div className="ssl-empty-container">
                       <ShieldAlert size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">
@@ -233,6 +170,55 @@ const CertVulnerabilitiesTable = ({
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* 4. Pagination Controls Footer */}
+      <div className="ssl-pagination-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0.5rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          Showing {totalRows === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, totalRows)} of {totalRows} vulnerabilities
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+            <span>Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              style={{ background: 'var(--bg-card-2)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '0.25rem 0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={totalRows > 0 ? totalRows : 1000}>All ({totalRows})</option>
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <button
+              disabled={validPage <= 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              style={{ opacity: validPage <= 1 ? 0.4 : 1, cursor: validPage <= 1 ? 'not-allowed' : 'pointer', background: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '6px', padding: '0.3rem 0.6rem', display: 'flex', alignItems: 'center' }}
+              title="Previous Page"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)', padding: '0 0.5rem' }}>
+              Page {validPage} of {totalPages}
+            </span>
+            <button
+              disabled={validPage >= totalPages}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              style={{ opacity: validPage >= totalPages ? 0.4 : 1, cursor: validPage >= totalPages ? 'not-allowed' : 'pointer', background: 'var(--bg-card-2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', borderRadius: '6px', padding: '0.3rem 0.6rem', display: 'flex', alignItems: 'center' }}
+              title="Next Page"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
 

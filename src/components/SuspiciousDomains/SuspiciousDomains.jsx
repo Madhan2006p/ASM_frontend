@@ -82,9 +82,7 @@ const SuspiciousDomains = ({ assignedDomains, selectedDomain, setSelectedDomain 
     <div className="sd-container">
       
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
         title="Suspicious Domains"
-        subtitle="Discover and monitor suspicious look-alike domains that could be used for phishing or brand impersonation."
         stats={[
           { label: 'Total Domains',   value: totalCount.toString(), subtext: 'Monitored lookalikes' },
           { label: 'Suspicious / Active', value: activeCount.toString(), subtext: 'Live HTTP/DNS resolution' },

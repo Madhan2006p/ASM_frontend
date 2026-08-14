@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Endpoints.css';
-import { Search, Filter, Lock, ArrowRight, ChevronDown, Check, CheckCircle2, X, RefreshCw } from 'lucide-react';
+import { Filter, Lock, ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Check, CheckCircle2, X, RefreshCw } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -8,9 +8,10 @@ import { api } from '../../utils/api';
 const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [endpoints, setEndpoints] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [methodFilter, setMethodFilter] = useState('All Methods');
   const [riskFilter, setRiskFilter] = useState('All Risks');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   const [showMethodMenu, setShowMethodMenu] = useState(false);
   const [showRiskMenu, setShowRiskMenu] = useState(false);
@@ -79,19 +80,25 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
 
   // Filtering Logic
   const filteredData = endpoints.filter(ep => {
-    const path = getPathFromUrl(ep.http_url);
-    const asset = ep.subdomain_name || getAssetFromUrl(ep.http_url, '');
-    const epId = `EP-${ep.id}`;
-    
-    const matchesSearch = path.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          epId.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesMethod = methodFilter === 'All Methods' || ep.method === methodFilter;
     const matchesRisk = riskFilter === 'All Risks' || mapRisk(ep.threat_count) === riskFilter.toUpperCase();
 
-    return matchesSearch && matchesMethod && matchesRisk;
+    return matchesMethod && matchesRisk;
   });
+
+  // Reset to page 1 on filter or scan changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [methodFilter, riskFilter, activeScanId]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const validPage = Math.min(Math.max(currentPage, 1), totalPages || 1);
+  const startIndex = (validPage - 1) * itemsPerPage;
+  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
 
   const triggerToast = (msg) => {
     setToastMessage(msg);
@@ -153,9 +160,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         />
 
         <PageHeaderCard 
-          badgeText="ENDPOINTS"
           title="Endpoints"
-          subtitle="Discovered API endpoints and web routes across your assets."
           stats={[
             { label: 'ALL ROUTES', value: totalRoutes.toString(), subtext: 'Total cataloged', onClick: () => setRiskFilter('All Risks') },
             { label: 'CRITICAL', value: criticalCount.toString(), subtext: 'Immediate action', onClick: () => setRiskFilter('Critical') },
@@ -164,24 +169,6 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             { label: 'LOW RISK', value: lowCount.toString(), subtext: 'Minimal impact', onClick: () => setRiskFilter('Low') }
           ]}
         />
-
-        {/* Filters and Controls */}
-        <div className="global-controls-row">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div className="global-search-box">
-              <Search size={16} color="#94A3B8" />
-              <input 
-                type="text" 
-                placeholder="Search by path, asset, or ID..." 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-          </div>
-        </div>
 
         {/* Table */}
         <div className="global-table-wrapper">
@@ -203,7 +190,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                     Loading endpoints from database...
                   </td>
                 </tr>
-              ) : filteredData.map(ep => {
+              ) : currentData.map(ep => {
                 const path = getPathFromUrl(ep.http_url);
                 const asset = ep.subdomain_name || getAssetFromUrl(ep.http_url, 'Default Asset');
                 const risk = mapRisk(ep.threat_count);
@@ -241,7 +228,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                   </tr>
                 );
               })}
-              {!loading && filteredData.length === 0 && (
+              {!loading && currentData.length === 0 && (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No endpoints found for this scan.
@@ -250,6 +237,34 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
               )}
             </tbody>
           </table>
+
+          {/* Pagination Footer */}
+          <div className="table-footer">
+            <div className="footer-info">
+              Showing {filteredData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} endpoints
+            </div>
+            <div className="footer-pagination">
+              <button 
+                className="page-btn" 
+                onClick={handlePrevPage}
+                disabled={currentPage <= 1}
+                style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+                title="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span>Page {totalPages === 0 ? 0 : validPage} of {totalPages}</span>
+              <button 
+                className="page-btn" 
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+                title="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>

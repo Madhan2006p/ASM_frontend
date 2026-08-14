@@ -123,9 +123,7 @@ const FaradayFindings = ({ activeScanId, assignedDomains, selectedDomain, setSel
     <div className="global-page-container page-animate">
       
       <PageHeaderCard
-        badgeText="VULNERABILITY INTEGRATION"
         title="Faraday Findings"
-        subtitle="Manage and analyze vulnerabilities imported from external testing tools into Faraday's environment."
         actions={
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <button 
