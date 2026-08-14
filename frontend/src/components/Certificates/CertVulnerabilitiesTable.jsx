@@ -111,7 +111,6 @@ const CertVulnerabilitiesTable = ({
                 <th>SSL Grade</th>
                 <th>Vulnerability</th>
                 <th>Severity</th>
-                <th>Action</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -145,20 +144,6 @@ const CertVulnerabilitiesTable = ({
                       </span>
                     </td>
                     <td>
-                      <select
-                        className="ssl-action-select"
-                        value={row.action || 'Remediate'}
-                        onChange={(e) => {
-                          row.action = e.target.value;
-                        }}
-                      >
-                        <option value="Remediate">Remediate</option>
-                        <option value="Re-scan">Re-scan</option>
-                        <option value="Mark False Positive">Mark False Positive</option>
-                        <option value="Mute">Mute</option>
-                      </select>
-                    </td>
-                    <td>
                       <span className={`ssl-status-badge ${row.status?.toLowerCase().replace(/\s+/g, '-') || 'unreviewed'}`}>
                         {row.status || 'Unreviewed'}
                       </span>
@@ -169,7 +154,7 @@ const CertVulnerabilitiesTable = ({
 
               {paginatedVulns.length === 0 && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={7}>
                     <div className="ssl-empty-container">
                       <ShieldAlert size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">
