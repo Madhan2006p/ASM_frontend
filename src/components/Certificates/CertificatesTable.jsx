@@ -144,8 +144,6 @@ const CertificatesTable = ({
                 <th style={{ width: '60px' }}>S.No</th>
                 <th>Domain</th>
                 <th>IP</th>
-                <th>Action</th>
-                <th>Team Action</th>
                 <th>Status</th>
                 <th>RDNS</th>
                 <th>SSL Grade</th>
@@ -176,27 +174,6 @@ const CertificatesTable = ({
                       {row.ip && row.ip !== '—' ? row.ip : <span style={{ color: '#EF4444', fontSize: '0.78rem', fontWeight: 600 }}>DNS Not Found</span>}
                     </td>
                     <td>
-                      <select
-                        className="ssl-action-select"
-                        value={row.action || 'Inspect'}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          row.action = e.target.value;
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <option value="Inspect">Inspect</option>
-                        <option value="Re-scan">Re-scan</option>
-                        <option value="Renew">Renew</option>
-                        <option value="Export">Export</option>
-                      </select>
-                    </td>
-                    <td>
-                      <span className="ssl-team-badge">
-                        {row.teamAction || 'Unassigned'}
-                      </span>
-                    </td>
-                    <td>
                       <span className={`ssl-status-badge ${(row.status || (row.daysLeft <= 0 ? 'Expired' : 'Valid')).toLowerCase().replace(/\s+/g, '-')}`}>
                         {row.status || (row.daysLeft <= 0 ? 'Expired' : 'Valid')}
                       </span>
@@ -225,7 +202,7 @@ const CertificatesTable = ({
 
               {paginatedCerts.length === 0 && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={7}>
                     <div className="ssl-empty-container">
                       <ShieldCheck size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">

@@ -40,8 +40,6 @@ const NoCertificateTable = ({
               <tr>
                 <th style={{ width: '60px' }}>S.No</th>
                 <th>Domain</th>
-                <th>Action</th>
-                <th>Team Action</th>
                 <th>Status</th>
                 <th>IP</th>
                 <th>Location</th>
@@ -54,24 +52,6 @@ const NoCertificateTable = ({
                 <tr key={row.id || idx}>
                   <td style={{ fontWeight: '600' }}>{startIndex + idx + 1}</td>
                   <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{row.domain}</td>
-                  <td>
-                    <select
-                      className="ssl-action-select"
-                      value={row.action || 'Issue Cert'}
-                      onChange={(e) => {
-                        row.action = e.target.value;
-                      }}
-                    >
-                      <option value="Issue Cert">Issue Cert</option>
-                      <option value="Request Cert">Request Cert</option>
-                      <option value="Ignore">Ignore</option>
-                    </select>
-                  </td>
-                  <td>
-                    <span className="ssl-team-badge">
-                      {row.teamAction || 'Unassigned'}
-                    </span>
-                  </td>
                   <td>
                     <span className={`ssl-status-badge ${row.status?.toLowerCase().replace(/\s+/g, '-') || 'unencrypted'}`}>
                       {row.status || 'Unencrypted'}
@@ -88,7 +68,7 @@ const NoCertificateTable = ({
 
               {paginatedData.length === 0 && (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={7}>
                     <div className="ssl-empty-container">
                       <ShieldOff size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">
