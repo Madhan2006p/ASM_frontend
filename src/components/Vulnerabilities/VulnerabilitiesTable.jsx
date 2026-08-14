@@ -238,14 +238,22 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
                         <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{Math.round((selectedRow.confidence || 0) * 100)}%</span>
                       </div>
                     )}
-                    {selectedRow.finding_status && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Validation</span>
-                        <span style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '3px 10px', borderRadius: '20px', background: selectedRow.finding_status === 'confirmed' ? 'rgba(16,185,129,0.12)' : selectedRow.finding_status === 'potential' ? 'rgba(245,158,11,0.12)' : 'rgba(100,116,139,0.12)', color: selectedRow.finding_status === 'confirmed' ? '#10B981' : selectedRow.finding_status === 'potential' ? '#F59E0B' : '#94A3B8', border: `1px solid ${selectedRow.finding_status === 'confirmed' ? 'rgba(16,185,129,0.3)' : selectedRow.finding_status === 'potential' ? 'rgba(245,158,11,0.3)' : 'rgba(100,116,139,0.3)'}` }}>
-                          {selectedRow.finding_status.replace('_', ' ')}
-                        </span>
-                      </div>
-                    )}
+                    {selectedRow.finding_status && (() => {
+                      const statusNorm = String(selectedRow.finding_status).toLowerCase();
+                      const isConfirmed = statusNorm.startsWith('confirm');
+                      const isPotential = statusNorm.startsWith('potential');
+                      const isNotVulnerable = statusNorm.startsWith('not_');
+                      const badgeBg = isConfirmed ? 'rgba(16,185,129,0.12)' : isPotential ? 'rgba(245,158,11,0.12)' : isNotVulnerable ? 'rgba(239,68,68,0.10)' : 'rgba(100,116,139,0.12)';
+                      const badgeColor = isConfirmed ? '#10B981' : isPotential ? '#F59E0B' : isNotVulnerable ? '#EF4444' : '#94A3B8';
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Validation</span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em', padding: '3px 10px', borderRadius: '20px', background: badgeBg, color: badgeColor, border: `1px solid ${badgeColor}` }}>
+                            {statusNorm.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                   {selectedRow.evidence && (
                     <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: '1.6', background: 'var(--bg-main)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.75rem 1rem', fontFamily: 'monospace' }}>

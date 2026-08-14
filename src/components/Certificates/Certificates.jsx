@@ -27,7 +27,7 @@ const Certificates = ({
   // Data states (start empty — never show placeholder/mock data)
   const [certs, setCerts] = useState([]);
   const [vulnerabilities, setVulnerabilities] = useState([]);
-  const [noCerts] = useState([]);
+  const [noCerts, setNoCerts] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Filter selection states for Summary Cards
