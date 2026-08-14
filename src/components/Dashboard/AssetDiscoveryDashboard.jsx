@@ -48,6 +48,8 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const [techs, setTechs]   = useState([]);
   const [ssl,   setSsl]     = useState([]);
   const [loading, setLoading] = useState(false);
+  // Reference time for SSL expiry checks — captured once, not on every render
+  const [nowTs] = useState(() => Date.now());
 
   useEffect(() => {
     const load = async () => {
@@ -91,7 +93,13 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const services = (exec?.exposed_services||[]).slice(0,8);
 
   const techMap = {};
-  techs.forEach(t => { if(t.technology) techMap[t.technology]=(techMap[t.technology]||0)+1; });
+  techs.forEach(t => {
+    const list = Array.isArray(t.technologies) ? t.technologies : (t.technology ? [t.technology] : []);
+    list.forEach(tech => {
+      const name = (tech || '').trim();
+      if (name) techMap[name] = (techMap[name] || 0) + 1;
+    });
+  });
   const techData = Object.entries(techMap).sort((a,b)=>b[1]-a[1]).slice(0,6)
     .map(([name,value])=>({ name, value }));
   const PIE_COLORS = ['#3B82F6','#8B5CF6','#EC4899','#F97316','#22C55E','#EAB308'];
@@ -100,11 +108,21 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const trends  = exec?.trends||[];
   const chartTrends = trends.length > 1 ? trends : trends.length === 1 ? [trends[0], trends[0]] : [{date:'',assets:total,vulns:tvulns}, {date:'',assets:total,vulns:tvulns}];
 
-  const sslValid   = ssl.filter(s=>!s.is_expired).length;
-  const sslExpired = ssl.filter(s=>s.is_expired).length;
+  // Compute certificate status from expiry_date (API returns dd-mm-yyyy)
+  const parseCertDate = (value) => {
+    if (!value) return null;
+    const m = String(value).trim().match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const soonTs = nowTs + 90 * 24 * 60 * 60 * 1000;
+  const sslExpired = ssl.filter(s => { const d = parseCertDate(s.expiry_date); return d && d.getTime() < nowTs; }).length;
+  const sslExpiringSoon = ssl.filter(s => { const d = parseCertDate(s.expiry_date); return d && d.getTime() >= nowTs && d.getTime() <= soonTs; }).length;
+  const sslValid = Math.max(0, ssl.length - sslExpired - sslExpiringSoon);
   const sslData = [
     { name:'Valid', value:sslValid, fill:'#22C55E' },
-    { name:'Expiring',value:sslExpiring, fill:'#F97316' },
+    { name:'Expiring',value:sslExpiringSoon, fill:'#F97316' },
     { name:'Expired', value:sslExpired, fill:'#EF4444' },
   ];
 
@@ -326,8 +344,8 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
                       {s.status||'—'}
                     </span>
                   </td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomains_count||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerabilities_count||'—'}</td>
+                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomain_count||'—'}</td>
+                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerability_count||'—'}</td>
                   <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.created_at?new Date(s.created_at).toLocaleString():'—'}</td>
                 </tr>
               ))}

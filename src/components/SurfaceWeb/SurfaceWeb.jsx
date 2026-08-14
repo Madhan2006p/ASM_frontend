@@ -3,7 +3,6 @@ import {
   Globe, 
   Search, 
   Activity, 
-  Clock, 
   RefreshCw, 
   Eye, 
   Shield, 
@@ -305,6 +304,9 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
   const [loadingResults, setLoadingResults] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('');
+  const [endpoints, setEndpoints] = useState([]);
+  const [endpointsLoading, setEndpointsLoading] = useState(false);
+  const [endpointScanStatus, setEndpointScanStatus] = useState('');
 
   // Load Scan History & Stats
   const loadScansAndStats = async () => {
@@ -331,6 +333,45 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
 
   useEffect(() => {
     loadScansAndStats();
+  }, []);
+
+  // Load scanned endpoints (URL / domain / page title / http status / webserver / tech)
+  const refreshEndpoints = async (showLoader = false) => {
+    if (showLoader) setEndpointsLoading(true);
+    try {
+      const data = await api.get('/api/attacksurface/endpoints/');
+      setEndpoints(Array.isArray(data) ? data : (data.results || []));
+    } catch (err) {
+      console.error("Failed to load endpoints", err);
+      setEndpoints([]);
+    } finally {
+      if (showLoader) setEndpointsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshEndpoints(true);
+  }, []);
+
+  // Refresh the endpoints table while an attack-surface scan is running so
+  // newly discovered URLs appear without a manual page reload.
+  useEffect(() => {
+    let interval;
+    const poll = async () => {
+      try {
+        const scansData = await api.get('/api/attacksurface/scans/');
+        const list = Array.isArray(scansData) ? scansData : (scansData.results || []);
+        const latest = list[0];
+        setEndpointScanStatus(latest ? latest.status : '');
+        const hasRunning = list.some(s => s.status === 'running' || s.status === 'pending');
+        if (hasRunning) await refreshEndpoints();
+      } catch (err) {
+        console.error("Endpoint poll error", err);
+      }
+    };
+    poll();
+    interval = setInterval(poll, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleSelectScan = async (scan) => {
@@ -464,58 +505,72 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
         </div>
       )}
 
-      {/* Main Layout Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 1fr) minmax(480px, 2fr)', gap: '1.5rem', alignItems: 'flex-start' }}>
-        
-        {/* LEFT PANEL: SCAN LIST */}
-        <div className="card" style={{ padding: '1.25rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)', minHeight: '400px' }}>
-          <h3 style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
-            Scan History
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {scans.map((s, idx) => {
-              const isSelected = selectedScan?.id === s.id;
-              return (
-                <div
-                  key={s.id}
-                  onClick={() => handleSelectScan(s)}
-                  style={{
-                    padding: '1rem', borderRadius: '8px', border: `1px solid ${isSelected ? '#3b82f6' : 'var(--border-color)'}`,
-                    background: isSelected ? 'rgba(59,130,246,0.06)' : 'var(--bg-main)',
-                    cursor: 'pointer', transition: 'all 0.2s', position: 'relative'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-primary)' }}>{s.target}</span>
-                    <span style={{
-                      fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px',
-                      background: s.status === 'completed' ? 'rgba(16,185,129,0.1)' : (s.status === 'running' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)'),
-                      color: s.status === 'completed' ? '#10b981' : (s.status === 'running' ? '#3b82f6' : '#dc2626')
-                    }}>
-                      {s.status.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Clock size={12} />
-                      <span>{new Date(s.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div>
-                      <strong>{s.results_count}</strong> values found
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            {scans.length === 0 && (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                No OSINT targets scanned yet. Enter a domain above to start.
-              </div>
-            )}
-          </div>
+      {/* Endpoints Table */}
+      <div style={{
+        background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+        borderRadius: 12, padding: '1.1rem'
+      }}>
+        <div style={{
+          fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase',
+          letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: '0.9rem',
+          display: 'flex', alignItems: 'center', gap: '0.35rem'
+        }}>
+          <Globe size={12} /> Discovered Endpoints
+          {(endpointScanStatus === 'running' || endpointScanStatus === 'pending') && (
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+              fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.05em', color: '#3b82f6',
+              background: 'rgba(59,130,246,0.1)', padding: '0.2rem 0.5rem', borderRadius: 5
+            }}>
+              <RefreshCw className="spin" size={12} /> Scanning...
+            </span>
+          )}
         </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                {['S.No', 'URL', 'Domain', 'Status', 'PageTitle', 'HTTPStatus', 'WebServer', 'Technology'].map(h => (
+                  <th key={h} style={{ padding: '0.5rem 0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 700, fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(endpoints || []).map((ep, i) => (
+                <tr key={ep.id || i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>{i + 1}</td>
+                  <td style={{ padding: '0.6rem 0.75rem', fontWeight: 600, color: 'var(--text-primary)', wordBreak: 'break-all', maxWidth: '280px' }}>{ep.http_url || '—'}</td>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>{ep.subdomain_name || '—'}</td>
+                  <td style={{ padding: '0.6rem 0.75rem' }}>
+                    <span style={{
+                      padding: '0.15rem 0.5rem', borderRadius: 5, fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase',
+                      background: ep.is_alive ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                      color: ep.is_alive ? '#22C55E' : '#EF4444'
+                    }}>
+                      {ep.is_alive ? 'Alive' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ep.title || ''}>{ep.title || '—'}</td>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>{ep.http_status ?? '—'}</td>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>{ep.webserver || '—'}</td>
+                  <td style={{ padding: '0.6rem 0.75rem', color: 'var(--text-secondary)' }}>{(Array.isArray(ep.technologies) && ep.technologies.length) ? ep.technologies.join(', ') : '—'}</td>
+                </tr>
+              ))}
+              {endpoints.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    {endpointsLoading ? 'Loading endpoints...' : 'No endpoints found. Run an asset discovery scan to populate this table.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      {/* Main Layout Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem', alignItems: 'flex-start' }}>
         {/* RIGHT PANEL: SELECTED SCAN FINDINGS */}
         <div className="card" style={{ padding: '1.25rem', border: '1px solid var(--border-color)', background: 'var(--bg-card)', minHeight: '400px', display: 'flex', flexDirection: 'column' }}>
           
@@ -625,7 +680,7 @@ const SurfaceWeb = ({ activeTarget, assignedDomains, selectedDomain, setSelected
             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', flex: 1, color: 'var(--text-secondary)', gap: '0.5rem' }}>
               <ShieldAlert size={36} style={{ opacity: 0.6 }} />
               <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No Scan Selected</p>
-              <p style={{ fontSize: '0.8rem', textAlign: 'center', maxWidth: '300px' }}>Select an existing target scan from history or launch a new footprint scan above.</p>
+              <p style={{ fontSize: '0.8rem', textAlign: 'center', maxWidth: '300px' }}>No scan results yet. Launch a footprint scan above to get started.</p>
             </div>
           )}
         </div>
