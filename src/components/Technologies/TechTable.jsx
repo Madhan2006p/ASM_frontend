@@ -103,7 +103,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
 
-
   /* ── Modal summary stats ─────────────────────────────── */
   const modalTechs = selectedSubdomainModal?.technologies || [];
   const modalParsed = modalTechs.map(t => {

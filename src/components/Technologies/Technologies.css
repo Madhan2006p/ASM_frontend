@@ -229,26 +229,6 @@
 
 .tech-subdomain-text {
   font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-primary, #0f172a);
-}
-
-.tech-table-row {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.tech-table-row:hover {
-  background-color: rgba(59, 130, 246, 0.08) !important;
-}
-
-.tech-table-row:hover .tech-subdomain-text {
-  color: #3b82f6;
-}
-
-/* All-tech badges wrapper */
-.tech-badges-wrap {
   display: flex;
   align-items: center;
   flex-wrap: wrap;

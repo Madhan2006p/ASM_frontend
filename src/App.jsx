@@ -20,6 +20,11 @@ import EmailSecurityDashboard from './components/EmailSecurity/EmailSecurityDash
 import EmailSecurityRecommendations from './components/EmailSecurity/EmailSecurityRecommendations';
 import MobileVAPT from './components/MobileVAPT/MobileVAPT';
 import MobileVAPTDashboard from './components/MobileVAPT/MobileVAPTDashboard';
+import VulnerabilityDashboard from './components/VulnerabilityManagement/VulnerabilityDashboard';
+import MyVulnerabilities from './components/VulnerabilityManagement/MyVulnerabilities';
+import MyFindings from './components/VulnerabilityManagement/MyFindings';
+import CVEView from './components/VulnerabilityManagement/CVEView';
+import RemediationTracker from './components/VulnerabilityManagement/RemediationTracker';
 
 import ImpersonatingAccount from './components/ImpersonatingAccount/ImpersonatingAccount';
 import LandingPage from './components/Auth/LandingPage';
@@ -259,7 +264,7 @@ function App() {
             />
           )}
 
-          {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} setActivePage={setActivePage} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysis initialTab="overview" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Attack Graph'                 && <AttackPathAnalysis initialTab="graph" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
@@ -271,7 +276,13 @@ function App() {
 
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
-          {activePage === 'Vulnerabilities'       && <Vulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'VM Dashboard'          && <VulnerabilityDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Task'                  && <RemediationTracker assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Task / Remediation Tracker' && <RemediationTracker assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'My Vulnerabilities'    && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'Vulnerabilities'       && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'My Findings'           && <MyFindings assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
+          {activePage === 'CVE View'              && <CVEView assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'SSL Certificates'      && <Certificates activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Surface Web Dashboard'   && <SurfaceWebDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Surface Web'           && <SurfaceWeb activeTarget={activeTarget} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}

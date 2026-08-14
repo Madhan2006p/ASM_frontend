@@ -24,7 +24,11 @@ const menuGroups = [
   {
     title: 'VULNERABILITY MANAGEMENT',
     items: [
-      { name: 'Vulnerabilities', icon: <ShieldAlert size={16} /> },
+      { name: 'Dashboard', pageKey: 'VM Dashboard', icon: <Activity size={16} /> },
+      { name: 'Task', pageKey: 'Task', icon: <Layers size={16} /> },
+      { name: 'My Vulnerabilities', pageKey: 'My Vulnerabilities', icon: <ShieldAlert size={16} /> },
+      { name: 'My Findings', pageKey: 'My Findings', icon: <FileText size={16} /> },
+      { name: 'CVE View', pageKey: 'CVE View', icon: <ShieldCheck size={16} /> },
     ]
   },
   {
@@ -257,16 +261,19 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
                   </div>
                   {isExpanded && (
                     <div className="nav-menu">
-                      {group.items.map((item, i) => (
-                        <div 
-                          key={i} 
-                          className={`nav-item ${activePage === item.name ? 'active' : ''}`}
-                          onClick={() => setActivePage(item.name)}
-                        >
-                          <span className="nav-icon">{item.icon}</span>
-                          <span>{item.name}</span>
-                        </div>
-                      ))}
+                      {group.items.map((item, i) => {
+                        const targetKey = item.pageKey || item.name;
+                        return (
+                          <div 
+                            key={i} 
+                            className={`nav-item ${activePage === targetKey ? 'active' : ''}`}
+                            onClick={() => setActivePage(targetKey)}
+                          >
+                            <span className="nav-icon">{item.icon}</span>
+                            <span>{item.name}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>

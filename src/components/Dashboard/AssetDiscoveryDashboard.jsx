@@ -26,11 +26,28 @@ const W = ({ title, children, style={} }) => (
   </div>
 );
 
-const CT = ({ label, value, sub, color, icon }) => (
-  <div style={{
-    background:`${color}11`, border:`1px solid ${color}33`, borderRadius:10,
-    padding:'0.85rem 1rem', display:'flex', flexDirection:'column', gap:4
-  }}>
+const CT = ({ label, value, sub, color, icon, onClick }) => (
+  <div 
+    onClick={onClick}
+    style={{
+      background:`${color}11`, border:`1px solid ${color}33`, borderRadius:10,
+      padding:'0.85rem 1rem', display:'flex', flexDirection:'column', gap:4,
+      cursor: onClick ? 'pointer' : 'default',
+      transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+    }}
+    onMouseEnter={(e) => {
+      if (onClick) {
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = `0 4px 12px ${color}33`;
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (onClick) {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'none';
+      }
+    }}
+  >
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
       <span style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',
         letterSpacing:'0.06em',color:'var(--text-muted)'}}>{label}</span>
@@ -44,7 +61,7 @@ const CT = ({ label, value, sub, color, icon }) => (
 const dark = { background:'#1a1f2e', border:'1px solid rgba(255,255,255,0.06)', borderRadius:8, padding:'8px 12px', color:'#e2e8f0', fontSize:'0.78rem' };
 const gridLine = { stroke:'rgba(255,255,255,0.05)' };
 
-const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
+const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan, setActivePage }) => {
   const [exec, setExec]     = useState(null);
   const [techs, setTechs]   = useState([]);
   const [ssl,   setSsl]     = useState([]);
@@ -151,13 +168,13 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
       {/* KPI Strip */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(130px, 1fr))',gap:'0.75rem'}}>
-        <CT label="Subdomains"   value={subs}   color="#3B82F6" icon={<Globe size={16}/>}    sub="discovered"/>
-        <CT label="Endpoints"    value={eps}    color="#8B5CF6" icon={<Server size={16}/>}   sub="mapped"/>
-        <CT label="Open Ports"   value={ports}  color="#F97316" icon={<Activity size={16}/>} sub="exposed"/>
-        <CT label="Directories"  value={dirs}   color="#10B981" icon={<Folder size={16}/>}   sub="found"/>
-        <CT label="Technologies" value={techsCount}  color="#06B6D4" icon={<Code size={16}/>}     sub="identified"/>
-        <CT label="Total Vulns"  value={tvulns} color="#F87171" icon={<Shield size={16}/>}   sub="all severity"/>
-        <CT label="Expiring SSL" value={sslExpiring} color="#F59E0B" icon={<Award size={16}/>}   sub="within 90 days"/>
+        <CT label="Subdomains"   value={subs}   color="#3B82F6" icon={<Globe size={16}/>}    sub="discovered"     onClick={() => setActivePage && setActivePage('Subdomain Discovery')}/>
+        <CT label="Endpoints"    value={eps}    color="#8B5CF6" icon={<Server size={16}/>}   sub="mapped"         onClick={() => setActivePage && setActivePage('Endpoints')}/>
+        <CT label="Open Ports"   value={ports}  color="#F97316" icon={<Activity size={16}/>} sub="exposed"        onClick={() => setActivePage && setActivePage('Open Ports')}/>
+        <CT label="Directories"  value={dirs}   color="#10B981" icon={<Folder size={16}/>}   sub="found"          onClick={() => setActivePage && setActivePage('Directories')}/>
+        <CT label="Technologies" value={techsCount}  color="#06B6D4" icon={<Code size={16}/>}     sub="identified"    onClick={() => setActivePage && setActivePage('Technologies')}/>
+        <CT label="Total Vulns"  value={tvulns} color="#F87171" icon={<Shield size={16}/>}   sub="all severity"   onClick={() => setActivePage && setActivePage('My Vulnerabilities')}/>
+        <CT label="Expiring SSL" value={sslExpiring} color="#F59E0B" icon={<Award size={16}/>}   sub="within 90 days" onClick={() => setActivePage && setActivePage('SSL Certificates')}/>
       </div>
 
       {/* Row 1: asset panels + risk distribution */}

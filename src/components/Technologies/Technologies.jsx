@@ -53,7 +53,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           if (cleaned.length) techMap[host] = cleaned;
         });
 
-        // 2) Build the row list: ONLY subdomains that have detected technologies
+        // 2) Build the row list: ONLY subdomains which actually have detected technologies
         const rowsByHost = {};
         const addRow = (host, src) => {
           if (!host || rowsByHost[host]) return;

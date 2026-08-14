@@ -44,7 +44,6 @@ const SSLDetailModal = ({ cert, onClose }) => {
   };
 
   const issuer = cleanIssuerName(rawIssuer);
-
   const daysLeft = cert.daysLeft !== undefined ? cert.daysLeft : (cert.days !== null && cert.days !== undefined ? cert.days : 61);
   const isHealthy = cert.health === 'Healthy' || daysLeft > 30;
 
@@ -227,7 +226,8 @@ const SSLDetailModal = ({ cert, onClose }) => {
           </div>
 
           {/* Subject Alternative Names (SANs) */}
-          <div className="ssl-pro-panel">              <div className="ssl-pro-panel-header-between">
+          <div className="ssl-pro-panel">
+            <div className="ssl-pro-panel-header-between">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Globe size={18} className="icon-cyan" />
                 <span>Subject Alternative Names (SANs)</span>
@@ -269,7 +269,6 @@ const SSLDetailModal = ({ cert, onClose }) => {
               </div>
             </div>
           </div>
-
           {/* Potential SSL Vulnerabilities & Configuration Audit */}
           <div className="ssl-pro-panel">
             <div className="ssl-pro-panel-header">

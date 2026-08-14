@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import PageHeaderCard from '../common/PageHeaderCard';
-import { parseTechEntry, getEolInfo } from '../../utils/techUtils';
 import './Technologies.css';
 
 /* ═════════════════════════════════════════════════════════

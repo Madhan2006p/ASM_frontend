@@ -489,6 +489,45 @@
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08), 0 0 60px rgba(6, 182, 212, 0.04);
 }
 
+.light-mode .spp-tab-btn {
+  color: #64748B;
+}
+
+.light-mode .spp-tab-btn:hover {
+  color: #0F172A;
+}
+
+.light-mode .spp-tab-active {
+  color: #0284C7 !important;
+  border-bottom-color: #0284C7 !important;
+}
+
+.light-mode .spr-sum-card {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+.light-mode .spr-sum-label {
+  color: #64748B;
+}
+
+.light-mode .spr-section-title {
+  color: #475569;
+}
+
+.light-mode .spr-vuln-item {
+  background: #F8FAFC;
+  border-color: #E2E8F0;
+}
+
+.light-mode .spr-vuln-name {
+  color: #0F172A;
+}
+
+.light-mode .spr-vuln-fix {
+  color: #475569;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Tab Navigation
    ═══════════════════════════════════════════════════════════════════════════ */

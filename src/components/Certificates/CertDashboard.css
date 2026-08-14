@@ -706,6 +706,35 @@
   }
 }
 
+/* Responsive Breakpoints */
+@media (max-width: 1280px) {
+  .ssl-vuln-status-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .ssl-cert-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .ssl-vuln-status-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ssl-vuln-status-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ssl-toolbar-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ssl-search-input {
+    width: 100%;
+  }
+}
+
 /* ==========================================
    LIGHT MODE STYLING FOR SSL CERTIFICATES
    ========================================== */
@@ -807,4 +836,3 @@
   border-top-color: rgba(37, 99, 235, 0.12) !important;
   color: #475569 !important;
 }
-

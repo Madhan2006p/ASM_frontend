@@ -98,7 +98,6 @@ const CertVulnerabilitiesTable = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       
 
-
       {/* 3. Vulnerability Data Table */}
       <div className="ssl-table-card">
         <div className="ssl-table-wrapper">
