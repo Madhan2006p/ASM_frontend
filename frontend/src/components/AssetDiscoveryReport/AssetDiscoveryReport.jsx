@@ -410,9 +410,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, select
     return (
       <div className="global-page-container page-animate">
         <PageHeaderCard
-          badgeText="REPORT"
           title="Asset Discovery Report"
-          subtitle="Comprehensive Attack Surface Management report covering all discovered assets."
           stats={[
             { label: 'Subdomains',      value: '—', subtext: 'discovered' },
             { label: 'Open Ports',      value: '—', subtext: 'exposed' },
@@ -451,9 +449,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, select
     return (
       <div className="global-page-container page-animate">
         <PageHeaderCard
-          badgeText="REPORT"
           title="Asset Discovery Report"
-          subtitle="Loading report data…"
           stats={[
             { label: 'Subdomains',      value: '…', subtext: 'loading' },
             { label: 'Open Ports',      value: '…', subtext: 'loading' },
@@ -475,9 +471,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, select
 
       {/* ── Page Header ──────────────────────── */}
       <PageHeaderCard
-        badgeText="REPORT"
         title="Asset Discovery Report"
-        subtitle="Comprehensive Attack Surface Management report covering all discovered assets."
         stats={[
           { label: 'Subdomains',    value: subdomains.length.toString(),     subtext: 'discovered' },
           { label: 'Open Ports',    value: ports.length.toString(),           subtext: 'exposed' },

@@ -99,9 +99,7 @@ const BrandMonitoringDashboard = ({ assignedDomains, selectedDomain, setSelected
   return (
     <div className="global-page-container" style={{display:'flex',flexDirection:'column',gap:'1rem',paddingBottom:'2rem'}}>
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
         title="Brand Monitoring Overview"
-        subtitle="Track domain impersonation, typosquatting, and external brand threats."
         stats={[
           { label:'Monitored Targets', value: totalTargets.toString() },
           { label:'Phishing Detected', value: phish.toString() },

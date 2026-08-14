@@ -154,9 +154,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         />
 
         <PageHeaderCard 
-          badgeText="SECURITY"
           title="Open Ports"
-          subtitle="Monitor exposed services, identify risky ports, and track externally accessible network services across discovered assets."
           stats={[
             { label: 'ALL', value: totalOpen.toString(), subtext: 'Total open ports', onClick: () => setSeverityFilter('All') },
             { label: 'CRITICAL', value: criticalCount.toString(), subtext: 'Immediate action', onClick: () => setSeverityFilter('Critical') },

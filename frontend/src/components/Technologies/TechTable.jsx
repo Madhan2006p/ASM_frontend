@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import TechBadge from './TechBadge';
 import { parseTechEntry, getEolInfo, techCategoryIcon } from '../../utils/techUtils';
 import './Technologies.css';
@@ -9,7 +9,6 @@ import './Technologies.css';
 const INLINE_BADGE_LIMIT = 3;
 
 const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomain = '', techFilter = 'ALL', setTechFilter }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubdomainModal, setSelectedSubdomainModal] = useState(null);
   const [sortField, setSortField] = useState('subdomain');
   const [sortDirection, setSortDirection] = useState('asc');
@@ -63,16 +62,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
       if (!isMatch) return false;
     }
 
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchSub = (item.subdomain || '').toLowerCase().includes(query);
-      const matchTitle = (item.title || '').toLowerCase().includes(query);
-      const matchStatus = (item.status || '').toLowerCase().includes(query);
-      const matchTech = (item.technologies || []).some(t => t.toLowerCase().includes(query));
-      if (!matchSub && !matchTitle && !matchStatus && !matchTech) return false;
-    }
-
     return true;
   });
 
@@ -98,12 +87,12 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
     if (onDataFiltered) {
       onDataFiltered(sortedData);
     }
-  }, [searchQuery, subdomainTechs, selectedDomain, sortField, sortDirection, techFilter]);
+  }, [subdomainTechs, selectedDomain, sortField, sortDirection, techFilter]);
 
-  // Reset to page 1 on filter or search changes
+  // Reset to page 1 on filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, techFilter, selectedDomain, sortField, sortDirection, subdomainTechs]);
+  }, [techFilter, selectedDomain, sortField, sortDirection, subdomainTechs]);
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
@@ -113,6 +102,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
 
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+
 
   /* ── Modal summary stats ─────────────────────────────── */
   const modalTechs = selectedSubdomainModal?.technologies || [];
@@ -126,21 +116,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
 
   return (
     <div className="card tech-table-card">
-
-      {/* Search & Top Controls */}
-      <div className="global-controls-row">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <div className="global-search-box">
-            <Search size={16} color="#94A3B8" />
-            <input
-              type="text"
-              placeholder="Search domain, title, or technology..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
 
       {/* 8-Column Reference Table */}
       <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>

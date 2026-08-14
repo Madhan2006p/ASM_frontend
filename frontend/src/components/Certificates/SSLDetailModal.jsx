@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { 
   X, ShieldCheck, CheckCircle2, AlertTriangle, Lock, Server, 
-  Globe, Key, Clock, Search
+  Globe, Key, Clock
 } from 'lucide-react';
 import './Certificates.css';
 
 const SSLDetailModal = ({ cert, onClose }) => {
-  const [sanSearch, setSanSearch] = useState('');
-
   if (!cert) return null;
 
   const domainName = cert.domain || cert.subdomain || '—';
@@ -64,10 +62,6 @@ const SSLDetailModal = ({ cert, onClose }) => {
         `app.${baseTarget}`,
         `portal.${baseTarget}`
       ];
-
-  const filteredSans = rawSans.filter(san => 
-    san.toLowerCase().includes(sanSearch.toLowerCase())
-  );
 
   const tlsVersion = cert.tls || 'TLS 1.3';
   const cipherSuite = cert.cipher || '';
@@ -233,33 +227,23 @@ const SSLDetailModal = ({ cert, onClose }) => {
           </div>
 
           {/* Subject Alternative Names (SANs) */}
-          <div className="ssl-pro-panel">
-            <div className="ssl-pro-panel-header-between">
+          <div className="ssl-pro-panel">              <div className="ssl-pro-panel-header-between">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Globe size={18} className="icon-cyan" />
                 <span>Subject Alternative Names (SANs)</span>
                 <span className="ssl-pro-badge-count">{rawSans.length}</span>
               </div>
-              <div className="ssl-pro-search-box">
-                <Search size={14} />
-                <input 
-                  type="text" 
-                  placeholder="Filter SANs..." 
-                  value={sanSearch}
-                  onChange={(e) => setSanSearch(e.target.value)}
-                />
-              </div>
             </div>
 
             <div className="ssl-pro-sans-grid">
-              {filteredSans.map((san, idx) => (
+              {rawSans.map((san, idx) => (
                 <div key={idx} className={`ssl-pro-san-chip ${san === domainName ? 'active-target' : ''}`}>
                   <span className="ssl-pro-san-dot" />
                   <span className="font-mono">{san}</span>
                 </div>
               ))}
-              {filteredSans.length === 0 && (
-                <div className="ssl-pro-empty-sans">No alternative names match "{sanSearch}"</div>
+              {rawSans.length === 0 && (
+                <div className="ssl-pro-empty-sans">No alternative names available.</div>
               )}
             </div>
           </div>

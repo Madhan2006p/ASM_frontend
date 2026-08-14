@@ -130,7 +130,6 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
     <div className="global-page-container page-animate">
       <div className="global-max-width">
         <PageHeaderCard
-          badgeText="OWASP TOP 10"
           title="Vulnerability Management"
         />
 

@@ -143,9 +143,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
         {/* Banner Area */}
         <PageHeaderCard 
-          badgeText="DISCOVERY"
           title="Attack Surface Discovery"
-          subtitle="Monitor and enumerate every external-facing asset across your perimeter."
           stats={[
             {
               label: 'DISCOVERED ASSETS',

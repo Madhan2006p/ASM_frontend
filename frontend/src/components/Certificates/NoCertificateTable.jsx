@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
   X,
   ChevronLeft,
   ChevronRight,
@@ -12,22 +11,15 @@ const NoCertificateTable = ({
   noCerts = [],
   loading = false
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filtering
   const filteredData = useMemo(() => {
     return noCerts.filter((item) => {
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        if (!item.domain?.toLowerCase().includes(q) && !item.ip?.toLowerCase().includes(q)) {
-          return false;
-        }
-      }
       return true;
     });
-  }, [noCerts, searchQuery]);
+  }, [noCerts]);
 
   const totalRows = filteredData.length;
   const totalPages = Math.ceil(totalRows / pageSize) || 1;

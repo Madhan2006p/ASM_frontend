@@ -138,9 +138,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
       </div>
 
       <PageHeaderCard
-        badgeText="ASSET DISCOVERY"
         title="Asset Discovery Dashboard"
-        subtitle="Internet-facing asset inventory, vulnerability exposure, and risk posture overview."
         stats={[
           { label:'Total Assets',   value: total.toString(),      subtext:'subdomains + endpoints + ports' },
           { label:'Critical Vulns', value:(vs.critical||0).toString(), subtext:'immediate action required' },

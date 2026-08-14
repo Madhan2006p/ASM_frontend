@@ -113,9 +113,7 @@ const EmailSecurityDashboard = ({ activeScanId, assignedDomains, selectedDomain,
       </div>
 
       <PageHeaderCard
-        badgeText="EMAIL SECURITY"
         title="Email Security Dashboard"
-        subtitle="Domain impersonation protection and email authentication overview."
         stats={[
           { label:'Domains Checked', value: data.length.toString() },
           { label:'SPF Pass Rate',   value: `${Math.round((spf/total)*100)}%` },

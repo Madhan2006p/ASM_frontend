@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Directories.css';
 import {
-  Search, Folder, FolderOpen, Lock, Database, Globe, RefreshCw,
+  Folder, FolderOpen, Lock, Database, Globe, RefreshCw,
   ExternalLink, FileText, KeyRound, Code2, ScrollText, GitBranch, Server,
   LogIn, FileQuestion, Bug, ChevronLeft, ChevronRight
 } from 'lucide-react';
@@ -27,7 +27,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   const [directories, setDirectories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterPill, setFilterPill] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -161,9 +160,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     if (filterPill === 'Sensitive' && !item.isSensitive) return false;
     if (filterPill === 'High / Critical Risk' && item.risk !== 'HIGH' && item.risk !== 'CRITICAL') return false;
 
-    // Search Box
-    if (searchQuery && !item.path.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-
     return true;
   }).sort((a, b) => {
     const riskWeight = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
@@ -173,10 +169,10 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return (statusWeight[b.status] || 0) - (statusWeight[a.status] || 0);
   });
 
-  // Reset to page 1 on filter, search, or scan changes
+  // Reset to page 1 on filter or scan changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filterPill, searchQuery, activeScanId]);
+  }, [filterPill, activeScanId]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -249,9 +245,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
         />
 
         <PageHeaderCard
-          badgeText="DISCOVERY"
           title="Directories"
-          subtitle="Content-based directory discovery — distinguishes publicly accessible resources from genuine security exposures (secrets, backups, configs, database dumps, directory listings, VCS metadata)."
           stats={[
             { label: 'ALL DIRECTORIES', value: totalCount.toString(), subtext: 'Verified accessible paths', onClick: () => setFilterPill('All') },
             { label: 'EXPOSED', value: exposedCount.toString(), subtext: 'Sensitive content accessible', onClick: () => setFilterPill('Exposed') },
@@ -259,21 +253,6 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
             { label: 'CRITICAL / HIGH RISK', value: highRiskCount.toString(), subtext: 'Priority remediation', onClick: () => setFilterPill('High / Critical Risk') }
           ]}
         />
-
-        {/* Table Controls */}
-        <div className="global-controls-row">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div className="global-search-box">
-              <Search size={16} color="#94A3B8" />
-              <input
-                type="text"
-                placeholder="Search directory path, category..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Table */}
         <div className="card global-table-wrapper">

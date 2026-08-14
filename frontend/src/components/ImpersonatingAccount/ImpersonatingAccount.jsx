@@ -82,9 +82,7 @@ const ImpersonatingAccount = ({ activeTarget, assignedDomains, selectedDomain, s
     <div className="global-page-container page-animate">
       
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
         title="Impersonating Accounts"
-        subtitle="Discover real, live fake social media profiles targeting your brand using Maigret & Sherlock OSINT scanners."
         stats={[
           { label: 'Scans Run', value: totalScans.toString(), subtext: 'Total username checks' },
           { label: 'Profiles Found', value: totalFindings.toString(), subtext: 'Verified profiles' },

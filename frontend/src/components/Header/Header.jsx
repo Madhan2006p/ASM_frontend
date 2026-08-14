@@ -49,7 +49,6 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
         {activePage === 'Executive Dashboard' ? (
           <div className="header-page-title">
             <h1 style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>EXECUTIVE DASHBOARD</h1>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>A complete centralized security posture overview.</p>
           </div>
         ) : (
           <>

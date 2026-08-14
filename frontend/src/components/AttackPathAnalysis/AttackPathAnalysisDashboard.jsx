@@ -107,9 +107,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
       </div>
 
       <PageHeaderCard
-        badgeText="ATTACK PATH ANALYSIS"
         title="Attack Path Analysis Dashboard"
-        subtitle="Visualize how attackers could chain existing vulnerabilities to breach your critical assets."
       />
 
       {loading ? (

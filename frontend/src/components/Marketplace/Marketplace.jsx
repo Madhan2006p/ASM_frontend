@@ -217,9 +217,7 @@ const Marketplace = () => {
     <div className="global-page-container">
       <div className="global-max-width">
         <PageHeaderCard
-          badgeText="MANAGE"
           title="Marketplace"
-          subtitle="Extend your attack surface monitoring with powerful integrations and plugins."
           stats={[
             { label: 'Available Plugins', value: `${plugins.length}`, subtext: 'Ready to install' },
             { label: 'Installed',         value: `${installedIds.length}`, subtext: 'Active integrations' },

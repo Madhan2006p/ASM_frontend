@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
   ChevronDown,
   X,
   Plus,
@@ -17,7 +16,6 @@ const CertificatesTable = ({
   onSelectCert
 }) => {
   // State variables
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDomainFilter, setSelectedDomainFilter] = useState('All');
   const [selectedGradeFilter, setSelectedGradeFilter] = useState('All');
   const [tableViewMode, setTableViewMode] = useState('domain'); // 'domain' | 'details'
@@ -48,31 +46,19 @@ const CertificatesTable = ({
   // Filter logic
   const filteredCerts = useMemo(() => {
     return certs.filter((item) => {
-      // 1. Search Query
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const matchesDomain = item.domain?.toLowerCase().includes(q);
-        const matchesIp = item.ip?.toLowerCase().includes(q);
-        const matchesIssuer = item.issuer?.toLowerCase().includes(q);
-        const matchesLocation = item.location?.toLowerCase().includes(q);
-        if (!matchesDomain && !matchesIp && !matchesIssuer && !matchesLocation) {
-          return false;
-        }
-      }
-
-      // 2. Domain Dropdown Filter
+      // 1. Domain Dropdown Filter
       if (selectedDomainFilter !== 'All' && item.domain !== selectedDomainFilter) {
         return false;
       }
 
-      // 3. Grade Dropdown Filter
+      // 2. Grade Dropdown Filter
       if (selectedGradeFilter !== 'All' && item.sslGrade !== selectedGradeFilter) {
         return false;
       }
 
       return true;
     });
-  }, [certs, searchQuery, selectedDomainFilter, selectedGradeFilter]);
+  }, [certs, selectedDomainFilter, selectedGradeFilter]);
 
   // Sorting logic
   const sortedCerts = useMemo(() => {
@@ -108,7 +94,6 @@ const CertificatesTable = ({
 
   // Clear all filters handler
   const handleClearAll = () => {
-    setSearchQuery('');
     setSelectedDomainFilter('All');
     setSelectedGradeFilter('All');
     setCurrentPage(1);
