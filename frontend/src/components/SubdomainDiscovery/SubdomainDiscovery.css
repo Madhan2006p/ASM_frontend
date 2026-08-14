@@ -662,17 +662,18 @@
   padding-right: 1rem;
 }
 
-/* IPs — 2 per line, remaining IPs wrap to the next line */
+/* IPs — one per line so the full address is always visible on a single line */
 .sub-ip-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.35rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;   /* chips size to their content, not the full column width */
 }
 
 .sub-ip-chip {
   display: inline-flex;
   align-items: center;
-  min-width: 0;
+  max-width: 100%;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.72rem;
   font-weight: 500;
@@ -681,7 +682,7 @@
   border: 1px solid rgba(59, 130, 246, 0.22);
   border-radius: 6px;
   padding: 0.18rem 0.45rem;
-  overflow-wrap: anywhere;   /* never clip an IP — wrap it instead */
+  white-space: nowrap;      /* keep the full address on one line, never cut off */
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 

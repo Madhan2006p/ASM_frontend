@@ -234,43 +234,16 @@
   color: var(--text-primary, #0f172a);
 }
 
-/* Clickable domain → full-screen popup */
-.tech-subdomain-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.5rem;
-  margin: -0.25rem 0;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
+.tech-table-row {
   cursor: pointer;
-  color: var(--text-primary, #0f172a);
-  font-family: inherit;
-  text-align: left;
-  transition: all 0.15s ease;
-  max-width: 100%;
+  transition: background-color 0.2s ease;
 }
 
-.tech-subdomain-link:hover {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.35);
+.tech-table-row:hover {
+  background-color: rgba(59, 130, 246, 0.08) !important;
 }
 
-.tech-subdomain-link:hover .tech-subdomain-text {
-  color: #3b82f6;
-}
-
-.tech-subdomain-eye {
-  display: inline-flex;
-  align-items: center;
-  color: #94A3B8;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.tech-subdomain-link:hover .tech-subdomain-eye {
-  opacity: 1;
+.tech-table-row:hover .tech-subdomain-text {
   color: #3b82f6;
 }
 

@@ -5,7 +5,8 @@ import {
 } from 'recharts';
 import {
   Server, Shield, AlertTriangle, Globe, Lock, TrendingUp,
-  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye, Folder, Code, Award
+  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye, Folder, Code, Award,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
@@ -48,6 +49,9 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const [techs, setTechs]   = useState([]);
   const [ssl,   setSsl]     = useState([]);
   const [loading, setLoading] = useState(false);
+  // Reference time for SSL expiry checks — captured once, not on every render
+  const [nowTs] = useState(() => Date.now());
+  const [scanPage, setScanPage] = useState(1);
 
   useEffect(() => {
     const load = async () => {
@@ -91,7 +95,13 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const services = (exec?.exposed_services||[]).slice(0,8);
 
   const techMap = {};
-  techs.forEach(t => { if(t.technology) techMap[t.technology]=(techMap[t.technology]||0)+1; });
+  techs.forEach(t => {
+    const list = Array.isArray(t.technologies) ? t.technologies : (t.technology ? [t.technology] : []);
+    list.forEach(tech => {
+      const name = (tech || '').trim();
+      if (name) techMap[name] = (techMap[name] || 0) + 1;
+    });
+  });
   const techData = Object.entries(techMap).sort((a,b)=>b[1]-a[1]).slice(0,6)
     .map(([name,value])=>({ name, value }));
   const PIE_COLORS = ['#3B82F6','#8B5CF6','#EC4899','#F97316','#22C55E','#EAB308'];
@@ -100,11 +110,21 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const trends  = exec?.trends||[];
   const chartTrends = trends.length > 1 ? trends : trends.length === 1 ? [trends[0], trends[0]] : [{date:'',assets:total,vulns:tvulns}, {date:'',assets:total,vulns:tvulns}];
 
-  const sslValid   = ssl.filter(s=>!s.is_expired).length;
-  const sslExpired = ssl.filter(s=>s.is_expired).length;
+  // Compute certificate status from expiry_date (API returns dd-mm-yyyy)
+  const parseCertDate = (value) => {
+    if (!value) return null;
+    const m = String(value).trim().match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  const soonTs = nowTs + 90 * 24 * 60 * 60 * 1000;
+  const sslExpired = ssl.filter(s => { const d = parseCertDate(s.expiry_date); return d && d.getTime() < nowTs; }).length;
+  const sslExpiringSoon = ssl.filter(s => { const d = parseCertDate(s.expiry_date); return d && d.getTime() >= nowTs && d.getTime() <= soonTs; }).length;
+  const sslValid = Math.max(0, ssl.length - sslExpired - sslExpiringSoon);
   const sslData = [
     { name:'Valid', value:sslValid, fill:'#22C55E' },
-    { name:'Expiring',value:sslExpiring, fill:'#F97316' },
+    { name:'Expiring',value:sslExpiringSoon, fill:'#F97316' },
     { name:'Expired', value:sslExpired, fill:'#EF4444' },
   ];
 
@@ -306,35 +326,76 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
       {/* Scan History Table */}
       <W title={<><TrendingUp size={12}/> Recent Scan History</>}>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.8rem'}}>
-            <thead>
-              <tr style={{borderBottom:'1px solid var(--border-color)'}}>
-                {['Domain/Target','Status','Subdomains','Vulnerabilities','Scan Date'].map(h=>(
-                  <th key={h} style={{padding:'0.5rem 0.75rem',textAlign:'left',color:'var(--text-muted)',fontWeight:700,fontSize:'0.68rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(scansList.slice(0,8)||[]).map((s,i)=>(
-                <tr key={s.id||i} style={{borderBottom:'1px solid var(--border-color)'}}>
-                  <td style={{padding:'0.6rem 0.75rem',fontWeight:600,color:'var(--text-primary)'}}>{s.target||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem'}}>
-                    <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',
-                      background:s.status==='completed'?'rgba(34,197,94,0.12)':'rgba(59,130,246,0.12)',
-                      color:s.status==='completed'?'#22C55E':'#3B82F6'}}>
-                      {s.status||'—'}
-                    </span>
-                  </td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomains_count||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerabilities_count||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.created_at?new Date(s.created_at).toLocaleString():'—'}</td>
-                </tr>
-              ))}
-              {scansList.length===0 && <tr><td colSpan={5} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No scans found. Run a scan to populate this table.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+        {(() => {
+          const scans = scansList || [];
+          const scansPerPage = 10;
+          const totalScanPages = Math.ceil(scans.length / scansPerPage);
+          const validScanPage = Math.min(Math.max(scanPage, 1), totalScanPages || 1);
+          const startScanIdx = (validScanPage - 1) * scansPerPage;
+          const currentScans = scans.slice(startScanIdx, startScanIdx + scansPerPage);
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.8rem'}}>
+                  <thead>
+                    <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                      {['Domain/Target','Status','Subdomains','Vulnerabilities','Scan Date'].map(h=>(
+                        <th key={h} style={{padding:'0.5rem 0.75rem',textAlign:'left',color:'var(--text-muted)',fontWeight:700,fontSize:'0.68rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentScans.map((s,i)=>(
+                      <tr key={s.id||i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                        <td style={{padding:'0.6rem 0.75rem',fontWeight:600,color:'var(--text-primary)'}}>{s.target||'—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem'}}>
+                          <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',
+                            background:s.status==='completed'?'rgba(34,197,94,0.12)':'rgba(59,130,246,0.12)',
+                            color:s.status==='completed'?'#22C55E':'#3B82F6'}}>
+                            {s.status||'—'}
+                          </span>
+                        </td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomain_count ?? s.subdomains_count ?? '—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerability_count ?? s.vulnerabilities_count ?? '—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.created_at?new Date(s.created_at).toLocaleString():'—'}</td>
+                      </tr>
+                    ))}
+                    {scans.length===0 && <tr><td colSpan={5} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No scans found. Run a scan to populate this table.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table pagination */}
+              <div className="table-footer" style={{ padding: '0.75rem 0', background: 'transparent', borderTop: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
+                <div className="footer-info">
+                  Showing {scans.length === 0 ? 0 : startScanIdx + 1} to {Math.min(startScanIdx + scansPerPage, scans.length)} of {scans.length} scans
+                </div>
+                <div className="footer-pagination">
+                  <button 
+                    className="page-btn" 
+                    onClick={() => setScanPage(p => Math.max(1, p - 1))}
+                    disabled={validScanPage <= 1}
+                    style={{opacity: validScanPage <= 1 ? 0.3 : 1}}
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span>Page {totalScanPages === 0 ? 0 : validScanPage} of {totalScanPages}</span>
+                  <button 
+                    className="page-btn" 
+                    onClick={() => setScanPage(p => Math.min(totalScanPages, p + 1))}
+                    disabled={validScanPage >= totalScanPages || totalScanPages === 0}
+                    style={{opacity: (validScanPage >= totalScanPages || totalScanPages === 0) ? 0.3 : 1}}
+                    title="Next page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </W>
     </div>
   );
