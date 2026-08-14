@@ -264,7 +264,7 @@ function App() {
             />
           )}
 
-          {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
+          {activePage === 'Asset Discovery Dashboard' && <AssetDiscoveryDashboard activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} setActivePage={setActivePage} />}
           {activePage === 'Brand Monitoring Dashboard'&& <BrandMonitoringDashboard assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} />}
           {activePage === 'Attack Path Analysis Dashboard' && <AttackPathAnalysis initialTab="overview" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
           {activePage === 'Attack Graph'                 && <AttackPathAnalysis initialTab="graph" activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} setSelectedDomain={setSelectedDomain} scansList={filteredScansList} handleSelectScan={handleSelectScan} />}
