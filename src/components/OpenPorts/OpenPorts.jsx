@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './OpenPorts.css';
-import { ArrowRight, CheckCircle2, X, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle2, X, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -9,6 +9,8 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const [portsList, setPortsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [severityFilter, setSeverityFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [toastMessage, setToastMessage] = useState('');
   const [selectedPort, setSelectedPort] = useState(null);
 
@@ -97,6 +99,20 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     return item.severity === severityFilter.toUpperCase();
   });
 
+  // Reset to page 1 on filter or scan changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [severityFilter, activeScanId]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const validPage = Math.min(Math.max(currentPage, 1), totalPages || 1);
+  const startIndex = (validPage - 1) * itemsPerPage;
+  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+
   const exportToCSV = () => {
     const headers = ['Host', 'IP Address', 'Port', 'Protocol', 'Service', 'Severity', 'Risk Score', 'Status', 'Last Seen'];
     const csvRows = filteredData.map(item => [
@@ -171,7 +187,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                     Loading open ports from database...
                   </td>
                 </tr>
-              ) : filteredData.map(item => (
+              ) : currentData.map(item => (
                 <tr key={item.id}>
                   <td className="op-host">{item.host}</td>
                   <td className="op-ip">
@@ -219,7 +235,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                   <td className="op-last-seen">{item.lastSeen}</td>
                 </tr>
               ))}
-              {!loading && filteredData.length === 0 && (
+              {!loading && currentData.length === 0 && (
                 <tr>
                   <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No open ports found for this scan.
@@ -228,6 +244,34 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
               )}
             </tbody>
           </table>
+
+          {/* Pagination Footer */}
+          <div className="table-footer">
+            <div className="footer-info">
+              Showing {filteredData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} open ports
+            </div>
+            <div className="footer-pagination">
+              <button 
+                className="page-btn" 
+                onClick={handlePrevPage}
+                disabled={currentPage <= 1}
+                style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+                title="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span>Page {totalPages === 0 ? 0 : validPage} of {totalPages}</span>
+              <button 
+                className="page-btn" 
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+                title="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>

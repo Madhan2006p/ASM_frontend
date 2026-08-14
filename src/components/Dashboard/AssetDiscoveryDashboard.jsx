@@ -5,7 +5,8 @@ import {
 } from 'recharts';
 import {
   Server, Shield, AlertTriangle, Globe, Lock, TrendingUp,
-  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye, Folder, Code, Award
+  RefreshCw, Activity, CheckCircle, XCircle, Cpu, Eye, Folder, Code, Award,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
@@ -50,6 +51,7 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
   const [loading, setLoading] = useState(false);
   // Reference time for SSL expiry checks — captured once, not on every render
   const [nowTs] = useState(() => Date.now());
+  const [scanPage, setScanPage] = useState(1);
 
   useEffect(() => {
     const load = async () => {
@@ -322,35 +324,76 @@ const AssetDiscoveryDashboard = ({ activeScanId, assignedDomains, selectedDomain
 
       {/* Scan History Table */}
       <W title={<><TrendingUp size={12}/> Recent Scan History</>}>
-        <div style={{overflowX:'auto'}}>
-          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.8rem'}}>
-            <thead>
-              <tr style={{borderBottom:'1px solid var(--border-color)'}}>
-                {['Domain/Target','Status','Subdomains','Vulnerabilities','Scan Date'].map(h=>(
-                  <th key={h} style={{padding:'0.5rem 0.75rem',textAlign:'left',color:'var(--text-muted)',fontWeight:700,fontSize:'0.68rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(scansList.slice(0,8)||[]).map((s,i)=>(
-                <tr key={s.id||i} style={{borderBottom:'1px solid var(--border-color)'}}>
-                  <td style={{padding:'0.6rem 0.75rem',fontWeight:600,color:'var(--text-primary)'}}>{s.target||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem'}}>
-                    <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',
-                      background:s.status==='completed'?'rgba(34,197,94,0.12)':'rgba(59,130,246,0.12)',
-                      color:s.status==='completed'?'#22C55E':'#3B82F6'}}>
-                      {s.status||'—'}
-                    </span>
-                  </td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomain_count||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerability_count||'—'}</td>
-                  <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.created_at?new Date(s.created_at).toLocaleString():'—'}</td>
-                </tr>
-              ))}
-              {scansList.length===0 && <tr><td colSpan={5} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No scans found. Run a scan to populate this table.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+        {(() => {
+          const scans = scansList || [];
+          const scansPerPage = 10;
+          const totalScanPages = Math.ceil(scans.length / scansPerPage);
+          const validScanPage = Math.min(Math.max(scanPage, 1), totalScanPages || 1);
+          const startScanIdx = (validScanPage - 1) * scansPerPage;
+          const currentScans = scans.slice(startScanIdx, startScanIdx + scansPerPage);
+
+          return (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{overflowX:'auto'}}>
+                <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.8rem'}}>
+                  <thead>
+                    <tr style={{borderBottom:'1px solid var(--border-color)'}}>
+                      {['Domain/Target','Status','Subdomains','Vulnerabilities','Scan Date'].map(h=>(
+                        <th key={h} style={{padding:'0.5rem 0.75rem',textAlign:'left',color:'var(--text-muted)',fontWeight:700,fontSize:'0.68rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentScans.map((s,i)=>(
+                      <tr key={s.id||i} style={{borderBottom:'1px solid var(--border-color)'}}>
+                        <td style={{padding:'0.6rem 0.75rem',fontWeight:600,color:'var(--text-primary)'}}>{s.target||'—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem'}}>
+                          <span style={{padding:'0.15rem 0.5rem',borderRadius:5,fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',
+                            background:s.status==='completed'?'rgba(34,197,94,0.12)':'rgba(59,130,246,0.12)',
+                            color:s.status==='completed'?'#22C55E':'#3B82F6'}}>
+                            {s.status||'—'}
+                          </span>
+                        </td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.subdomain_count ?? s.subdomains_count ?? '—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-secondary)'}}>{s.vulnerability_count ?? s.vulnerabilities_count ?? '—'}</td>
+                        <td style={{padding:'0.6rem 0.75rem',color:'var(--text-muted)',fontSize:'0.76rem'}}>{s.created_at?new Date(s.created_at).toLocaleString():'—'}</td>
+                      </tr>
+                    ))}
+                    {scans.length===0 && <tr><td colSpan={5} style={{padding:'2rem',textAlign:'center',color:'var(--text-muted)'}}>No scans found. Run a scan to populate this table.</td></tr>}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table pagination */}
+              <div className="table-footer" style={{ padding: '0.75rem 0', background: 'transparent', borderTop: '1px solid var(--border-color)', marginTop: '0.5rem' }}>
+                <div className="footer-info">
+                  Showing {scans.length === 0 ? 0 : startScanIdx + 1} to {Math.min(startScanIdx + scansPerPage, scans.length)} of {scans.length} scans
+                </div>
+                <div className="footer-pagination">
+                  <button 
+                    className="page-btn" 
+                    onClick={() => setScanPage(p => Math.max(1, p - 1))}
+                    disabled={validScanPage <= 1}
+                    style={{opacity: validScanPage <= 1 ? 0.3 : 1}}
+                    title="Previous page"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span>Page {totalScanPages === 0 ? 0 : validScanPage} of {totalScanPages}</span>
+                  <button 
+                    className="page-btn" 
+                    onClick={() => setScanPage(p => Math.min(totalScanPages, p + 1))}
+                    disabled={validScanPage >= totalScanPages || totalScanPages === 0}
+                    style={{opacity: (validScanPage >= totalScanPages || totalScanPages === 0) ? 0.3 : 1}}
+                    title="Next page"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
       </W>
     </div>
   );

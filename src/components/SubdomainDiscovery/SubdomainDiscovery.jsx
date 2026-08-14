@@ -242,7 +242,9 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                           ))}
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>-</span>
+                        <span style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+                          DNS Not Found
+                        </span>
                       )}
                     </td>
                     <td className="td-ports" style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -288,15 +290,16 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
           {/* Footer Area */}
           <div className="table-footer">
-            <div className="footer-sync">
-              <RefreshCw size={14} color="#94A3B8" /> Realtime sync enabled
+            <div className="footer-info">
+              Showing {filteredData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} subdomains
             </div>
             <div className="footer-pagination">
               <button 
                 className="page-btn" 
                 onClick={handlePrevPage}
-                disabled={currentPage === 1}
-                style={{opacity: currentPage === 1 ? 0.3 : 1}}
+                disabled={currentPage <= 1}
+                style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+                title="Previous page"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -304,8 +307,9 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
               <button 
                 className="page-btn" 
                 onClick={handleNextPage}
-                disabled={currentPage === totalPages || totalPages === 0}
-                style={{opacity: (currentPage === totalPages || totalPages === 0) ? 0.3 : 1}}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+                title="Next page"
               >
                 <ChevronRight size={16} />
               </button>

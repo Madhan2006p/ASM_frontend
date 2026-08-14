@@ -3,7 +3,7 @@ import './Directories.css';
 import {
   Folder, FolderOpen, Lock, Database, Globe, RefreshCw,
   ExternalLink, FileText, KeyRound, Code2, ScrollText, GitBranch, Server,
-  LogIn, FileQuestion, Bug
+  LogIn, FileQuestion, Bug, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
@@ -27,6 +27,8 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   const [directories, setDirectories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterPill, setFilterPill] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch directories
   useEffect(() => {
@@ -167,6 +169,20 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return (statusWeight[b.status] || 0) - (statusWeight[a.status] || 0);
   });
 
+  // Reset to page 1 on filter or scan changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterPill, activeScanId]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const validPage = Math.min(Math.max(currentPage, 1), totalPages || 1);
+  const startIndex = (validPage - 1) * itemsPerPage;
+  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
+  const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
+
   const HTTP_LABELS = {
     200: '200 OK', 201: '201 Created', 204: '204 No Content',
     301: '301 Moved', 302: '302 Found', 303: '303 See Other',
@@ -260,7 +276,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                     Loading directories from scan database...
                   </td>
                 </tr>
-              ) : filteredData.map(item => {
+              ) : currentData.map(item => {
                 const dateStr = item.created ? new Date(item.created).toLocaleDateString() : 'Recent';
                 return (
                   <tr key={item.id}>
@@ -312,7 +328,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                   </tr>
                 );
               })}
-              {!loading && filteredData.length === 0 && (
+              {!loading && currentData.length === 0 && (
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No directories found for this scan.
@@ -321,6 +337,34 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
               )}
             </tbody>
           </table>
+
+          {/* Pagination Footer */}
+          <div className="table-footer">
+            <div className="footer-info">
+              Showing {filteredData.length === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} directories
+            </div>
+            <div className="footer-pagination">
+              <button 
+                className="page-btn" 
+                onClick={handlePrevPage}
+                disabled={currentPage <= 1}
+                style={{opacity: currentPage <= 1 ? 0.3 : 1}}
+                title="Previous page"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <span>Page {totalPages === 0 ? 0 : validPage} of {totalPages}</span>
+              <button 
+                className="page-btn" 
+                onClick={handleNextPage}
+                disabled={currentPage >= totalPages || totalPages === 0}
+                style={{opacity: (currentPage >= totalPages || totalPages === 0) ? 0.3 : 1}}
+                title="Next page"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </div>
 
       </div>

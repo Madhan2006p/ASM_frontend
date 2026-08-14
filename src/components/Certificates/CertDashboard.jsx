@@ -70,21 +70,6 @@ const CertDashboard = ({
         <h1 className="ssl-page-title">SSL Certificates</h1>
       </div>
 
-      {/* 2. Top Domain Navigation Bar */}
-      <div className="ssl-domain-nav-container">
-        <div className="ssl-domain-tabs">
-          {domainsList.map((domain) => (
-            <button
-              key={domain}
-              className={`ssl-domain-tab ${selectedDomain === domain ? 'active' : ''}`}
-              onClick={() => setSelectedDomain(domain)}
-            >
-              {domain}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* 3. Sub-View Switcher Navigation Tabs */}
       <div className="ssl-view-switcher-container">
         <div className="ssl-view-tabs">

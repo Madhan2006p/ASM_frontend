@@ -134,10 +134,6 @@ const DiscoveryTable = () => {
     <div className="discovery-table-wrapper card">
       {/* Filter Bar */}
       <div className="filter-bar">
-        <div className="filter-search">
-          <Search size={16} className="filter-search-icon" />
-          <input type="text" placeholder="Search by hostname or IP..." />
-        </div>
         <div className="filter-dropdowns">
           <button className="dropdown-btn">
             All Domains <ChevronDown size={14} />

@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { Download } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import { parseTechEntry, getEolInfo } from '../../utils/techUtils';
 import './Technologies.css';
@@ -8,47 +7,67 @@ import './Technologies.css';
    TechDashboard
 ═════════════════════════════════════════════════════════ */
 
-const TechDashboard = ({ technologies = [], loading = false, onExport }) => {
-  /* ── Aggregate per-subdomain tech rows into a stack inventory ── */
+const TechDashboard = ({ technologies = [], loading = false, techFilter = 'ALL', setTechFilter }) => {
+  /* ── Compute stats per subdomain list ── */
   const inventory = useMemo(() => {
-    const map = {};
+    const list = technologies || [];
+    const totalCount = list.length;
+    const activeCount = list.filter(item => {
+      const s = (item.status || 'active').toLowerCase();
+      return s === 'live' || s === 'active' || s === 'up';
+    }).length;
+    const inactiveCount = list.filter(item => {
+      const s = (item.status || '').toLowerCase();
+      return s === 'inactive' || s === 'down';
+    }).length;
+    const otherCount = list.filter(item => {
+      const s = (item.status || '').toLowerCase();
+      return s !== 'live' && s !== 'active' && s !== 'up' && s !== 'inactive' && s !== 'down';
+    }).length;
 
-    (technologies || []).forEach(row => {
-      (row.technologies || []).forEach(raw => {
-        const { name, version, category } = parseTechEntry(raw);
-        if (!name) return;
-        const key = `${name.toLowerCase()}||${version.toLowerCase()}`;
-        if (!map[key]) {
-          const eol = getEolInfo(name, version);
-          map[key] = {
-            name,
-            version,
-            category,
-            outdated: eol.outdated,
-            eolNote: eol.note,
-            assets: 0,
-          };
-        }
-        map[key].assets += 1;
-      });
-    });
-
-    const list = Object.values(map).sort((a, b) => b.assets - a.assets);
     return {
-      list,
-      totalInstances: list.reduce((s, t) => s + t.assets, 0),
-      outdatedCount: list.filter(t => t.outdated).length,
-      withVersionCount: list.filter(t => t.version).length,
+      totalCount,
+      activeCount,
+      inactiveCount,
+      otherCount
     };
   }, [technologies]);
 
-  const { list: techList, totalInstances, outdatedCount, withVersionCount } = inventory;
+  const { totalCount, activeCount, inactiveCount, otherCount } = inventory;
 
   const statCards = [
-    { label: 'TOTAL DETECTIONS', value: totalInstances.toString(), subtext: 'tech instances found', color: '#3B82F6' },
-    { label: 'UNIQUE STACK', value: techList.length.toString(), subtext: 'distinct technologies', color: '#8B5CF6' },
-    { label: 'VERSIONS DETECTED', value: withVersionCount.toString(), subtext: 'fingerprinted w/ version', color: '#06B6D4' },
-    { label: 'OUTDATED / EOL', value: outdatedCount.toString(), subtext: outdatedCount > 0 ? 'needs attention' : 'all supported', color: outdatedCount > 0 ? '#EF4444' : '#10B981' },
+    { 
+      label: 'TOTAL ASSETS', 
+      value: totalCount.toString(), 
+      subtext: techFilter === 'ALL' ? 'Showing all assets' : 'Click to view all', 
+      color: '#3B82F6',
+      active: techFilter === 'ALL',
+      onClick: () => setTechFilter && setTechFilter('ALL')
+    },
+    { 
+      label: 'ACTIVE SUBDOMAINS', 
+      value: activeCount.toString(), 
+      subtext: techFilter === 'ACTIVE' ? 'Filter: Active only' : 'Live / up assets', 
+      color: '#10B981',
+      active: techFilter === 'ACTIVE',
+      onClick: () => setTechFilter && setTechFilter(techFilter === 'ACTIVE' ? 'ALL' : 'ACTIVE')
+    },
+    { 
+      label: 'INACTIVE SUBDOMAINS', 
+      value: inactiveCount.toString(), 
+      subtext: techFilter === 'INACTIVE' ? 'Filter: Inactive only' : 'Down / unreachable', 
+      color: '#EF4444',
+      active: techFilter === 'INACTIVE',
+      onClick: () => setTechFilter && setTechFilter(techFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')
+    },
+    { 
+      label: 'OTHER', 
+      value: otherCount.toString(), 
+      subtext: techFilter === 'OTHER' ? 'Filter: Other status' : 'Other / unknown status', 
+      color: '#8B5CF6',
+      active: techFilter === 'OTHER',
+      onClick: () => setTechFilter && setTechFilter(techFilter === 'OTHER' ? 'ALL' : 'OTHER')
+    },
   ];
 
   return (
@@ -59,15 +78,11 @@ const TechDashboard = ({ technologies = [], loading = false, onExport }) => {
           label: s.label,
           value: s.value,
           subtext: s.subtext,
+          active: s.active,
+          onClick: s.onClick,
           style: { borderLeft: `3px solid ${s.color}` },
         }))}
-        actions={
-          <button className="tech-btn-primary" onClick={onExport} disabled={loading || techList.length === 0}>
-            <Download size={15} /> Export CSV
-          </button>
-        }
       />
-
     </div>
   );
 };
