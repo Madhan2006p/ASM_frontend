@@ -124,18 +124,16 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   return (
     <div className="global-page-container">
       <div className="global-max-width">
+        <ScanSelector 
+          assignedDomains={assignedDomains}
+          selectedDomain={selectedDomain}
+          setSelectedDomain={setSelectedDomain}
+          scansList={scansList}
+          activeScanId={activeScanId}
+          handleSelectScan={handleSelectScan}
+        />
+
         <TechDashboard onExport={handleExport} technologies={subdomainTechs} loading={loading} />
-        
-        <div style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
-          <ScanSelector 
-            assignedDomains={assignedDomains}
-            selectedDomain={selectedDomain}
-            setSelectedDomain={setSelectedDomain}
-            scansList={scansList}
-            activeScanId={activeScanId}
-            handleSelectScan={handleSelectScan}
-          />
-        </div>
 
         <TechTable 
           onDataFiltered={setFilteredData} 
