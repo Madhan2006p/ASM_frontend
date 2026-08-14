@@ -24,7 +24,11 @@ const menuGroups = [
   {
     title: 'VULNERABILITY MANAGEMENT',
     items: [
-      { name: 'Vulnerability Management', icon: <ShieldAlert size={16} /> },
+      { name: 'VM Dashboard',               icon: <Activity size={16} /> },
+      { name: 'My Vulnerabilities',         icon: <ShieldAlert size={16} /> },
+      { name: 'My Findings',                icon: <FileText size={16} /> },
+      { name: 'CVE View',                   icon: <ShieldCheck size={16} /> },
+      { name: 'Task / Remediation Tracker', icon: <Layers size={16} /> },
     ]
   },
   {
