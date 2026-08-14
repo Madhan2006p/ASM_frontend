@@ -856,7 +856,7 @@ const AssetDiscoveryReport = ({ activeScanId, scansList, assignedDomains, select
                   const subPorts = ports.filter(p => p.host === sub.domain);
                   const subTechs = technologies.filter(t => t.hosts && t.hosts.includes(sub.domain));
                   const subVulns = vulnerabilities.filter(v => v.subdomain === sub.domain || v.domain === sub.domain);
-                  const ip = Array.isArray(sub.ip) ? sub.ip.join(', ') : (sub.ip || '—');
+                  const ip = Array.isArray(sub.ip) && sub.ip.length > 0 ? sub.ip.join(', ') : (sub.ip && sub.ip !== '—' ? sub.ip : 'DNS Not Found');
                   return (
                     <div key={sub.id} className="card vapt-finding-card" style={{ borderLeft: `4px solid ${sc.color}` }}>
                       <div className="vapt-finding-header" onClick={() => toggleRow(`sub-${sub.id}`)}>
