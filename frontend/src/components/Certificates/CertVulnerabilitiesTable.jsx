@@ -120,46 +120,14 @@ const CertVulnerabilitiesTable = ({
           <table className="ssl-table">
             <thead>
               <tr>
-                <th style={{ width: '60px' }}>
-                  <div className="ssl-th-content" onClick={() => handleSort('sNo')}>
-                    S.No <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('domain')}>
-                    Domain <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('ip')}>
-                    IP <Filter size={12} />
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('sslGrade')}>
-                    SSL Grade <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('vulnerability')}>
-                    Vulnerability <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('severity')}>
-                    Severity <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content">
-                    Action
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('status')}>
-                    Status <span>⇅</span>
-                  </div>
-                </th>
+                <th style={{ width: '60px' }}>S.No</th>
+                <th>Domain</th>
+                <th>IP</th>
+                <th>SSL Grade</th>
+                <th>Vulnerability</th>
+                <th>Severity</th>
+                <th>Action</th>
+                <th>Status</th>
               </tr>
             </thead>
 

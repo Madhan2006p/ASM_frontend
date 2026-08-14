@@ -156,51 +156,15 @@ const CertificatesTable = ({
           <table className="ssl-table">
             <thead>
               <tr>
-                <th style={{ width: '60px' }}>
-                  <div className="ssl-th-content" onClick={() => handleSort('sNo')}>
-                    S.No <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('domain')}>
-                    Domain <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('ip')}>
-                    IP <Filter size={12} />
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content">
-                    Action
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content">
-                    Team Action
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('status')}>
-                    Status <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('rdns')}>
-                    RDNS <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('sslGrade')}>
-                    SSL Grade <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
-                <th>
-                  <div className="ssl-th-content" onClick={() => handleSort('issuer')}>
-                    Iss Name <Filter size={12} /> <span>⇅</span>
-                  </div>
-                </th>
+                <th style={{ width: '60px' }}>S.No</th>
+                <th>Domain</th>
+                <th>IP</th>
+                <th>Action</th>
+                <th>Team Action</th>
+                <th>Status</th>
+                <th>RDNS</th>
+                <th>SSL Grade</th>
+                <th>Iss Name</th>
               </tr>
             </thead>
 

@@ -67,8 +67,8 @@
 }
 
 .ssl-domain-tab.active {
-  background-color: var(--brand-primary, #3B82F6);
-  color: #FFFFFF;
+  background-color: var(--brand-primary, #3B82F6) !important;
+  color: #FFFFFF !important;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
 }
 
@@ -105,8 +105,8 @@
 }
 
 .ssl-view-tab.active {
-  background-color: var(--brand-primary, #3B82F6);
-  color: #FFFFFF;
+  background-color: var(--brand-primary, #3B82F6) !important;
+  color: #FFFFFF !important;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
 }
 
@@ -705,3 +705,106 @@
     width: 100%;
   }
 }
+
+/* ==========================================
+   LIGHT MODE STYLING FOR SSL CERTIFICATES
+   ========================================== */
+.light-mode .ssl-page-header,
+.light-mode .ssl-view-switcher-container,
+.light-mode .ssl-domain-nav-container,
+.light-mode .ssl-cert-card,
+.light-mode .ssl-vuln-card,
+.light-mode .ssl-table-card,
+.light-mode .ssl-filter-popover {
+  background-color: #FFFFFF !important;
+  border: 1px solid rgba(37, 99, 235, 0.12) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-mode .ssl-page-title,
+.light-mode .ssl-cert-card-value,
+.light-mode .ssl-vuln-card-value,
+.light-mode .ssl-filter-title {
+  color: #0F172A !important;
+}
+
+.light-mode .ssl-view-tab,
+.light-mode .ssl-domain-tab {
+  color: #475569 !important;
+  background: transparent !important;
+}
+
+.light-mode .ssl-view-tab:hover,
+.light-mode .ssl-domain-tab:hover {
+  background-color: rgba(37, 99, 235, 0.08) !important;
+  color: #0F172A !important;
+}
+
+.light-mode .ssl-view-tab.active,
+.light-mode .ssl-domain-tab.active {
+  background-color: #2563EB !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3) !important;
+}
+
+.light-mode .ssl-cert-card-label,
+.light-mode .ssl-vuln-card-label,
+.light-mode .ssl-filter-label {
+  color: #64748B !important;
+}
+
+.light-mode .ssl-cert-card.active-filter,
+.light-mode .ssl-vuln-card.active-filter {
+  border-color: #2563EB !important;
+  background-color: #F8FAFC !important;
+  box-shadow: 0 0 0 1.5px #2563EB !important;
+}
+
+.light-mode .ssl-cert-card:hover,
+.light-mode .ssl-vuln-card:hover {
+  border-color: rgba(37, 99, 235, 0.4) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.light-mode .ssl-table th {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+.light-mode .ssl-table td {
+  color: #1E293B !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+}
+
+.light-mode .ssl-table tr:hover td {
+  background-color: #EFF6FF !important;
+}
+
+.light-mode .ssl-action-select,
+.light-mode .ssl-filter-select {
+  background-color: #F8FAFC !important;
+  color: #0F172A !important;
+  border: 1px solid rgba(37, 99, 235, 0.2) !important;
+}
+
+.light-mode .ssl-team-badge {
+  background-color: #F1F5F9 !important;
+  color: #475569 !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+.light-mode .ssl-search-box {
+  background-color: #F8FAFC !important;
+  border-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+.light-mode .ssl-search-input {
+  color: #0F172A !important;
+}
+
+.light-mode .ssl-pagination-footer {
+  border-top-color: rgba(37, 99, 235, 0.12) !important;
+  color: #475569 !important;
+}
+
