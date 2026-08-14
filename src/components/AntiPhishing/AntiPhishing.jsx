@@ -64,9 +64,7 @@ const AntiPhishing = ({ activeTarget, assignedDomains, selectedDomain, setSelect
     <div className="ap-container">
       
       <PageHeaderCard
-        badgeText="BRAND MONITORING"
         title="Phishing Domains"
-        subtitle="Monitor look-alike domain registrations, typosquats, URLScan security reputations, and web technology profiles."
         stats={[
           { label: 'Monitored Lookalikes', value: totalCount.toString(), subtext: 'Typosquats registered' },
           { label: 'Phishing Flagged', value: phishingCount.toString(), subtext: 'High URLScan threat score' },

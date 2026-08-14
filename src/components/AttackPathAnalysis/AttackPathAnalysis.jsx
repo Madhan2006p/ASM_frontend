@@ -105,9 +105,7 @@ const AttackPathAnalysis = ({
     <div className="global-page-container page-animate apa-wrapper">
       {/* ── Page Header ─────────────────────────────────────── */}
       <PageHeaderCard
-        badgeText="MODULE"
         title="Attack Path Analysis"
-        subtitle="Automated attack chain correlation from Internet entry vectors to critical business crown jewels."
         stats={[
           { label: 'Attack Paths',      value: analysisData?.stats?.totalAttackPaths?.toString() || '0', subtext: 'correlated' },
           { label: 'Critical Paths',    value: analysisData?.stats?.criticalAttackPaths?.toString() || '0', subtext: 'high risk' },

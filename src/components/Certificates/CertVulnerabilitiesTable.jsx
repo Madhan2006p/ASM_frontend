@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
   ChevronDown,
   X,
   Plus,
@@ -17,7 +16,6 @@ const CertVulnerabilitiesTable = ({
   selectedSeverityFilter = 'ALL'
 }) => {
   // Local state
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedVulnType, setSelectedVulnType] = useState('All');
   const [showFilterPopover, setShowFilterPopover] = useState(false);
 
@@ -48,26 +46,14 @@ const CertVulnerabilitiesTable = ({
         }
       }
 
-      // 2. Search Query
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const matchesVuln = item.vulnerability?.toLowerCase().includes(q);
-        const matchesDomain = item.domain?.toLowerCase().includes(q);
-        const matchesIp = item.ip?.toLowerCase().includes(q);
-        const matchesStatus = item.status?.toLowerCase().includes(q);
-        if (!matchesVuln && !matchesDomain && !matchesIp && !matchesStatus) {
-          return false;
-        }
-      }
-
-      // 3. Vulnerability Type Dropdown Filter
+      // 2. Vulnerability Type Dropdown Filter
       if (selectedVulnType !== 'All' && item.vulnerability !== selectedVulnType) {
         return false;
       }
 
       return true;
     });
-  }, [vulnerabilities, selectedSeverityFilter, searchQuery, selectedVulnType]);
+  }, [vulnerabilities, selectedSeverityFilter, selectedVulnType]);
 
   // Sorting logic
   const sortedVulns = useMemo(() => {
@@ -103,7 +89,6 @@ const CertVulnerabilitiesTable = ({
 
   // Clear all filters handler
   const handleClearAll = () => {
-    setSearchQuery('');
     setSelectedVulnType('All');
     setCurrentPage(1);
     setShowFilterPopover(false);

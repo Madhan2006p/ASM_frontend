@@ -54,9 +54,7 @@ const TechDashboard = ({ technologies = [], loading = false, onExport }) => {
   return (
     <div className="tech-dash">
       <PageHeaderCard
-        badgeText="TECHNOLOGIES"
         title="Technologies"
-        subtitle="Detected technologies and versions per subdomain — click any domain for full details."
         stats={statCards.map(s => ({
           label: s.label,
           value: s.value,

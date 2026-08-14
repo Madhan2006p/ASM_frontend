@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './SubdomainDiscovery.css';
-import { Search, RefreshCw, ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { RefreshCw, ChevronLeft, ChevronRight, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import PageHeaderCard from '../common/PageHeaderCard';
 import ScanSelector from '../common/ScanSelector';
 import { api } from '../../utils/api';
@@ -8,7 +8,6 @@ import { api } from '../../utils/api';
 const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelectScan, fetchScans, assignedDomains, selectedDomain, setSelectedDomain }) => {
   const [subdomains, setSubdomains] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   
   const itemsPerPage = 10;
@@ -99,15 +98,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
     if (statusFilter === 'ACTIVE' && !isSubdomainActive(item)) return false;
     if (statusFilter === 'INACTIVE' && isSubdomainActive(item)) return false;
 
-    // Search Term Filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const domainMatch = (item.domain || '').toLowerCase().includes(term);
-      const ipMatch = (Array.isArray(item.ip) ? item.ip.join(', ') : item.ip || '').toLowerCase().includes(term);
-      const titleMatch = (item.title || '').toLowerCase().includes(term);
-      if (!domainMatch && !ipMatch && !titleMatch) return false;
-    }
-
     return true;
   });
 
@@ -117,7 +107,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(currentPage - 1); };
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
-  const handleSearchChange = (e) => { setSearchTerm(e.target.value); setCurrentPage(1); };
 
   const getScanStatus = (item) => {
     const s = (item.status || 'active').toLowerCase();
@@ -127,7 +116,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   };
 
   const getEmptyStateText = () => {
-    if (searchTerm) return `No subdomains found matching "${searchTerm}".`;
     if (statusFilter === 'ACTIVE') return 'No active subdomains found.';
     if (statusFilter === 'INACTIVE') return 'No inactive subdomains found.';
     return 'No subdomains found.';
@@ -155,9 +143,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
 
         {/* Banner Area */}
         <PageHeaderCard 
-          badgeText="DISCOVERY"
           title="Attack Surface Discovery"
-          subtitle="Monitor and enumerate every external-facing asset across your perimeter."
           stats={[
             {
               label: 'DISCOVERED ASSETS',
@@ -196,15 +182,6 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
               <div className="t-subtitle" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                 {loading ? "Loading from backend..." : `Showing ${currentData.length} of ${filteredData.length} assets`}
               </div>
-            </div>
-            <div className="global-search-box">
-              <Search size={16} color="#94A3B8" />
-              <input 
-                type="text" 
-                placeholder="Filter domains or IPs..." 
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
             </div>
           </div>
 
