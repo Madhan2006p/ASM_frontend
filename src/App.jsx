@@ -277,7 +277,6 @@ function App() {
           {activePage === 'Mobile Security Dashboard' && <MobileVAPTDashboard />}
           {activePage === 'Mobile Security'       && <MobileVAPT />}
           {activePage === 'VM Dashboard'          && <VulnerabilityDashboard />}
-          {activePage === 'Dashboard'             && <VulnerabilityDashboard />}
           {activePage === 'Task'                  && <RemediationTracker />}
           {activePage === 'Task / Remediation Tracker' && <RemediationTracker />}
           {activePage === 'My Vulnerabilities'    && <MyVulnerabilities activeScanId={activeScanId} assignedDomains={assignedDomains} selectedDomain={selectedDomain} />}
