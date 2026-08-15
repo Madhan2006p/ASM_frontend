@@ -11,6 +11,7 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   const notificationsRef = useRef(null);
 
   const getParentLabel = () => {
+    if (activePage.startsWith('Control Panel') || activePage === 'Super Admin Dashboard') return 'CONTROL PANEL';
     if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
     if (['Vulnerabilities'].includes(activePage)) return 'VULNERABILITY MANAGEMENT';
     if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';

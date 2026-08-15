@@ -203,17 +203,31 @@ const SSLDetailModal = ({ cert, onClose }) => {
               <CheckCircle2 size={18} className="icon-emerald" />
               <span>Certificate Validity & Hostname Alignment</span>
             </div>
-            <div className="ssl-pro-alert-card success">
-              <div className="ssl-pro-alert-icon">
-                <CheckCircle2 size={22} color="#10B981" />
-              </div>
-              <div>
-                <div className="ssl-pro-alert-title">Hostname Match & Certificate Validity Verified</div>
-                <div className="ssl-pro-alert-desc">
-                  The target hostname <strong className="font-mono">{domainName}</strong> matches the active SSL/TLS certificate.
+            {cert.status === 'Name Not Resolved to IP' ? (
+              <div className="ssl-pro-alert-card warning" style={{ background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)' }}>
+                <div className="ssl-pro-alert-icon">
+                  <AlertTriangle size={22} color="#F59E0B" />
+                </div>
+                <div>
+                  <div className="ssl-pro-alert-title" style={{ color: '#F59E0B' }}>Hostname Has Not Resolved to an IP Address</div>
+                  <div className="ssl-pro-alert-desc">
+                    DNS resolution for <strong className="font-mono">{domainName}</strong> failed or returned no active IP address. SSL/TLS connection requires a valid A/AAAA DNS record.
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="ssl-pro-alert-card success">
+                <div className="ssl-pro-alert-icon">
+                  <CheckCircle2 size={22} color="#10B981" />
+                </div>
+                <div>
+                  <div className="ssl-pro-alert-title">Hostname Match & Certificate Validity Verified</div>
+                  <div className="ssl-pro-alert-desc">
+                    The target hostname <strong className="font-mono">{domainName}</strong> matches the active SSL/TLS certificate.
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="ssl-pro-grid-2col">
               <div className="ssl-pro-info-tile">
                 <span className="ssl-pro-tile-label">Valid From</span>

@@ -3,7 +3,7 @@ import {
   Home, Globe, Search, Crosshair, PlusSquare, ShieldCheck,
   Activity, AlertCircle, FileText, Settings,
   ChevronDown, Shield, Mail, Smartphone, User, Store,
-  GitMerge, ShieldAlert, Layers
+  GitMerge, ShieldAlert, Layers, Building2, Users
 } from 'lucide-react';
 import './Sidebar.css';
 import { BASE_URL } from '../../utils/api';
@@ -209,14 +209,49 @@ const Sidebar = ({ activePage, setActivePage, onLogout, user }) => {
       <div className="sidebar-scrollable">
         {user?.is_superuser ? (
           <>
+            <div className="nav-group-title" style={{ cursor: 'default' }}>
+              <span>CONTROL PANEL</span>
+            </div>
             <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
               <div
-                className={`nav-item ${activePage === 'Super Admin Dashboard' ? 'active' : ''}`}
-                onClick={() => setActivePage('Super Admin Dashboard')}
+                className={`nav-item ${activePage === 'Control Panel' || activePage === 'Super Admin Dashboard' ? 'active' : ''}`}
+                onClick={() => setActivePage('Control Panel')}
               >
                 <span className="nav-icon"><Shield size={16} /></span>
-                <span>Super Admin Dashboard</span>
+                <span>Overview</span>
               </div>
+              <div
+                className={`nav-item ${activePage === 'Control Panel - Organizations' ? 'active' : ''}`}
+                onClick={() => setActivePage('Control Panel - Organizations')}
+              >
+                <span className="nav-icon"><Building2 size={16} /></span>
+                <span>Organizations</span>
+              </div>
+              <div
+                className={`nav-item ${activePage === 'Control Panel - Domains' ? 'active' : ''}`}
+                onClick={() => setActivePage('Control Panel - Domains')}
+              >
+                <span className="nav-icon"><Globe size={16} /></span>
+                <span>Domains</span>
+              </div>
+              <div
+                className={`nav-item ${activePage === 'Control Panel - Users' ? 'active' : ''}`}
+                onClick={() => setActivePage('Control Panel - Users')}
+              >
+                <span className="nav-icon"><Users size={16} /></span>
+                <span>Users</span>
+              </div>
+              <div
+                className={`nav-item ${activePage === 'Control Panel - Scans' ? 'active' : ''}`}
+                onClick={() => setActivePage('Control Panel - Scans')}
+              >
+                <span className="nav-icon"><Activity size={16} /></span>
+                <span>Scans &amp; Monitoring</span>
+              </div>
+            </div>
+
+            <div className="nav-group-title" style={{ cursor: 'default', marginTop: '1rem' }}>
+              <span>MANAGE</span>
             </div>
             <div className="nav-menu" style={{ marginBottom: '0.25rem' }}>
               <div

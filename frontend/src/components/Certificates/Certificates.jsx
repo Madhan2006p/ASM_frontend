@@ -52,7 +52,18 @@ const Certificates = ({
 
         {
           const mappedCerts = certResults.map((c, idx) => {
-            const isError = c.cipher_suite?.startsWith('Connection error') || c.cipher_suite?.startsWith('Error');
+            const cipherLower = (c.cipher_suite || '').toLowerCase();
+            const isError = cipherLower.startsWith('connection error') || cipherLower.startsWith('error');
+            const isDnsUnresolved = 
+              !c.ip || 
+              c.ip === '—' || 
+              c.ip === 'DNS Not Found' ||
+              cipherLower.includes('name or service not known') ||
+              cipherLower.includes('getaddrinfo failed') ||
+              cipherLower.includes('name resolution') ||
+              cipherLower.includes('not resolve') ||
+              cipherLower.includes('temporary failure');
+
             let daysLeft = 0;
             let isExpired = false;
             if (c.expiry_date) {
@@ -72,16 +83,25 @@ const Certificates = ({
               if (daysLeft <= 0) isExpired = true;
             }
 
-            const certStatus = isExpired ? 'Expired' : (isError ? 'Invalid' : (c.status || 'Valid'));
+            let certStatus = 'Valid';
+            if (isExpired) {
+              certStatus = 'Expired';
+            } else if (isDnsUnresolved) {
+              certStatus = 'Name Not Resolved to IP';
+            } else if (isError) {
+              certStatus = 'Host Unreachable';
+            } else {
+              certStatus = c.status || 'Valid';
+            }
 
             return {
               id: c.id || `api-cert-${idx}`,
               sNo: idx + 1,
               domain: c.subdomain || c.domain,
-              ip: c.ip || '—',
-              rdns: c.rdns || '--',
-              sslGrade: isError ? 'F' : (c.ssl_grade || 'A'),
-              issuer: c.issuer_name || '—',
+              ip: isDnsUnresolved ? 'DNS Not Found' : (c.ip || '—'),
+              rdns: isDnsUnresolved ? '--' : (c.rdns || '--'),
+              sslGrade: isError || isDnsUnresolved ? 'F' : (c.ssl_grade || 'A'),
+              issuer: c.issuer_name || (isDnsUnresolved ? '—' : '—'),
               expireDate: c.expiry_date || '—',
               purchaseDate: c.purchase_date || '—',
               expiry_date: c.expiry_date || '—',
@@ -95,8 +115,8 @@ const Certificates = ({
               updated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—',
               daysLeft,
               isTrusted: c.is_trusted !== undefined ? c.is_trusted : !isExpired,
-              tlsVersion: isError ? 'None' : 'TLS 1.3',
-              cipherSuite: c.cipher_suite || '—'
+              tlsVersion: isError || isDnsUnresolved ? 'None' : 'TLS 1.3',
+              cipherSuite: isDnsUnresolved ? 'DNS resolution failed: Hostname has not resolved to an IP address' : (c.cipher_suite || '—')
             };
           });
 
@@ -245,25 +265,25 @@ const Certificates = ({
     return domainFilteredCerts;
   }, [domainFilteredCerts, selectedCertFilter]);
 
-  // Compute Status Card Counts for SSL Vulnerability View (Overall, Unreviewed, In Progress, Muted, False Positive, Closed)
+  // Compute Severity Card Counts for SSL Vulnerability View (Overall, Critical, High, Medium, Low, Info)
   const vulnCounts = useMemo(() => {
     const counts = {
       overall: domainFilteredVulns.length,
-      unreviewed: 0,
-      inProgress: 0,
-      muted: 0,
-      falsePositive: 0,
-      closed: 0
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0,
+      info: 0
     };
 
     domainFilteredVulns.forEach((v) => {
-      const st = (v.status || 'Unreviewed').toLowerCase().replace(/\s+/g, '');
-      if (st.includes('unreview')) counts.unreviewed += 1;
-      else if (st.includes('progress')) counts.inProgress += 1;
-      else if (st.includes('mute')) counts.muted += 1;
-      else if (st.includes('false') || st.includes('positive')) counts.falsePositive += 1;
-      else if (st.includes('close')) counts.closed += 1;
-      else counts.unreviewed += 1;
+      const sev = (v.severity || 'INFO').toUpperCase();
+      if (sev === 'CRITICAL') counts.critical += 1;
+      else if (sev === 'HIGH') counts.high += 1;
+      else if (sev === 'MEDIUM') counts.medium += 1;
+      else if (sev === 'LOW') counts.low += 1;
+      else if (sev === 'INFO' || sev === 'INFORMATIONAL') counts.info += 1;
+      else counts.info += 1;
     });
 
     return counts;

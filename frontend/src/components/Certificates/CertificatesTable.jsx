@@ -171,10 +171,26 @@ const CertificatesTable = ({
                       style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}
                       onClick={() => onSelectCert && onSelectCert(row)}
                     >
-                      {row.ip && row.ip !== '—' ? row.ip : <span style={{ color: '#EF4444', fontSize: '0.78rem', fontWeight: 600 }}>DNS Not Found</span>}
+                      {row.ip && row.ip !== '—' && row.ip !== 'DNS Not Found' ? (
+                        row.ip
+                      ) : (
+                        <span 
+                          style={{ color: '#EF4444', fontSize: '0.78rem', fontWeight: 600, cursor: 'help' }}
+                          title="Domain name has not resolved to an IP address"
+                        >
+                          DNS Not Found
+                        </span>
+                      )}
                     </td>
                     <td>
-                      <span className={`ssl-status-badge ${(row.status || (row.daysLeft <= 0 ? 'Expired' : 'Valid')).toLowerCase().replace(/\s+/g, '-')}`}>
+                      <span 
+                        className={`ssl-status-badge ${(row.status || (row.daysLeft <= 0 ? 'Expired' : 'Valid')).toLowerCase().replace(/\s+/g, '-')}`}
+                        title={
+                          row.status === 'Name Not Resolved to IP' 
+                            ? 'Hostname has not resolved to an IP address (DNS query failed or returned no records)' 
+                            : (row.status === 'Host Unreachable' ? 'Connection to host failed / port unreachable' : row.status)
+                        }
+                      >
                         {row.status || (row.daysLeft <= 0 ? 'Expired' : 'Valid')}
                       </span>
                     </td>

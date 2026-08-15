@@ -222,22 +222,13 @@ const VulnerabilitiesTable = ({ data, loading, showScanningState, isVulnScanRunn
             </div>
 
             <div className="vuln-modal-body">
-              {/* Confidence + Finding Status + Evidence Block (VulnMap) */}
-              {(selectedRow.confidence != null || selectedRow.finding_status || selectedRow.evidence) && (
+              {/* Finding Status + Evidence Block (VulnMap) */}
+              {(selectedRow.finding_status || selectedRow.evidence) && (
                 <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.2)', borderLeft: '4px solid #3B82F6' }}>
                   <h4 style={{ margin: '0 0 0.75rem 0', fontSize: '0.9rem', textTransform: 'uppercase', color: '#3B82F6', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Shield size={16} /> Confidence & Evidence
+                    <Shield size={16} /> Evidence & Validation
                   </h4>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: selectedRow.evidence ? '1rem' : 0 }}>
-                    {(selectedRow.confidence != null) && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Confidence</span>
-                        <div style={{ width: '120px', height: '8px', borderRadius: '4px', background: 'var(--bg-main)', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                          <div style={{ width: `${Math.round((selectedRow.confidence || 0) * 100)}%`, height: '100%', background: selectedRow.confidence >= 0.8 ? '#10B981' : selectedRow.confidence >= 0.5 ? '#F59E0B' : '#EF4444', borderRadius: '4px' }} />
-                        </div>
-                        <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)', fontFamily: 'monospace' }}>{Math.round((selectedRow.confidence || 0) * 100)}%</span>
-                      </div>
-                    )}
                     {selectedRow.finding_status && (() => {
                       const statusNorm = String(selectedRow.finding_status).toLowerCase();
                       const isConfirmed = statusNorm.startsWith('confirm');

@@ -78,7 +78,6 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
         owasp_category: v.owasp_category || '',
         owasp_rank: v.owasp_rank || 0,
         owasp_id: v.owasp_rank ? `A${String(v.owasp_rank).padStart(2, '0')}` : '',
-        confidence: (typeof v.confidence === 'number') ? v.confidence : null,
         finding_status: v.finding_status || '',
         evidence: v.evidence || '',
         template_id: v.template_id || '',

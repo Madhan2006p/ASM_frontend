@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layers, AlertCircle, Hourglass } from 'lucide-react';
+import { Layers, AlertOctagon, AlertTriangle, AlertCircle, Shield, Info, Hourglass } from 'lucide-react';
 import './CertDashboard.css';
 
 // Speedometer / Gauge Icon matching Screenshot 0
@@ -145,7 +145,7 @@ const CertDashboard = ({
         </div>
       )}
 
-      {/* VIEW B: SSL Vulnerability View - 6 Status Summary Cards */}
+      {/* VIEW B: SSL Vulnerability View - 6 Severity Summary Cards */}
       {activeView === 'SSL Vulnerability' && (
         <div className="ssl-vuln-status-grid">
           
@@ -163,73 +163,73 @@ const CertDashboard = ({
             </div>
           </div>
 
-          {/* Card 2: Unreviewed */}
+          {/* Card 2: Critical */}
           <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'Unreviewed' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Unreviewed' ? 'ALL' : 'Unreviewed')}
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'CRITICAL' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'CRITICAL' ? 'ALL' : 'CRITICAL')}
           >
             <div className="ssl-cert-card-icon red">
-              <AlertCircle size={22} />
+              <AlertOctagon size={22} />
             </div>
             <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">Unreviewed</span>
-              <span className="ssl-cert-card-value">{vulnCounts.unreviewed || 0}</span>
+              <span className="ssl-cert-card-label">Critical</span>
+              <span className="ssl-cert-card-value">{vulnCounts.critical || 0}</span>
             </div>
           </div>
 
-          {/* Card 3: In Progress */}
+          {/* Card 3: High */}
           <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'In Progress' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'In Progress' ? 'ALL' : 'In Progress')}
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'HIGH' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'HIGH' ? 'ALL' : 'HIGH')}
+          >
+            <div className="ssl-cert-card-icon orange">
+              <AlertTriangle size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">High</span>
+              <span className="ssl-cert-card-value">{vulnCounts.high || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 4: Medium */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'MEDIUM' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'MEDIUM' ? 'ALL' : 'MEDIUM')}
           >
             <div className="ssl-cert-card-icon amber">
-              <Hourglass size={22} />
-            </div>
-            <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">In Progress</span>
-              <span className="ssl-cert-card-value">{vulnCounts.inProgress || 0}</span>
-            </div>
-          </div>
-
-          {/* Card 4: Muted */}
-          <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'Muted' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Muted' ? 'ALL' : 'Muted')}
-          >
-            <div className="ssl-cert-card-icon slate">
-              <Hourglass size={22} />
-            </div>
-            <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">Muted</span>
-              <span className="ssl-cert-card-value">{vulnCounts.muted || 0}</span>
-            </div>
-          </div>
-
-          {/* Card 5: False Positive */}
-          <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'False Positive' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'False Positive' ? 'ALL' : 'False Positive')}
-          >
-            <div className="ssl-cert-card-icon purple">
               <AlertCircle size={22} />
             </div>
             <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">False Positive</span>
-              <span className="ssl-cert-card-value">{vulnCounts.falsePositive || 0}</span>
+              <span className="ssl-cert-card-label">Medium</span>
+              <span className="ssl-cert-card-value">{vulnCounts.medium || 0}</span>
             </div>
           </div>
 
-          {/* Card 6: Closed */}
+          {/* Card 5: Low */}
           <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'Closed' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Closed' ? 'ALL' : 'Closed')}
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'LOW' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'LOW' ? 'ALL' : 'LOW')}
           >
             <div className="ssl-cert-card-icon green">
-              <Layers size={22} />
+              <Shield size={22} />
             </div>
             <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">Closed</span>
-              <span className="ssl-cert-card-value">{vulnCounts.closed || 0}</span>
+              <span className="ssl-cert-card-label">Low</span>
+              <span className="ssl-cert-card-value">{vulnCounts.low || 0}</span>
+            </div>
+          </div>
+
+          {/* Card 6: Info */}
+          <div
+            className={`ssl-vuln-card ${selectedSeverityFilter === 'INFO' ? 'active-filter' : ''}`}
+            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'INFO' ? 'ALL' : 'INFO')}
+          >
+            <div className="ssl-cert-card-icon blue">
+              <Info size={22} />
+            </div>
+            <div className="ssl-cert-card-content">
+              <span className="ssl-cert-card-label">Info</span>
+              <span className="ssl-cert-card-value">{vulnCounts.info || 0}</span>
             </div>
           </div>
 

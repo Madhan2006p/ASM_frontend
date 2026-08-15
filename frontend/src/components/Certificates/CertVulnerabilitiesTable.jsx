@@ -36,12 +36,13 @@ const CertVulnerabilitiesTable = ({
   // Filtering logic
   const filteredVulns = useMemo(() => {
     return vulnerabilities.filter((item) => {
-      // 1. Status / Severity Filter (from top cards)
+      // 1. Severity Filter (from top cards)
       if (selectedSeverityFilter && selectedSeverityFilter !== 'ALL' && selectedSeverityFilter !== 'overall') {
-        const target = selectedSeverityFilter.toLowerCase();
-        const matchesStatus = (item.status || '').toLowerCase() === target;
-        const matchesSev = (item.severity || '').toLowerCase() === target;
-        if (!matchesStatus && !matchesSev) {
+        const target = selectedSeverityFilter.toUpperCase();
+        const itemSev = (item.severity || '').toUpperCase();
+        if (target === 'INFO') {
+          if (itemSev !== 'INFO' && itemSev !== 'INFORMATIONAL') return false;
+        } else if (itemSev !== target) {
           return false;
         }
       }

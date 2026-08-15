@@ -26,7 +26,7 @@ import LandingPage from './components/Auth/LandingPage';
 import Login from './components/Auth/Login';
 import Settings from './components/Settings/Settings';
 import Marketplace from './components/Marketplace/Marketplace';
-import SuperAdminDashboard from './components/AdminPanel/SuperAdminDashboard';
+import ControlPanel from './components/AdminPanel/ControlPanel';
 import GlobalAlert from './components/common/GlobalAlert';
 import ScanProgressPanel from './components/ScanProgress/ScanProgressPanel';
 import InternalDashboard from './components/InternalDiscovery/InternalDashboard';
@@ -79,8 +79,8 @@ function App() {
       }
       
       if (userData.is_superuser) {
-        setActivePage('Super Admin Dashboard');
-      } else if (activePage === 'Super Admin Dashboard') {
+        setActivePage('Control Panel');
+      } else if (activePage === 'Control Panel' || activePage === 'Super Admin Dashboard') {
         setActivePage('Executive Dashboard');
       }
     }
@@ -215,8 +215,20 @@ function App() {
           toggleTheme={toggleTheme}
         />
         <div key={activePage} className="page-animate">
-          {activePage === 'Super Admin Dashboard' && (
-            <SuperAdminDashboard currentUser={user} />
+          {(activePage === 'Control Panel' || activePage === 'Super Admin Dashboard') && (
+            <ControlPanel currentUser={user} initialTab="overview" onNavigate={setActivePage} />
+          )}
+          {activePage === 'Control Panel - Organizations' && (
+            <ControlPanel currentUser={user} initialTab="organizations" onNavigate={setActivePage} />
+          )}
+          {activePage === 'Control Panel - Domains' && (
+            <ControlPanel currentUser={user} initialTab="domains" onNavigate={setActivePage} />
+          )}
+          {activePage === 'Control Panel - Users' && (
+            <ControlPanel currentUser={user} initialTab="users" onNavigate={setActivePage} />
+          )}
+          {activePage === 'Control Panel - Scans' && (
+            <ControlPanel currentUser={user} initialTab="scans" onNavigate={setActivePage} />
           )}
           {activePage === 'Executive Dashboard' && (
             <ExecutiveDashboard 
@@ -306,11 +318,13 @@ function App() {
           {activePage === 'Settings'    && <Settings user={user} setUser={setUser} />}
         </div>
       </div>
-      <ScanProgressPanel
-        activeScanId={activeScanId}
-        scansList={filteredScansList}
-        fetchScans={fetchScans}
-      />
+      {(!user?.is_superuser || (!activePage.startsWith('Control Panel') && activePage !== 'Super Admin Dashboard')) && (
+        <ScanProgressPanel
+          activeScanId={activeScanId}
+          scansList={filteredScansList}
+          fetchScans={fetchScans}
+        />
+      )}
       <GlobalAlert />
     </div>
   );

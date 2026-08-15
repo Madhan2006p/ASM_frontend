@@ -239,6 +239,18 @@
   color: #4ADE80;
 }
 
+.ssl-cert-card-icon.orange {
+  background-color: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  color: #FB923C;
+}
+
+.ssl-cert-card-icon.blue {
+  background-color: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  color: #60A5FA;
+}
+
 /* Action select dropdown in tables */
 .ssl-action-select {
   background-color: var(--bg-card-2, #112040);
@@ -282,6 +294,14 @@
 }
 
 .ssl-status-badge.unencrypted, .ssl-status-badge.expired {
+  background-color: rgba(239, 68, 68, 0.12); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.ssl-status-badge.name-not-resolved-to-ip, .ssl-status-badge.name-not-resolved, .ssl-status-badge.unresolved {
+  background-color: rgba(245, 158, 11, 0.12); color: #F59E0B; border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.ssl-status-badge.host-unreachable, .ssl-status-badge.unreachable {
   background-color: rgba(239, 68, 68, 0.12); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
