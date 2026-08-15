@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Building2, Globe, Users, Radio, Shield,
   Plus, Search, RefreshCw, Trash2, Play, CheckCircle2,
   AlertCircle, X, ExternalLink, Check, Copy, Key, UserCheck,
-  ChevronRight, Activity, Terminal, Eye, Layers, Lock
+  ChevronRight, Activity, Terminal, Eye, Layers, Lock, Unlink, Link
 } from 'lucide-react';
 import './ControlPanel.css';
 
@@ -28,14 +28,20 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
   const [scanStatusFilter, setScanStatusFilter] = useState('ALL');
   const [scanOrgFilter, setScanOrgFilter] = useState('ALL');
 
-  // Modals & Drawers
+  // Modals & Drilldown Views
   const [showCreateOrg, setShowCreateOrg] = useState(false);
   const [showCreateDomain, setShowCreateDomain] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [showStartScan, setShowStartScan] = useState(false);
+  const [selectedOrgForDetail, setSelectedOrgForDetail] = useState(null);
+  const [orgDetailDomains, setOrgDetailDomains] = useState([]);
+  const [orgDetailLoading, setOrgDetailLoading] = useState(false);
+  const [selectedExistingDomainToMap, setSelectedExistingDomainToMap] = useState('');
+  const [newCustomDomainToMap, setNewCustomDomainToMap] = useState('');
   const [selectedUserForManage, setSelectedUserForManage] = useState(null);
   const [selectedScanLogs, setSelectedScanLogs] = useState(null);
   const [createdAdminCredentials, setCreatedAdminCredentials] = useState(null);
+  const [scanningDomain, setScanningDomain] = useState(null);
 
   // Form States
   const [orgForm, setOrgForm] = useState({
@@ -44,7 +50,8 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     description: '',
     domains: '',
     admin_password: 'changeme',
-    admin_email: ''
+    admin_email: '',
+    selected_existing_domains: []
   });
   const [orgLogoFile, setOrgLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState(null);
@@ -136,6 +143,78 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     }
   };
 
+  // ── Organization Detail & Domains Drilldown ──────────────────────────────
+  const openOrgDetail = async (org) => {
+    setSelectedOrgForDetail(org);
+    setOrgDetailLoading(true);
+    setSelectedExistingDomainToMap('');
+    setNewCustomDomainToMap('');
+    try {
+      const res = await api.get(`/api/auth/organizations/${org.org_id}/domains/`);
+      setOrgDetailDomains(Array.isArray(res?.domains) ? res.domains : []);
+    } catch (e) {
+      // fallback from org.allowed_domains
+      const fallbackList = (org.allowed_domains ? org.allowed_domains.split(',') : []).map(d => ({
+        domain: d.trim(),
+        last_scan_status: 'not_scanned',
+        last_scanned_at: null
+      }));
+      setOrgDetailDomains(fallbackList);
+    } finally {
+      setOrgDetailLoading(false);
+    }
+  };
+
+  const refreshOrgDetailDomains = async (orgId) => {
+    try {
+      const res = await api.get(`/api/auth/organizations/${orgId}/domains/`);
+      setOrgDetailDomains(Array.isArray(res?.domains) ? res.domains : []);
+    } catch (e) {
+      console.warn('Failed to refresh org domains:', e);
+    }
+  };
+
+  // ── Map Existing / New Domain to Organization inside Drilldown ───────────
+  const handleMapDomainToOrg = async (e) => {
+    e.preventDefault();
+    if (!selectedOrgForDetail) return;
+    const domainToAdd = selectedExistingDomainToMap || newCustomDomainToMap.trim().toLowerCase();
+    if (!domainToAdd) {
+      showToast('Please select an existing domain or enter a domain name', 'error');
+      return;
+    }
+
+    try {
+      await api.post(`/api/auth/organizations/${selectedOrgForDetail.org_id}/domains/`, {
+        domain: domainToAdd
+      });
+      showToast(`Domain '${domainToAdd}' mapped to ${selectedOrgForDetail.name}`);
+      setSelectedExistingDomainToMap('');
+      setNewCustomDomainToMap('');
+      refreshOrgDetailDomains(selectedOrgForDetail.org_id);
+      fetchAllData();
+    } catch (err) {
+      showToast(err.message || 'Failed to map domain', 'error');
+    }
+  };
+
+  // ── Unmap Domain from Organization ───────────────────────────────────────
+  const handleUnmapDomainFromOrg = async (domainName) => {
+    if (!selectedOrgForDetail) return;
+    if (!window.confirm(`Unlink domain '${domainName}' from ${selectedOrgForDetail.name}?`)) return;
+
+    try {
+      await api.delete(`/api/auth/organizations/${selectedOrgForDetail.org_id}/domains/`, {
+        domain: domainName
+      });
+      showToast(`Domain '${domainName}' unmapped from organization`);
+      refreshOrgDetailDomains(selectedOrgForDetail.org_id);
+      fetchAllData();
+    } catch (err) {
+      showToast(err.message || 'Failed to unmap domain', 'error');
+    }
+  };
+
   // ── Create Organization ──────────────────────────────────────────────────
   const handleCreateOrg = async (e) => {
     e.preventDefault();
@@ -145,11 +224,18 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     }
 
     try {
+      // Combine custom typed domains with selected existing domains
+      const allDomains = [
+        ...(orgForm.domains ? orgForm.domains.split(',').map(d => d.trim()).filter(Boolean) : []),
+        ...(orgForm.selected_existing_domains || [])
+      ];
+      const combinedDomainsStr = Array.from(new Set(allDomains)).join(',');
+
       const formData = new FormData();
       formData.append('name', orgForm.name.trim());
       if (orgForm.org_id) formData.append('org_id', orgForm.org_id.trim());
       if (orgForm.description) formData.append('description', orgForm.description.trim());
-      if (orgForm.domains) formData.append('domains', orgForm.domains.trim());
+      if (combinedDomainsStr) formData.append('domains', combinedDomainsStr);
       if (orgForm.admin_password) formData.append('admin_password', orgForm.admin_password);
       if (orgForm.admin_email) formData.append('admin_email', orgForm.admin_email.trim());
       if (orgLogoFile) formData.append('logo', orgLogoFile);
@@ -171,7 +257,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
           username: data.admin_user.username,
           password: data.admin_user.password || orgForm.admin_password,
           email: data.admin_user.email,
-          domains: orgForm.domains
+          domains: combinedDomainsStr
         });
       }
 
@@ -181,7 +267,8 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
         description: '',
         domains: '',
         admin_password: 'changeme',
-        admin_email: ''
+        admin_email: '',
+        selected_existing_domains: []
       });
       setOrgLogoFile(null);
       setLogoPreview(null);
@@ -191,7 +278,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     }
   };
 
-  // ── Create Domain ────────────────────────────────────────────────────────
+  // ── Create Domain (Domain tab) ───────────────────────────────────────────
   const handleCreateDomain = async (e) => {
     e.preventDefault();
     if (!domainForm.domain.trim()) {
@@ -201,11 +288,11 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     try {
       await api.post('/api/auth/admin/domains/', {
         domain: domainForm.domain.trim(),
-        org_id: domainForm.org_id
+        org_id: domainForm.org_id || null
       });
-      showToast(`Domain '${domainForm.domain}' added & synced to organization!`);
+      showToast(`Domain '${domainForm.domain}' added successfully!`);
       setShowCreateDomain(false);
-      setDomainForm({ domain: '', org_id: organizations[0]?.org_id || '' });
+      setDomainForm({ domain: '', org_id: '' });
       fetchAllData();
     } catch (err) {
       showToast(err.message || 'Failed to create domain', 'error');
@@ -238,17 +325,18 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     }
   };
 
-  // ── Trigger Scan ─────────────────────────────────────────────────────────
+  // ── Trigger Scan (Inside Organization Domain List or Scan Monitor) ─────────
   const handleTriggerScan = async (targetDomain, orgId) => {
     const target = targetDomain || scanForm.target;
-    const org = orgId || scanForm.org_id || organizations[0]?.org_id || '1';
+    const org = orgId || scanForm.org_id || (selectedOrgForDetail?.org_id) || organizations[0]?.org_id || '1';
     if (!target) {
       showToast('Target domain is required', 'error');
       return;
     }
 
+    setScanningDomain(target);
     try {
-      showToast(`Initiating attack surface scan on ${target}...`);
+      showToast(`Starting attack surface scan on ${target} (${org})...`);
       await api.post('/api/attacksurface/admin-scan/', {
         target,
         org_id: org
@@ -256,9 +344,14 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
       showToast(`Scan started for ${target}!`);
       setShowStartScan(false);
       setScanForm(prev => ({ ...prev, target: '' }));
+      if (selectedOrgForDetail) {
+        refreshOrgDetailDomains(selectedOrgForDetail.org_id);
+      }
       fetchAllData();
     } catch (err) {
       showToast(err.message || 'Failed to start scan', 'error');
+    } finally {
+      setScanningDomain(null);
     }
   };
 
@@ -411,6 +504,13 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     return scans.filter(s => ['running', 'pending', 'started'].includes(s.status?.toLowerCase())).length;
   }, [scans]);
 
+  // Existing domain names for selection in organization mapping
+  const availableDomainsForMapping = useMemo(() => {
+    if (!selectedOrgForDetail) return domains;
+    const currentMapped = new Set(orgDetailDomains.map(d => (typeof d === 'string' ? d : d.domain).toLowerCase()));
+    return domains.filter(d => !currentMapped.has(d.domain.toLowerCase()));
+  }, [domains, orgDetailDomains, selectedOrgForDetail]);
+
   return (
     <div className="control-panel-container">
 
@@ -530,7 +630,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
               <div className="cp-stat-icon emerald"><Globe size={26} /></div>
               <div className="cp-stat-info">
                 <span className="cp-stat-val">{domains.length}</span>
-                <span className="cp-stat-label">Monitored Domains</span>
+                <span className="cp-stat-label">Created Domains</span>
               </div>
             </div>
 
@@ -565,18 +665,18 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
           }}>
             <div>
               <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: '#F8FAFC' }}>
-                🚀 Multi-Tenant Auto-Orchestration Active
+                🚀 Hierarchical Multi-Tenant Domain &amp; Scan Flow
               </h3>
               <p style={{ margin: '0.35rem 0 0', fontSize: '0.88rem', color: '#94A3B8' }}>
-                When you create a new organization, a dedicated <code style={{ color: '#60A5FA', background: 'rgba(59,130,246,0.15)', padding: '2px 6px', borderRadius: '4px' }}>admin_&lt;org_name&gt;</code> account is automatically provisioned and all assigned domains are mapped instantly.
+                Select an organization to view its mapped domains, map new domains from the domain pool, and trigger targeted scans directly per domain.
               </p>
             </div>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <button className="cp-btn-primary" onClick={() => setShowCreateOrg(true)}>
                 <Plus size={16} /> Create Organization
               </button>
-              <button className="cp-btn-primary" style={{ background: '#10B981' }} onClick={() => setShowStartScan(true)}>
-                <Play size={16} /> Start Global Scan
+              <button className="cp-btn-secondary" onClick={() => setActiveTab('organizations')}>
+                <Building2 size={16} /> Manage Organizations
               </button>
             </div>
           </div>
@@ -595,35 +695,39 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                 </button>
               </div>
               <div style={{ padding: '0.5rem 0' }}>
-                {organizations.slice(0, 5).map(org => (
-                  <div key={org.id} style={{
-                    padding: '0.9rem 1.5rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    borderBottom: '1px solid rgba(255,255,255,0.04)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
-                      {org.logo ? (
-                        <img src={org.logo.startsWith('http') ? org.logo : `${BASE_URL}${org.logo}`} alt="" style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', padding: '2px' }} />
-                      ) : (
-                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(59,130,246,0.15)', color: '#60A5FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                          {org.name.slice(0, 2).toUpperCase()}
+                {organizations.slice(0, 5).map(org => {
+                  const domainCount = org.allowed_domains ? org.allowed_domains.split(',').filter(Boolean).length : 0;
+                  return (
+                    <div key={org.id} style={{
+                      padding: '0.9rem 1.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderBottom: '1px solid rgba(255,255,255,0.04)',
+                      cursor: 'pointer'
+                    }} onClick={() => openOrgDetail(org)}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                        {org.logo ? (
+                          <img src={org.logo.startsWith('http') ? org.logo : `${BASE_URL}${org.logo}`} alt="" style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', padding: '2px' }} />
+                        ) : (
+                          <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(59,130,246,0.15)', color: '#60A5FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                            {org.name.slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#F8FAFC', fontSize: '0.95rem' }}>{org.name}</div>
+                          <div style={{ fontSize: '0.78rem', color: '#94A3B8', fontFamily: 'monospace' }}>ID: {org.org_id}</div>
                         </div>
-                      )}
-                      <div>
-                        <div style={{ fontWeight: 700, color: '#F8FAFC', fontSize: '0.95rem' }}>{org.name}</div>
-                        <div style={{ fontSize: '0.78rem', color: '#94A3B8', fontFamily: 'monospace' }}>ID: {org.org_id}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <span className="cp-domain-pill">{domainCount} domain(s)</span>
+                        <span style={{ color: '#60A5FA', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                          View Domains <ChevronRight size={14} />
+                        </span>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span className="cp-domain-pill">{org.allowed_domains ? org.allowed_domains.split(',').length : 0} domains</span>
-                      <button className="cp-btn-action scan" onClick={() => { setScanForm({ target: org.allowed_domains?.split(',')[0] || '', org_id: org.org_id }); setShowStartScan(true); }}>
-                        <Play size={13} /> Scan
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
                 {organizations.length === 0 && (
                   <div style={{ padding: '2rem', textAlign: 'center', color: '#94A3B8' }}>No organizations created yet.</div>
                 )}
@@ -721,7 +825,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                     const orgDomains = org.allowed_domains ? org.allowed_domains.split(',').map(d => d.trim()).filter(Boolean) : [];
                     const expectedAdminUsername = `admin_${org.org_id.replace('-', '_')}`;
                     return (
-                      <tr key={org.id}>
+                      <tr key={org.id} style={{ cursor: 'pointer' }} onClick={() => openOrgDetail(org)}>
                         <td>
                           {org.logo ? (
                             <img src={org.logo.startsWith('http') ? org.logo : `${BASE_URL}${org.logo}`} alt="" style={{ width: '38px', height: '38px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', padding: '2px' }} />
@@ -758,27 +862,14 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                             </span>
                           </div>
                         </td>
-                        <td style={{ textAlign: 'right' }}>
+                        <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
                           <div style={{ display: 'inline-flex', gap: '0.45rem' }}>
                             <button
-                              className="cp-btn-action scan"
-                              onClick={() => {
-                                setScanForm({ target: orgDomains[0] || '', org_id: org.org_id });
-                                setShowStartScan(true);
-                              }}
-                              title="Trigger scan for organization"
-                            >
-                              <Play size={13} /> Scan
-                            </button>
-                            <button
                               className="cp-btn-action outline"
-                              onClick={() => {
-                                setDomainForm({ domain: '', org_id: org.org_id });
-                                setShowCreateDomain(true);
-                              }}
-                              title="Add domain to this organization"
+                              onClick={() => openOrgDetail(org)}
+                              title="View & manage assigned domains"
                             >
-                              <Globe size={13} /> +Domain
+                              <Globe size={13} /> View Domains ({orgDomains.length})
                             </button>
                           </div>
                         </td>
@@ -812,7 +903,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
               <Search className="cp-search-icon" size={17} />
               <input
                 type="text"
-                placeholder="Search domains by name or organization..."
+                placeholder="Search domains by name or mapped organization..."
                 value={domainSearch}
                 onChange={e => setDomainSearch(e.target.value)}
                 className="cp-search-input"
@@ -829,7 +920,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
             </div>
           </div>
 
-          {/* Domains Table */}
+          {/* Domains Table (Clean domain pool) */}
           <div className="cp-card">
             <div style={{ overflowX: 'auto' }}>
               <table className="cp-table">
@@ -865,7 +956,7 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                         </div>
                       </td>
                       <td>
-                        <span className="cp-domain-pill">{d.users_count || 1} User(s)</span>
+                        <span className="cp-domain-pill">{d.users_count || 0} User(s)</span>
                       </td>
                       <td>
                         <span className={`cp-status-pill ${d.last_scan_status || 'not_scanned'}`}>
@@ -878,18 +969,11 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', gap: '0.45rem' }}>
                           <button
-                            className="cp-btn-action scan"
-                            onClick={() => handleTriggerScan(d.domain, d.organization_id)}
-                            title="Start scan immediately"
-                          >
-                            <Play size={13} /> Start Scan
-                          </button>
-                          <button
                             className="cp-btn-action danger"
                             onClick={() => handleDeleteDomain(d)}
                             title="Delete domain"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={13} /> Delete
                           </button>
                         </div>
                       </td>
@@ -1107,7 +1191,6 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                 </thead>
                 <tbody>
                   {filteredScans.map(s => {
-                    const isRunning = ['running', 'pending', 'started'].includes(String(s.status).toLowerCase());
                     return (
                       <tr key={s.id}>
                         <td>
@@ -1185,6 +1268,162 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
       )}
 
       {/* ─────────────────────────────────────────────────────────────────── */}
+      {/* DRAWER / MODAL: ORGANIZATION DETAILS & DOMAIN DRILLDOWN             */}
+      {/* ─────────────────────────────────────────────────────────────────── */}
+      {selectedOrgForDetail && (
+        <div className="cp-modal-backdrop" onClick={() => setSelectedOrgForDetail(null)}>
+          <div className="cp-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '820px' }}>
+            <div className="cp-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+                {selectedOrgForDetail.logo ? (
+                  <img src={selectedOrgForDetail.logo.startsWith('http') ? selectedOrgForDetail.logo : `${BASE_URL}${selectedOrgForDetail.logo}`} alt="" style={{ width: '42px', height: '42px', borderRadius: '8px', objectFit: 'contain', background: 'rgba(255,255,255,0.05)', padding: '3px' }} />
+                ) : (
+                  <div style={{ width: '42px', height: '42px', borderRadius: '8px', background: 'rgba(59,130,246,0.15)', color: '#60A5FA', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.1rem' }}>
+                    {selectedOrgForDetail.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h3 style={{ margin: 0 }}>{selectedOrgForDetail.name}</h3>
+                  <div style={{ fontSize: '0.8rem', color: '#94A3B8', fontFamily: 'monospace' }}>
+                    Org ID: <span style={{ color: '#60A5FA' }}>{selectedOrgForDetail.org_id}</span> · Admin: <span style={{ color: '#E2E8F0' }}>admin_{selectedOrgForDetail.org_id.replace('-', '_')}</span>
+                  </div>
+                </div>
+              </div>
+              <button className="cp-modal-close" onClick={() => setSelectedOrgForDetail(null)}><X size={18} /></button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              
+              {/* Map Domain Form */}
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '1.25rem' }}>
+                <h4 style={{ margin: '0 0 0.85rem 0', fontSize: '0.92rem', color: '#E2E8F0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Link size={16} color="#10B981" /> Map Domain to {selectedOrgForDetail.name}
+                </h4>
+                <form onSubmit={handleMapDomainToOrg} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: '220px' }}>
+                    <select
+                      value={selectedExistingDomainToMap}
+                      onChange={e => {
+                        setSelectedExistingDomainToMap(e.target.value);
+                        if (e.target.value) setNewCustomDomainToMap('');
+                      }}
+                      className="cp-select"
+                    >
+                      <option value="">-- Pick from Created Domains --</option>
+                      {availableDomainsForMapping.map(d => (
+                        <option key={d.id} value={d.domain}>{d.domain}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <input
+                      type="text"
+                      placeholder="Or enter new domain (e.g. portal.domain.com)"
+                      value={newCustomDomainToMap}
+                      onChange={e => {
+                        setNewCustomDomainToMap(e.target.value);
+                        if (e.target.value) setSelectedExistingDomainToMap('');
+                      }}
+                      className="cp-input"
+                    />
+                  </div>
+                  <button type="submit" className="cp-btn-primary" style={{ background: '#10B981' }}>
+                    <Plus size={15} /> Map Domain
+                  </button>
+                </form>
+              </div>
+
+              {/* Mapped Domains Table with Direct Scan Button */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.95rem', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Globe size={16} color="#3B82F6" />
+                    Assigned Domains ({orgDetailDomains.length})
+                  </h4>
+                  <span style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
+                    You can trigger an attack surface scan for any specific domain below
+                  </span>
+                </div>
+
+                <div className="cp-card">
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="cp-table">
+                      <thead>
+                        <tr>
+                          <th>Domain Name</th>
+                          <th>Status</th>
+                          <th>Last Scanned At</th>
+                          <th style={{ textAlign: 'right' }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orgDetailDomains.map((dom, idx) => {
+                          const domainName = typeof dom === 'string' ? dom : dom.domain;
+                          const scanStatus = (typeof dom === 'object' && dom.last_scan_status) ? dom.last_scan_status : 'not_scanned';
+                          const lastScanned = (typeof dom === 'object' && dom.last_scanned_at) ? dom.last_scanned_at : null;
+                          const isScanning = scanningDomain === domainName;
+
+                          return (
+                            <tr key={idx}>
+                              <td>
+                                <span style={{ fontWeight: 700, fontFamily: 'monospace', fontSize: '0.92rem', color: '#F8FAFC' }}>
+                                  {domainName}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={`cp-status-pill ${scanStatus}`}>
+                                  {scanStatus === 'not_scanned' ? 'Not Scanned' : scanStatus}
+                                </span>
+                              </td>
+                              <td style={{ color: '#94A3B8', fontSize: '0.82rem' }}>
+                                {lastScanned ? new Date(lastScanned).toLocaleString() : '—'}
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', gap: '0.45rem' }}>
+                                  <button
+                                    className="cp-btn-action scan"
+                                    onClick={() => handleTriggerScan(domainName, selectedOrgForDetail.org_id)}
+                                    disabled={isScanning}
+                                    title={`Start attack surface scan on ${domainName}`}
+                                  >
+                                    <Play size={13} className={isScanning ? 'spin' : ''} />
+                                    {isScanning ? 'Starting...' : 'Start Scan'}
+                                  </button>
+                                  <button
+                                    className="cp-btn-action danger"
+                                    onClick={() => handleUnmapDomainFromOrg(domainName)}
+                                    title="Unlink domain from organization"
+                                  >
+                                    <Unlink size={13} /> Unlink
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {orgDetailDomains.length === 0 && (
+                          <tr>
+                            <td colSpan={4} style={{ textAlign: 'center', padding: '2.5rem', color: '#94A3B8' }}>
+                              No domains mapped to this organization yet. Use the form above to map or create a domain!
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="cp-modal-footer">
+              <button type="button" className="cp-btn-secondary" onClick={() => setSelectedOrgForDetail(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────────── */}
       {/* MODAL: CREATE ORGANIZATION                                          */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       {showCreateOrg && (
@@ -1245,8 +1484,42 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                 </div>
               </div>
 
+              {/* Pick from existing created domains */}
+              {domains.length > 0 && (
+                <div className="cp-form-group">
+                  <label>Select from Existing Domains in Domain Pool</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', maxHeight: '100px', overflowY: 'auto', padding: '0.5rem', background: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    {domains.map(d => {
+                      const isSelected = orgForm.selected_existing_domains?.includes(d.domain);
+                      return (
+                        <span
+                          key={d.id}
+                          onClick={() => {
+                            setOrgForm(prev => ({
+                              ...prev,
+                              selected_existing_domains: isSelected
+                                ? prev.selected_existing_domains.filter(x => x !== d.domain)
+                                : [...(prev.selected_existing_domains || []), d.domain]
+                            }));
+                          }}
+                          className="cp-domain-pill"
+                          style={{
+                            cursor: 'pointer',
+                            background: isSelected ? 'rgba(59,130,246,0.3)' : 'rgba(255,255,255,0.05)',
+                            borderColor: isSelected ? '#3B82F6' : 'var(--border-color)'
+                          }}
+                        >
+                          {isSelected && <Check size={12} style={{ marginRight: '4px' }} />}
+                          {d.domain}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div className="cp-form-group">
-                <label>Allowed Domains (comma-separated)</label>
+                <label>Add New Allowed Domains (comma-separated)</label>
                 <input
                   type="text"
                   placeholder="e.g. vheeds.com, app.vheeds.com, api.vheeds.com"
@@ -1347,13 +1620,13 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
       )}
 
       {/* ─────────────────────────────────────────────────────────────────── */}
-      {/* MODAL: ADD DOMAIN                                                   */}
+      {/* MODAL: ADD DOMAIN (Domain tab)                                      */}
       {/* ─────────────────────────────────────────────────────────────────── */}
       {showCreateDomain && (
         <div className="cp-modal-backdrop" onClick={() => setShowCreateDomain(false)}>
           <div className="cp-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <div className="cp-modal-header">
-              <h3><Globe size={22} color="#10B981" /> Add Monitored Domain</h3>
+              <h3><Globe size={22} color="#10B981" /> Add Domain</h3>
               <button className="cp-modal-close" onClick={() => setShowCreateDomain(false)}><X size={18} /></button>
             </div>
 
@@ -1371,13 +1644,13 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
               </div>
 
               <div className="cp-form-group">
-                <label>Assign to Organization *</label>
+                <label>Assign to Organization (Optional)</label>
                 <select
                   value={domainForm.org_id}
                   onChange={e => setDomainForm({ ...domainForm, org_id: e.target.value })}
                   className="cp-select"
-                  required
                 >
+                  <option value="">-- Standalone (No Organization) --</option>
                   {organizations.map(o => (
                     <option key={o.org_id} value={o.org_id}>{o.name} ({o.org_id})</option>
                   ))}
