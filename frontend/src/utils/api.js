@@ -1,6 +1,24 @@
-const rawBase = (typeof import.meta !== 'undefined' && import.meta.env)
-  ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://127.0.0.1:8001')
-  : 'http://127.0.0.1:8001';
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined' && window.location) {
+    const { hostname, port, origin } = window.location;
+    // When accessed on a remote server/IP (like 103.235.105.35)
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return origin;
+    }
+    // When running locally on Vite dev server (port 5173 / 5174)
+    if (port === '5173' || port === '5174') {
+      return 'http://127.0.0.1:8001';
+    }
+    return origin;
+  }
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env)
+    ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL)
+    : null;
+  if (envUrl) return envUrl;
+  return 'http://127.0.0.1:8001';
+};
+
+const rawBase = getBaseUrl();
 const BASE_URL = rawBase.replace(/\/api\/?$/, '');
 
 class ApiClient {
