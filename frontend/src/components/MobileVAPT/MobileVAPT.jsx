@@ -393,17 +393,21 @@ const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700 }}>
-                Security Score
-              </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#38BDF8' }}>
-                {selectedApp.score || 85} / 100
+          {/* Right side Score and Grade Box */}
+          <div className="mv-score-grade-cluster">
+            <div className="mv-score-block">
+              <span className="mv-score-caption">SECURITY SCORE</span>
+              <div className="mv-score-number">
+                {selectedApp.score || 85}
+                <span className="mv-score-total"> / 100</span>
               </div>
             </div>
-            <div className={`mv-sc-badge badge-${calculateGrade(parseInt(selectedApp.score) || 85).charAt(0)}`} style={{ fontSize: '1.1rem', padding: '0.35rem 0.85rem' }}>
-              Grade {calculateGrade(parseInt(selectedApp.score) || 85)}
+            <div className="mv-grade-divider" />
+            <div className="mv-grade-block">
+              <span className="mv-grade-caption">GRADE</span>
+              <div className={`mv-grade-pill grade-${calculateGrade(parseInt(selectedApp.score) || 85).charAt(0)}`}>
+                {calculateGrade(parseInt(selectedApp.score) || 85)}
+              </div>
             </div>
           </div>
         </div>
