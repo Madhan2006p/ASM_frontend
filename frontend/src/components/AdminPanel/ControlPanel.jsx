@@ -441,6 +441,21 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
     }
   };
 
+  const handleDeleteOrg = async (org) => {
+    if (!org) return;
+    if (!window.confirm(`Are you sure you want to delete organization '${org.name}' (${org.org_id})?\n\nWARNING: All user accounts under this organization (including its administrator) will also be permanently deleted!`)) {
+      return;
+    }
+    try {
+      await api.delete(`/api/auth/organizations/${org.org_id}/`);
+      showToast(`Organization '${org.name}' and its users deleted successfully`);
+      setSelectedOrgForDetail(null);
+      fetchAllData();
+    } catch (e) {
+      showToast(e.message || 'Failed to delete organization', 'error');
+    }
+  };
+
   const handleDeleteDomain = async (domainObj) => {
     if (!window.confirm(`Are you sure you want to delete domain '${domainObj.domain}'?`)) return;
     try {
@@ -870,6 +885,13 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
                               title="View & manage assigned domains"
                             >
                               <Globe size={13} /> View Domains ({orgDomains.length})
+                            </button>
+                            <button
+                              className="cp-btn-action danger"
+                              onClick={() => handleDeleteOrg(org)}
+                              title="Delete organization and all associated users"
+                            >
+                              <Trash2 size={13} /> Delete
                             </button>
                           </div>
                         </td>
@@ -1416,7 +1438,15 @@ const ControlPanel = ({ currentUser, initialTab = 'overview', onNavigate }) => {
 
             </div>
 
-            <div className="cp-modal-footer">
+            <div className="cp-modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <button
+                type="button"
+                className="cp-btn-action danger"
+                onClick={() => handleDeleteOrg(selectedOrgForDetail)}
+                title="Delete organization and all associated users"
+              >
+                <Trash2 size={14} /> Delete Organization
+              </button>
               <button type="button" className="cp-btn-secondary" onClick={() => setSelectedOrgForDetail(null)}>Close</button>
             </div>
           </div>
