@@ -1,0 +1,5 @@
+# SSL/TLS Enterprise Vulnerability Scanner Dependencies
+# Python 3.10+ compatible
+
+# Cryptography library for deep X.509 certificate parsing, public key inspection, and signature validation
+cryptography>=41.0.0
