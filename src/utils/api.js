@@ -1,6 +1,18 @@
-const rawBase = (typeof import.meta !== 'undefined' && import.meta.env)
-  ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:8001')
-  : 'http://localhost:8001';
+const getBaseUrl = () => {
+  if (typeof import.meta !== 'undefined' && import.meta.env) {
+    if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    const { hostname, protocol, port } = window.location;
+    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
+    }
+  }
+  return 'http://localhost:8001';
+};
+
+const rawBase = getBaseUrl();
 const BASE_URL = rawBase.replace(/\/api\/?$/, '');
 
 class ApiClient {
