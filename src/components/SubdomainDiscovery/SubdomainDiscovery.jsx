@@ -260,8 +260,25 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       {item.screenshot_url ? (
-                        <a href={item.screenshot_url} target="_blank" rel="noopener noreferrer" className="shot-thumb" title="Open full screenshot">
-                          <img src={item.screenshot_url} alt={`Screenshot of ${item.domain}`} loading="lazy" className="shot-img" />
+                        <a 
+                          href={item.screenshot_url.startsWith('http') || item.screenshot_url.startsWith('/') ? item.screenshot_url : `/${item.screenshot_url}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="shot-thumb" 
+                          title="Open full screenshot in new tab"
+                        >
+                          <img 
+                            src={item.screenshot_url.startsWith('http') || item.screenshot_url.startsWith('/') ? item.screenshot_url : `/${item.screenshot_url}`} 
+                            alt={`Screenshot of ${item.domain}`} 
+                            loading="lazy" 
+                            className="shot-img" 
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              if (e.target.parentElement) {
+                                e.target.parentElement.innerHTML = '<span class="shot-empty">No preview</span>';
+                              }
+                            }}
+                          />
                         </a>
                       ) : (
                         <span className="shot-empty">No screenshot</span>
