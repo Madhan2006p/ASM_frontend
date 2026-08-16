@@ -1,10 +1,17 @@
 const getBaseUrl = () => {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
-    if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+  const envUrl = (typeof import.meta !== 'undefined' && import.meta.env)
+    ? (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || '')
+    : '';
+
+  if (typeof window !== 'undefined' && window.location) {
+    const isRemoteHost = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    const isLoopbackTarget = envUrl.includes('localhost') || envUrl.includes('127.0.0.1');
+    if (isRemoteHost && isLoopbackTarget) {
+      return '';
+    }
   }
-  // Default to relative root in all environments (leveraging Vite dev proxy and Nginx reverse proxy)
-  return '';
+
+  return envUrl || '';
 };
 
 const rawBase = getBaseUrl();
