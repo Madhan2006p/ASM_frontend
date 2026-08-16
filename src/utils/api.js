@@ -3,17 +3,12 @@ const getBaseUrl = () => {
     if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   }
-  if (typeof window !== 'undefined' && window.location) {
-    const { hostname, protocol, port } = window.location;
-    if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-      return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-    }
-  }
-  return 'http://localhost:8001';
+  // Default to relative root in all environments (leveraging Vite dev proxy and Nginx reverse proxy)
+  return '';
 };
 
 const rawBase = getBaseUrl();
-const BASE_URL = rawBase.replace(/\/api\/?$/, '');
+const BASE_URL = rawBase ? rawBase.replace(/\/api\/?$/, '') : '';
 
 class ApiClient {
   constructor() {
