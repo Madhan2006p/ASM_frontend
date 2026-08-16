@@ -109,6 +109,15 @@ function App() {
       const data = await api.get('/api/attacksurface/scans/');
       const list = Array.isArray(data) ? data : (data?.results || []);
       setScansList(list);
+
+      const targets = list.map(s => s.target).filter(Boolean);
+      if (targets.length > 0) {
+        setAssignedDomains(prev => {
+          const merged = Array.from(new Set([...(Array.isArray(prev) ? prev : []), ...targets]));
+          return merged;
+        });
+      }
+
       if (list.length > 0) {
         const latest = list[0];
         if (selectLatest || !activeScanId) {
@@ -179,10 +188,12 @@ function App() {
     // When selected domain changes, auto-select the latest scan for that domain
     if (selectedDomain) {
       const filtered = scansList.filter(s => s.target === selectedDomain);
-      if (filtered.length > 0 && (!activeScanId || !filtered.some(s => s.id === activeScanId))) {
-        setActiveScanId(filtered[0].id);
-        setActiveTarget(filtered[0].target);
-      } else if (filtered.length === 0) {
+      if (filtered.length > 0) {
+        if (!filtered.some(s => s.id === activeScanId)) {
+          setActiveScanId(filtered[0].id);
+          setActiveTarget(filtered[0].target);
+        }
+      } else {
         setActiveScanId(null);
         setActiveTarget(selectedDomain);
       }
@@ -193,7 +204,7 @@ function App() {
         setActiveTarget(scansList[0].target);
       }
     }
-  }, [selectedDomain, scansList]);
+  }, [selectedDomain, scansList, activeScanId]);
 
   const filteredScansList = selectedDomain 
     ? scansList.filter(s => s.target === selectedDomain)

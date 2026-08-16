@@ -4,11 +4,14 @@ import './TargetDomainTabs.css';
 
 const TargetDomainTabs = ({
   assignedDomains = [],
+  scansList = [],
   selectedDomain = '',
   setSelectedDomain
 }) => {
-  // Only show domains the user is actually assigned — no hardcoded defaults.
-  const domainList = Array.isArray(assignedDomains) ? Array.from(new Set(assignedDomains)) : [];
+  // Combine assigned domains and scanned targets so all valid target domains are selectable
+  const assignedList = Array.isArray(assignedDomains) ? assignedDomains : [];
+  const scanTargets = Array.isArray(scansList) ? scansList.map(s => s.target) : [];
+  const domainList = Array.from(new Set([...assignedList, ...scanTargets].filter(Boolean)));
 
   const tabs = [
     { label: 'All Domains', value: '' },

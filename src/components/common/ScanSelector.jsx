@@ -12,6 +12,7 @@ const ScanSelector = ({
   return (
     <TargetDomainTabs
       assignedDomains={assignedDomains}
+      scansList={scansList}
       selectedDomain={selectedDomain}
       setSelectedDomain={setSelectedDomain}
     />
