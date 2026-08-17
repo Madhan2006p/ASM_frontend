@@ -62,21 +62,26 @@ function App() {
 
   const handleLogin = (userData) => {
     if (userData) {
+      const emailStr = String(userData.email || userData.username || 'User');
+      const fallbackName = emailStr.includes('@')
+        ? emailStr.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')
+        : (userData.username || 'Admin');
+
       setUser({
         id: userData.id,
-        name: userData.name || userData.email.split('@')[0].split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' '),
-        email: userData.email,
+        name: userData.name || fallbackName,
+        email: userData.email || '',
+        username: userData.username || '',
         organization: userData.organization || 'Infotech Sentinel',
         organization_id: userData.organization_id || '1',
         logo_url: userData.logo_url || null,
-        is_superuser: userData.is_superuser || false,
-        role: userData.role || 'member',
-        features: userData.features || [],
+        is_superuser: Boolean(userData.is_superuser),
+        role: userData.role || (userData.is_superuser ? 'admin' : 'member'),
+        features: Array.isArray(userData.features) ? userData.features : [],
         profile_photo_url: userData.profile_photo_url || null,
       });
-      // Store admin-assigned domains from login payload. Users with no
-      // assigned domains get an empty list — never fall back to hardcoded
-      // defaults.
+
+      // Store admin-assigned domains from login payload.
       if (Array.isArray(userData.assigned_domains)) {
         setAssignedDomains(userData.assigned_domains);
       } else {
@@ -85,7 +90,7 @@ function App() {
       
       if (userData.is_superuser) {
         setActivePage('Super Admin Dashboard');
-      } else if (activePage === 'Super Admin Dashboard') {
+      } else {
         setActivePage('Executive Dashboard');
       }
     }
