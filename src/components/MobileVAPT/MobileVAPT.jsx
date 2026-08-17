@@ -56,7 +56,7 @@ const ExpandableCell = ({ text, fallback, maxChars = 60 }) => {
   );
 };
 
-const MobileVAPT = ({ assignedDomains, selectedDomain, setSelectedDomain }) => {
+const MobileVAPT = () => {
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [uploading, setUploading] = useState(false);

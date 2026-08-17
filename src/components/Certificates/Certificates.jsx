@@ -245,15 +245,13 @@ const Certificates = ({
     return domainFilteredCerts;
   }, [domainFilteredCerts, selectedCertFilter]);
 
-  // Compute Status Card Counts for SSL Vulnerability View (Overall, Unreviewed, In Progress, Muted, False Positive, Closed)
+  // Compute Status Card Counts for SSL Vulnerability View (Overall, Unreviewed, In Progress, Muted)
   const vulnCounts = useMemo(() => {
     const counts = {
       overall: domainFilteredVulns.length,
       unreviewed: 0,
       inProgress: 0,
-      muted: 0,
-      falsePositive: 0,
-      closed: 0
+      muted: 0
     };
 
     domainFilteredVulns.forEach((v) => {
@@ -261,8 +259,6 @@ const Certificates = ({
       if (st.includes('unreview')) counts.unreviewed += 1;
       else if (st.includes('progress')) counts.inProgress += 1;
       else if (st.includes('mute')) counts.muted += 1;
-      else if (st.includes('false') || st.includes('positive')) counts.falsePositive += 1;
-      else if (st.includes('close')) counts.closed += 1;
       else counts.unreviewed += 1;
     });
 

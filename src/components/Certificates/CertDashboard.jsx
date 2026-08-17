@@ -205,34 +205,6 @@ const CertDashboard = ({
             </div>
           </div>
 
-          {/* Card 5: False Positive */}
-          <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'False Positive' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'False Positive' ? 'ALL' : 'False Positive')}
-          >
-            <div className="ssl-cert-card-icon purple">
-              <AlertCircle size={22} />
-            </div>
-            <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">False Positive</span>
-              <span className="ssl-cert-card-value">{vulnCounts.falsePositive || 0}</span>
-            </div>
-          </div>
-
-          {/* Card 6: Closed */}
-          <div
-            className={`ssl-vuln-card ${selectedSeverityFilter === 'Closed' ? 'active-filter' : ''}`}
-            onClick={() => setSelectedSeverityFilter(selectedSeverityFilter === 'Closed' ? 'ALL' : 'Closed')}
-          >
-            <div className="ssl-cert-card-icon green">
-              <Layers size={22} />
-            </div>
-            <div className="ssl-cert-card-content">
-              <span className="ssl-cert-card-label">Closed</span>
-              <span className="ssl-cert-card-value">{vulnCounts.closed || 0}</span>
-            </div>
-          </div>
-
         </div>
       )}
 

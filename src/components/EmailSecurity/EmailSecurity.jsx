@@ -108,8 +108,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const spfRec      = getRecFor('spf');
   const dkimRec     = getRecFor('dkim');
   const bimiRec     = getRecFor('bimi');
-  const mxRec       = getRecFor('mx');
-  const starttlsRec = getRecFor('starttls');
+  const mxTlsRec    = getRecFor('mx_tls') || getRecFor('mx') || getRecFor('starttls');
 
   // Open recommendation modal popup for the selected module
   const viewRecommendation = (rec) => {
@@ -121,6 +120,9 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
   const getStatusInfo = (hasRec, type, recordText = '') => {
     if (!hasRec) return { pill: 'Not Configured', className: 'notconfigured' };
     if (type === 'DMARC' && recordText && !recordText.toLowerCase().includes('p=reject')) {
+      return { pill: 'Mis Configured', className: 'misconfigured' };
+    }
+    if (type === 'SPF' && recordText && (recordText.toLowerCase().includes('+all') || recordText.toLowerCase().includes('?all') || recordText.toLowerCase().includes('~all'))) {
       return { pill: 'Mis Configured', className: 'misconfigured' };
     }
     return { pill: 'Configured', className: 'configured' };
@@ -236,7 +238,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
-                {dmarcRec && (
+                {dmarcRec && dmarcStatus.className !== 'configured' && (
                   <div className="es-rec-btn-row">
                     <button className="es-view-rec-btn" onClick={() => viewRecommendation(dmarcRec)}>
                       View Recommendation
@@ -273,7 +275,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
-                {spfRec && (
+                {spfRec && spfStatus.className !== 'configured' && (
                   <div className="es-rec-btn-row">
                     <button className="es-view-rec-btn" onClick={() => viewRecommendation(spfRec)}>
                       View Recommendation
@@ -310,7 +312,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
-                {dkimRec && (
+                {dkimRec && dkimStatus.className !== 'configured' && (
                   <div className="es-rec-btn-row">
                     <button className="es-view-rec-btn" onClick={() => viewRecommendation(dkimRec)}>
                       View Recommendation
@@ -347,7 +349,7 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                     </div>
                   </>
                 )}
-                {bimiRec && (
+                {bimiRec && bimiStatus.className !== 'configured' && (
                   <div className="es-rec-btn-row">
                     <button className="es-view-rec-btn" onClick={() => viewRecommendation(bimiRec)}>
                       View Recommendation
@@ -363,58 +365,53 @@ const EmailSecurity = ({ activeScanId, assignedDomains, selectedDomain, setSelec
                 <Server size={40} />
                 <div className="detail-icon-title">MX & TLS</div>
               </div>
-              <div className="detail-content" style={{ flexDirection: 'row', gap: '3rem' }}>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div className="detail-desc">
-                    Mail Exchange (MX) records direct email to servers for a domain.
-                  </div>
-                  <div className="record-val-label">Configured Mail Servers</div>
-                  {hasRecord(result?.mx) ? (
-                    (Array.isArray(result.mx) ? result.mx : [result.mx]).map((rec, i) => {
-                      const parts = typeof rec === 'string' ? rec.split(' ') : [];
-                      const displayPriority = i + 1;
-                      const host = parts.length > 1 && !isNaN(parts[0]) ? parts.slice(1).join(' ') : rec;
-                      return (
-                        <div key={i} className="mx-record-item">
-                          <div className="mx-priority-pill">{displayPriority}</div>
-                          <div className="mx-host-text">{host}</div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="mx-record-item">
-                      <div className="mx-host-text">No MX records published.</div>
+              <div className="detail-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div style={{ display: 'flex', gap: '3rem', width: '100%' }}>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div className="detail-desc">
+                      Mail Exchange (MX) records direct email to servers for a domain.
                     </div>
-                  )}
-                  {mxRec && (
-                    <div className="es-rec-btn-row" style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
-                      <button className="es-view-rec-btn" onClick={() => viewRecommendation(mxRec)}>
-                        View Recommendation
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div className="detail-desc">
-                    STARTTLS guarantees that emails are encrypted during transit between mail servers.
-                  </div>
-                  <div className="record-val-label" style={{ marginBottom: '1rem' }}>STARTTLS Support</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                    <StarttlsBadge starttls={result?.smtp_starttls} />
-                    {result?.smtp_starttls && !result.smtp_starttls.checked && (
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Verification failed. Server unreachable.</span>
+                    <div className="record-val-label">Configured Mail Servers</div>
+                    {hasRecord(result?.mx) ? (
+                      (Array.isArray(result.mx) ? result.mx : [result.mx]).map((rec, i) => {
+                        const parts = typeof rec === 'string' ? rec.split(' ') : [];
+                        const displayPriority = i + 1;
+                        const host = parts.length > 1 && !isNaN(parts[0]) ? parts.slice(1).join(' ') : rec;
+                        return (
+                          <div key={i} className="mx-record-item">
+                            <div className="mx-priority-pill">{displayPriority}</div>
+                            <div className="mx-host-text">{host}</div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="mx-record-item">
+                        <div className="mx-host-text">No MX records published.</div>
+                      </div>
                     )}
                   </div>
-                  {starttlsRec && (
-                    <div className="es-rec-btn-row" style={{ marginTop: 'auto', paddingTop: '0.75rem' }}>
-                      <button className="es-view-rec-btn" onClick={() => viewRecommendation(starttlsRec)}>
-                        View Recommendation
-                      </button>
+
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                    <div className="detail-desc">
+                      STARTTLS guarantees that emails are encrypted during transit between mail servers.
                     </div>
-                  )}
+                    <div className="record-val-label" style={{ marginBottom: '1rem' }}>STARTTLS Support</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <StarttlsBadge starttls={result?.smtp_starttls} />
+                      {result?.smtp_starttls && !result.smtp_starttls.checked && (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Verification failed. Server unreachable.</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
+                {mxTlsRec && (
+                  <div className="es-rec-btn-row" style={{ marginTop: '0.5rem' }}>
+                    <button className="es-view-rec-btn" onClick={() => viewRecommendation(mxTlsRec)}>
+                      View Recommendation
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

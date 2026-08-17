@@ -190,11 +190,11 @@
 }
 
 /* ==========================================
-   2. SSL VULNERABILITY - 6 STATUS CARDS
+   2. SSL VULNERABILITY - 4 STATUS CARDS
    ========================================== */
 .ssl-vuln-status-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
 }
 

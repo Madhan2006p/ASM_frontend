@@ -54,7 +54,12 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         list.forEach((item) => {
           const ports = Array.isArray(item.ports) ? item.ports : [];
           // IP Address(es) resolved by the backend (same values as Subdomain Discovery)
-          const ipList = Array.isArray(item.ip) ? item.ip : (typeof item.ip === 'string' && item.ip ? item.ip.split(',').map(s => s.trim()).filter(Boolean) : []);
+          let ipList = [];
+          if (Array.isArray(item.ip)) {
+            ipList = item.ip.filter(Boolean).map(s => String(s).trim());
+          } else if (typeof item.ip === 'string' && item.ip.trim()) {
+            ipList = item.ip.split(',').map(s => s.trim()).filter(Boolean);
+          }
           // Keep the raw list for stacked per-line rendering; join for CSV export
           const ipStr = ipList.length > 0 ? ipList.join(', ') : '-';
           ports.forEach((p, idx) => {

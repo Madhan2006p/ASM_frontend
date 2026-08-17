@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   ShieldAlert,
@@ -111,21 +112,6 @@ export function buildRecommendations(result) {
       benefit:
         'Receiving servers will reject emails that fail DMARC, completely preventing spoofed emails from reaching inboxes.',
     });
-  } else {
-    recs.push({
-      id: 'dmarc-ok',
-      protocol: 'DMARC',
-      severity: 'info',
-      finding: 'DMARC is configured with p=reject',
-      whyMatters:
-        'Your DMARC policy is set to p=reject, which is the strongest enforcement level. Email sources not passing SPF or DKIM will be rejected by receiving servers.',
-      action:
-        'Regularly review DMARC aggregate reports to track authentication pass rates and catch any new legitimate sending services that may need to be added to SPF/DKIM.',
-      fix:
-        '• Monitor rua report inbox weekly\n• Ensure new ESP integrations are added to SPF includes\n• Rotate DKIM keys at least annually\n• Keep ruf (forensic) reports enabled for failure analysis',
-      benefit:
-        'Continued monitoring ensures your email ecosystem remains healthy and new threats are identified early.',
-    });
   }
 
   // ── SPF ───────────────────────────────────────────────────────────────────
@@ -176,21 +162,6 @@ export function buildRecommendations(result) {
       benefit:
         'Unauthorized senders will be rejected rather than flagged, greatly reducing spoofing risk.',
     });
-  } else {
-    recs.push({
-      id: 'spf-ok',
-      protocol: 'SPF',
-      severity: 'info',
-      finding: 'SPF is configured with -all (HardFail)',
-      whyMatters:
-        'Your SPF record is correctly configured. Keeping it accurate is important — stale entries for decommissioned mail services waste your 10-lookup limit and can cause legitimate mail failures.',
-      action:
-        'Review your SPF record quarterly. Remove any include: entries for services no longer in use and add new ESP/CRM integrations.',
-      fix:
-        '• Keep DNS lookup count below 10 (use SPF flattening tools if needed)\n• Remove obsolete ip4:/ip6: ranges and include: directives\n• Add new authorized services (ESPs, support tools) promptly\n• Test after every change with: mxtoolbox.com/spf',
-      benefit:
-        'A lean, accurate SPF record improves deliverability and ensures the domain remains protected as your email stack evolves.',
-    });
   }
 
   // ── DKIM ──────────────────────────────────────────────────────────────────
@@ -208,21 +179,6 @@ export function buildRecommendations(result) {
         'DKIM selector names depend on your email provider:\n• Google Workspace: google._domainkey.<yourdomain>\n• Microsoft 365: selector1._domainkey.<yourdomain>\n• Generic/Custom: default._domainkey.<yourdomain> or <selector>._domainkey.<yourdomain>\n\nSample TXT Record:\n<selector>._domainkey.<yourdomain>  IN TXT\n"v=DKIM1; k=rsa; p=<base64-encoded-public-key>"',
       benefit:
         'Cryptographic signing proves emails have not been altered in transit and strengthens DMARC authentication.',
-    });
-  } else {
-    recs.push({
-      id: 'dkim-ok',
-      protocol: 'DKIM',
-      severity: 'info',
-      finding: 'DKIM record is configured',
-      whyMatters:
-        'DKIM is configured, which is great. However, long-lived DKIM keys become a liability over time — if the private key is ever compromised, attackers can sign emails that will pass DKIM verification.',
-      action:
-        'Rotate DKIM keys at least once per year. Publish the new key under a new selector name provided by your mail host, switch signing to the new selector, then remove the old selector DNS record.',
-      fix:
-        '• Generate/obtain new key pair from mail provider annually\n• Publish new public key: <new-selector>._domainkey.<yourdomain>\n• Switch mail server/provider to sign with new selector\n• Wait for TTL to expire, then remove old selector record',
-      benefit:
-        'Regular key rotation limits exposure if a private key is ever compromised and keeps your signing infrastructure healthy.',
     });
   }
 
@@ -242,123 +198,62 @@ export function buildRecommendations(result) {
       benefit:
         'Brand logo shown in email clients increases recipient confidence, open rates, and reduces phishing confusion.',
     });
-  } else {
-    recs.push({
-      id: 'bimi-ok',
-      protocol: 'BIMI',
-      severity: 'info',
-      finding: 'BIMI record is configured',
-      whyMatters:
-        'BIMI is active, which enhances brand trust in email clients. If the logo URL becomes unreachable or DMARC policy is weakened, BIMI will stop working silently.',
-      action:
-        'Periodically verify the SVG logo URL is publicly accessible over HTTPS and that your DMARC policy remains at p=reject.',
-      fix:
-        '• Verify logo URL: curl -I https://<yourdomain>/bimi-logo.svg\n• Confirm DMARC stays at p=reject\n• Renew VMC before expiry (if using Verified Mark Certificate)\n• Test BIMI with: bimigroup.org/bimi-lookup',
-      benefit:
-        'Continuous brand logo display in email clients, reinforcing recipient trust for every email sent.',
-    });
   }
 
-  // ── MX ────────────────────────────────────────────────────────────────────
-  if (!hasRecord(result.mx)) {
-    recs.push({
-      id: 'mx-missing',
-      protocol: 'MX',
-      severity: 'high',
-      finding: 'No MX records found for this domain',
-      whyMatters:
-        'If this domain is not intended to receive email, it is still vulnerable to being used in spoofing attacks. Without a null MX and strict SPF/DMARC, attackers can craft convincing phishing emails from this domain.',
-      action:
-        'Publish a null MX (priority 0) to signal this domain does not accept email. Combine with v=spf1 -all and a DMARC p=reject record.',
-      fix:
-        'Null MX:\n<yourdomain>  IN MX  0 .\n\nSPF (no senders):\n<yourdomain>  IN TXT  "v=spf1 -all"\n\nDMARC:\n_dmarc.<yourdomain>  IN TXT\n"v=DMARC1; p=reject; sp=reject"',
-      benefit:
-        'Clearly signals that no email should originate from this domain, blocking spoofing and protecting your brand.',
-    });
-  } else {
-    const mxCount = Array.isArray(result.mx) ? result.mx.length : 1;
-    if (mxCount === 1) {
-      recs.push({
-        id: 'mx-single',
-        protocol: 'MX',
-        severity: 'low',
-        finding: 'Only one MX server configured — no redundancy',
-        whyMatters:
-          'With only one MX server, any downtime — planned or unplanned — will cause inbound email to fail delivery. Sending servers will retry for up to 5 days but mail may be lost if the outage is long.',
-        action:
-          'Configure a backup mail server and publish it as a secondary MX record with a higher priority number.',
-        fix:
-          '<yourdomain>  IN MX  10 mail.<yourdomain>.    ← primary\n<yourdomain>  IN MX  20 mail2.<yourdomain>.   ← backup\n\nEnsure the backup server accepts and queues mail when the primary is unavailable.',
-        benefit:
-          'Inbound email continues to be delivered even during primary mail server outages.',
-      });
-    } else {
-      recs.push({
-        id: 'mx-ok',
-        protocol: 'MX',
-        severity: 'info',
-        finding: `${mxCount} MX records configured`,
-        whyMatters:
-          'Multiple MX records provide good redundancy. However, stale or unreachable MX entries can slow mail delivery as sending servers attempt to connect to them before failing over.',
-        action:
-          'Periodically verify all MX hosts resolve and accept connections on port 25. Remove any decommissioned mail server entries.',
-        fix:
-          '• Test each MX host: telnet <mx-host> 25\n• Check MX priority ordering is correct\n• Remove any decommissioned servers\n• Verify each host has valid reverse DNS (PTR record)',
-        benefit:
-          'Reliable, fast inbound email delivery with clean fallback behaviour.',
-      });
-    }
-  }
-
-  // ── STARTTLS ──────────────────────────────────────────────────────────────
+  // ── MX & STARTTLS (Combined) ─────────────────────────────────────────────
+  const hasMx = hasRecord(result.mx);
+  const mxCount = Array.isArray(result.mx) ? result.mx.length : (hasMx ? 1 : 0);
   const starttls = result.smtp_starttls;
-  if (starttls) {
-    if (!starttls.checked) {
-      recs.push({
-        id: 'starttls-unchecked',
-        protocol: 'STARTTLS',
-        severity: 'medium',
-        finding: 'STARTTLS status could not be verified (server unreachable)',
-        whyMatters:
-          'STARTTLS encrypts SMTP sessions between mail servers, protecting email content from eavesdropping in transit. Without TLS, all email is transmitted in plaintext between servers.',
-        action:
-          'Manually test STARTTLS support and ensure your mail server is configured to advertise and require TLS.',
-        fix:
-          'Test manually:\nopenssl s_client -starttls smtp -connect mail.<yourdomain>:25\n\nIf not supported, configure TLS in your mail server:\n• Postfix: smtpd_tls_security_level = may\n• Exchange: Enable TLS on Receive/Send Connectors\n\nConsider MTA-STS to enforce TLS policy.',
-        benefit:
-          'Email in transit is encrypted, preventing eavesdropping and man-in-the-middle attacks between mail servers.',
-      });
-    } else if (!starttls.supported) {
-      recs.push({
-        id: 'starttls-unsupported',
-        protocol: 'STARTTLS',
-        severity: 'high',
-        finding: 'STARTTLS is not supported — email in transit is unencrypted',
-        whyMatters:
-          'Without STARTTLS, all email content is exposed in plaintext between mail servers. Any network-level attacker can read or modify email content.',
-        action:
-          'Enable STARTTLS on your SMTP server and configure it to advertise the STARTTLS capability. Consider also implementing MTA-STS to prevent TLS downgrade attacks.',
-        fix:
-          'Postfix:\nsmtpd_tls_security_level = may\nsmtpd_tls_cert_file = /etc/ssl/certs/mail.crt\nsmtpd_tls_key_file = /etc/ssl/private/mail.key\n\nExchange: Receive Connector → Auth: TLS\n\nMTA-STS (RFC 8461):\n_mta-sts.<domain>  IN TXT  "v=STSv1; id=<timestamp>"\nhttps://mta-sts.<domain>/.well-known/mta-sts.txt',
-        benefit:
-          'Email encrypted in transit between mail servers, protecting content from interception and tampering.',
-      });
-    } else {
-      recs.push({
-        id: 'starttls-ok',
-        protocol: 'STARTTLS',
-        severity: 'info',
-        finding: 'STARTTLS is supported',
-        whyMatters:
-          'STARTTLS is supported, which provides opportunistic encryption. However, without MTA-STS, a network attacker could strip the STARTTLS advertisement and force plaintext delivery.',
-        action:
-          'Publish an MTA-STS policy and TLS-RPT record to enforce TLS for all inbound connections and receive reports on failures.',
-        fix:
-          'MTA-STS DNS record:\n_mta-sts.<domain>  IN TXT  "v=STSv1; id=<yyyymmddHHMM>"\n\nPolicy file at https://mta-sts.<domain>/.well-known/mta-sts.txt:\nversion: STSv1\nmode: enforce\nmx: mail.<domain>\nmax_age: 86400\n\nTLS-RPT:\n_smtp._tls.<domain>  IN TXT\n"v=TLSRPTv1; rua=mailto:tlsrpt@<domain>"',
-        benefit:
-          'Sending servers will refuse to deliver mail if TLS cannot be established, preventing downgrade attacks.',
-      });
-    }
+  const hasStarttls = starttls && starttls.checked && starttls.supported;
+  const starttlsFailed = starttls && starttls.checked && !starttls.supported;
+
+  if (!hasMx) {
+    recs.push({
+      id: 'mx_tls-missing',
+      protocol: 'MX & TLS',
+      severity: 'high',
+      finding: 'No MX records found & email encryption unconfigured',
+      whyMatters:
+        'If this domain is not intended to receive email, it is vulnerable to spoofing attacks without a null MX and strict SPF/DMARC. If the domain does send/receive email, lack of MX records and STARTTLS encryption leaves emails vulnerable to interception in transit.',
+      action:
+        'For non-sending domains, publish a null MX (priority 0) with DMARC p=reject. For active email domains, configure primary and secondary MX records and enable STARTTLS with MTA-STS.',
+      fix:
+        'Option A: Active Email Domain (Redundancy & TLS)\n• MX Records:\n  <yourdomain>  IN MX  10 mail.<yourdomain>.\n  <yourdomain>  IN MX  20 mail2.<yourdomain>.\n• Enable STARTTLS in Postfix/Exchange (smtpd_tls_security_level = may)\n• MTA-STS DNS Record: _mta-sts.<yourdomain> IN TXT "v=STSv1; id=20260801"\n\nOption B: Non-Sending / Parked Domain (Null MX)\n• <yourdomain> IN MX 0 .\n• <yourdomain> IN TXT "v=spf1 -all"\n• _dmarc.<yourdomain> IN TXT "v=DMARC1; p=reject; sp=reject"',
+      benefit:
+        'Ensures resilient mail delivery, guarantees transport encryption between mail servers, and blocks spoofing.',
+    });
+  } else if (!hasStarttls) {
+    recs.push({
+      id: 'mx_tls-weak',
+      protocol: 'MX & TLS',
+      severity: starttlsFailed ? 'high' : 'medium',
+      finding: starttlsFailed 
+        ? `${mxCount} MX record(s) configured, but STARTTLS is not supported` 
+        : `${mxCount} MX record(s) configured, but STARTTLS verification could not be completed`,
+      whyMatters:
+        'Without STARTTLS, email in transit between mail servers is transmitted in plaintext. Network attackers or eavesdroppers can intercept, read, or tamper with sensitive communications.',
+      action:
+        'Enable STARTTLS on your SMTP servers and publish MTA-STS and TLS-RPT DNS records to mandate transport encryption.',
+      fix:
+        '1. Enable STARTTLS on Mail Server:\n• Postfix: smtpd_tls_security_level = may\n• Exchange: Enable TLS on Receive/Send Connectors\n\n2. Configure MTA-STS (RFC 8461):\n_mta-sts.<domain>  IN TXT  "v=STSv1; id=20260801"\nhttps://mta-sts.<domain>/.well-known/mta-sts.txt\n\n3. Configure TLS Reporting:\n_smtp._tls.<domain>  IN TXT  "v=TLSRPTv1; rua=mailto:tlsrpt@<domain>"',
+      benefit:
+        'Protects sensitive emails with mandatory transport-layer encryption, preventing man-in-the-middle and downgrade attacks.',
+    });
+  } else if (mxCount === 1) {
+    recs.push({
+      id: 'mx_tls-single',
+      protocol: 'MX & TLS',
+      severity: 'low',
+      finding: 'STARTTLS is supported, but only 1 MX server configured (no redundancy)',
+      whyMatters:
+        'STARTTLS encryption is active. However, with only a single MX server, any mail server downtime will cause incoming email delivery delays or failures.',
+      action:
+        'Add a secondary backup MX record for redundancy and publish an MTA-STS policy to enforce TLS across all mail transfer agents.',
+      fix:
+        '1. Add Backup MX:\n<yourdomain>  IN MX  10 mail.<yourdomain>.\n<yourdomain>  IN MX  20 mail2.<yourdomain>.\n\n2. Publish MTA-STS & TLS-RPT:\n_mta-sts.<domain>  IN TXT  "v=STSv1; id=20260801"\n_smtp._tls.<domain>  IN TXT  "v=TLSRPTv1; rua=mailto:tlsrpt@<domain>"',
+      benefit:
+        'Guarantees high-availability mail delivery and enforced transport encryption.',
+    });
   }
 
   return recs;
@@ -453,9 +348,9 @@ const EmailSecurityRecommendations = ({ rec, onClose, onBack }) => {
   );
 
   if (isModalMode) {
-    return (
+    const modalMarkup = (
       <div className="es-rec-overlay" onClick={handleOverlayClick}>
-        <div className="es-rec-modal">
+        <div className="es-rec-modal" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="es-rec-modal-header">
             <div className="es-rec-header-left">
@@ -495,6 +390,8 @@ const EmailSecurityRecommendations = ({ rec, onClose, onBack }) => {
         </div>
       </div>
     );
+
+    return typeof document !== 'undefined' ? createPortal(modalMarkup, document.body) : modalMarkup;
   }
 
   // Standalone Page Mode

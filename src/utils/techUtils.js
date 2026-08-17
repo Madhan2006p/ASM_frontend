@@ -15,12 +15,21 @@ export const parseTechEntry = (raw = '') => {
   let version = '';
   let category = 'Miscellaneous';
   let engines = [];
+  let source = '';
 
-  // Extract trailing (engine1, engine2) tag first (added by the multi-engine
-  // merge in the backend — e.g. "(wappalyzer-js, wappalyzergo)")
+  // Extract source tags like [FingerprintHub], [Webanalyze], [WhatCMS], [Header Analysis], [Wappalyzer]
+  const sourceMatch = name.match(/\s*\[(FingerprintHub|Webanalyze|WhatCMS|Header Analysis|Wappalyzer|HTTPX)\]\s*$/i);
+  if (sourceMatch) {
+    source = sourceMatch[1];
+    engines.push(source);
+    name = name.slice(0, sourceMatch.index).trim();
+  }
+
+  // Extract trailing (engine1, engine2) tag
   const engineMatch = name.match(/\s*\(([a-z0-9-]+(?:,\s*[a-z0-9-]+)*)\)\s*$/);
   if (engineMatch) {
-    engines = engineMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+    const matchedEngines = engineMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+    engines.push(...matchedEngines);
     name = name.slice(0, engineMatch.index).trim();
   }
 
@@ -53,7 +62,7 @@ export const parseTechEntry = (raw = '') => {
   version = String(version || '').trim().replace(/^v/i, '');
   version = version.split(' (')[0].split(' ')[0].trim();
 
-  return { name: name || raw, version, category, engines };
+  return { name: name || raw, version, category, engines: Array.from(new Set(engines)), source };
 };
 
 /* ── EOL / outdated knowledge base ───────────────────────
