@@ -9,8 +9,19 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
   const [subdomains, setSubdomains] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [previewModal, setPreviewModal] = useState(null);
   
   const itemsPerPage = 10;
+
+  const getScreenshotUrl = (rawUrl) => {
+    if (!rawUrl) return '';
+    const s = String(rawUrl).trim();
+    const mediaIdx = s.indexOf('/media/');
+    if (mediaIdx !== -1) {
+      return s.substring(mediaIdx);
+    }
+    return s.startsWith('http://') || s.startsWith('https://') || s.startsWith('/') ? s : `/${s}`;
+  };
 
   // Load subdomains when activeScanId or selectedDomain changes.
   // silent=true skips the loading spinner so background polls don't flicker.
@@ -262,15 +273,14 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                       {item.screenshot_url ? (
-                        <a 
-                          href={item.screenshot_url.startsWith('http') || item.screenshot_url.startsWith('/') ? item.screenshot_url : `/${item.screenshot_url}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <div 
                           className="shot-thumb" 
-                          title="Open full screenshot in new tab"
+                          onClick={() => setPreviewModal({ url: getScreenshotUrl(item.screenshot_url), domain: item.domain })}
+                          title="Click to preview screenshot"
+                          style={{ cursor: 'pointer' }}
                         >
                           <img 
-                            src={item.screenshot_url.startsWith('http') || item.screenshot_url.startsWith('/') ? item.screenshot_url : `/${item.screenshot_url}`} 
+                            src={getScreenshotUrl(item.screenshot_url)} 
                             alt={`Screenshot of ${item.domain}`} 
                             loading="lazy" 
                             className="shot-img" 
@@ -281,7 +291,7 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                               }
                             }}
                           />
-                        </a>
+                        </div>
                       ) : (
                         <span className="shot-empty">No screenshot</span>
                       )}
@@ -343,6 +353,106 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
         </div>
 
       </div>
+
+      {previewModal && (
+        <div 
+          className="shot-modal-overlay" 
+          onClick={() => setPreviewModal(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.82)',
+            backdropFilter: 'blur(5px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '2rem'
+          }}
+        >
+          <div 
+            className="shot-modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--bg-card, #1e293b)',
+              border: '1px solid var(--border-color, #334155)',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              maxWidth: '92vw',
+              maxHeight: '90vh',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.2rem' }}>📸</span>
+                <h4 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.05rem', fontWeight: 600 }}>
+                  Screenshot: {previewModal.domain}
+                </h4>
+              </div>
+              <button 
+                onClick={() => setPreviewModal(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '1.6rem',
+                  cursor: 'pointer',
+                  lineHeight: 1,
+                  padding: '0 0.5rem'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ overflow: 'auto', textAlign: 'center', borderRadius: '8px', border: '1px solid var(--border-color, #334155)', background: '#0b0f19' }}>
+              <img 
+                src={previewModal.url} 
+                alt={`Screenshot of ${previewModal.domain}`} 
+                style={{ maxWidth: '100%', maxHeight: '72vh', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <a 
+                href={previewModal.url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                style={{
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.85rem',
+                  borderRadius: '6px',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  background: 'var(--accent-color, #3b82f6)',
+                  fontWeight: 500
+                }}
+              >
+                Open Full Image in New Tab ↗
+              </a>
+              <button 
+                onClick={() => setPreviewModal(null)}
+                style={{
+                  padding: '0.45rem 1rem',
+                  fontSize: '0.85rem',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-secondary)',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

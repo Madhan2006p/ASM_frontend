@@ -116,14 +116,12 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   return (
     <div className="card tech-table-card">
 
-      {/* 5-Engine Technology Pipeline Banner */}
+      {/* 3-Engine Technology Pipeline Banner */}
       <div className="tech-pipeline-strip">
-        <span className="tech-pipeline-label">⚡ 5-Engine Detection Suite:</span>
-        <span className="tech-engine-pill tech-engine-wappalyzer">1. Wappalyzer (JS + Go)</span>
-        <span className="tech-engine-pill tech-engine-webanalyze">2. Webanalyze</span>
-        <span className="tech-engine-pill tech-engine-fingerprinthub">3. FingerprintHub</span>
-        <span className="tech-engine-pill tech-engine-whatcms">4. WhatCMS</span>
-        <span className="tech-engine-pill tech-engine-headeranalysis">5. Heuristic HTTP Headers</span>
+        <span className="tech-pipeline-label">⚡ 3-Engine Detection Suite:</span>
+        <span className="tech-engine-pill tech-engine-wappalyzer">1. Wappalyzer Multi-Runner (Go + JS + Browser)</span>
+        <span className="tech-engine-pill tech-engine-whatcms">2. WhatCMS Engine</span>
+        <span className="tech-engine-pill tech-engine-headeranalysis">3. Heuristic HTTP Headers</span>
       </div>
 
       {/* 8-Column Reference Table */}
