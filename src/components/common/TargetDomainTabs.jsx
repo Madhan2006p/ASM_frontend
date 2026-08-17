@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Lock } from 'lucide-react';
 import './TargetDomainTabs.css';
 
@@ -10,13 +10,24 @@ const TargetDomainTabs = ({
 }) => {
   // Combine assigned domains and scanned targets so all valid target domains are selectable
   const assignedList = Array.isArray(assignedDomains) ? assignedDomains : [];
-  const scanTargets = Array.isArray(scansList) ? scansList.map(s => s.target) : [];
-  const domainList = Array.from(new Set([...assignedList, ...scanTargets].filter(Boolean)));
+  const scanTargets = useMemo(
+    () => (Array.isArray(scansList) ? scansList.map(s => s.target) : []),
+    [scansList]
+  );
+  const domainList = useMemo(
+    () => Array.from(new Set([...assignedList, ...scanTargets].filter(Boolean))),
+    [assignedList, scanTargets]
+  );
 
-  const tabs = [
-    { label: 'All Domains', value: '' },
-    ...domainList.map(d => ({ label: d, value: d }))
-  ];
+  // When a module opens with no domain selected yet, default to the first
+  // domain tab so the module shows that domain's output.
+  useEffect(() => {
+    if (!selectedDomain && domainList.length > 0 && setSelectedDomain) {
+      setSelectedDomain(domainList[0]);
+    }
+  }, [selectedDomain, domainList, setSelectedDomain]);
+
+  const tabs = domainList.map(d => ({ label: d, value: d }));
 
   return (
     <div className="target-domain-tabs-container">
