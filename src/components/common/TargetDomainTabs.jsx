@@ -8,24 +8,23 @@ const TargetDomainTabs = ({
   selectedDomain = '',
   setSelectedDomain
 }) => {
-  // Combine assigned domains and scanned targets so all valid target domains are selectable
-  const assignedList = Array.isArray(assignedDomains) ? assignedDomains : [];
+  // Put scanned targets with existing scan data FIRST, then other assigned domains
   const scanTargets = useMemo(
-    () => (Array.isArray(scansList) ? scansList.map(s => s.target) : []),
+    () => (Array.isArray(scansList) ? scansList.map(s => s.target).filter(Boolean) : []),
     [scansList]
   );
   const domainList = useMemo(
-    () => Array.from(new Set([...assignedList, ...scanTargets].filter(Boolean))),
-    [assignedList, scanTargets]
+    () => Array.from(new Set([...scanTargets, ...assignedList].filter(Boolean))),
+    [scanTargets, assignedList]
   );
 
-  // When a module opens with no domain selected yet, default to the first
-  // domain tab so the module shows that domain's output.
+  // When a module opens with no domain selected yet, default to the latest scanned domain
   useEffect(() => {
     if (!selectedDomain && domainList.length > 0 && setSelectedDomain) {
-      setSelectedDomain(domainList[0]);
+      const defaultDomain = scanTargets[0] || domainList[0];
+      setSelectedDomain(defaultDomain);
     }
-  }, [selectedDomain, domainList, setSelectedDomain]);
+  }, [selectedDomain, domainList, scanTargets, setSelectedDomain]);
 
   const tabs = domainList.map(d => ({ label: d, value: d }));
 

@@ -123,6 +123,7 @@ function App() {
         if (selectLatest || !activeScanId) {
           setActiveScanId(latest.id);
           setActiveTarget(latest.target);
+          setSelectedDomain(prev => prev || latest.target);
         }
       }
     } catch (e) {
@@ -172,8 +173,8 @@ function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
 
   const allTargetDomains = Array.from(new Set([
-    ...(Array.isArray(assignedDomains) ? assignedDomains : []),
-    ...scansList.map(s => s.target)
+    ...scansList.map(s => s.target),
+    ...(Array.isArray(assignedDomains) ? assignedDomains : [])
   ].filter(Boolean)));
 
   const handleDomainSelect = (domain) => {
