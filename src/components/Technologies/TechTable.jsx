@@ -106,15 +106,25 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   /* ── Modal summary stats ─────────────────────────────── */
   const modalTechs = selectedSubdomainModal?.technologies || [];
   const modalParsed = modalTechs.map(t => {
-    const { name, version, category } = parseTechEntry(t);
+    const { name, version, category, engines, source } = parseTechEntry(t);
     const eol = getEolInfo(name, version);
-    return { name, version, category, outdated: eol.outdated, eolNote: eol.note };
+    return { name, version, category, engines, source, outdated: eol.outdated, eolNote: eol.note };
   });
   const modalWithVersion = modalParsed.filter(t => t.version).length;
   const modalOutdated = modalParsed.filter(t => t.outdated).length;
 
   return (
     <div className="card tech-table-card">
+
+      {/* 5-Engine Technology Pipeline Banner */}
+      <div className="tech-pipeline-strip">
+        <span className="tech-pipeline-label">⚡ 5-Engine Detection Suite:</span>
+        <span className="tech-engine-pill tech-engine-wappalyzer">1. Wappalyzer (JS + Go)</span>
+        <span className="tech-engine-pill tech-engine-webanalyze">2. Webanalyze</span>
+        <span className="tech-engine-pill tech-engine-fingerprinthub">3. FingerprintHub</span>
+        <span className="tech-engine-pill tech-engine-whatcms">4. WhatCMS</span>
+        <span className="tech-engine-pill tech-engine-headeranalysis">5. Heuristic HTTP Headers</span>
+      </div>
 
       {/* 8-Column Reference Table */}
       <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
@@ -208,7 +218,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                         {/* Inline badges (capped) + "+N more" button → full popup */}
                         <div className="tech-badges-wrap">
                           {techs.slice(0, INLINE_BADGE_LIMIT).map((tech, tIdx) => (
-                            <TechBadge key={tIdx} raw={tech} />
+                            <TechBadge key={tIdx} raw={tech} showEngine={true} />
                           ))}
                           {techs.length === 0 && (
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No technologies</span>
@@ -363,6 +373,18 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                             <span className="tech-modal-card-detail-label">Category</span>
                             <span className="tech-modal-card-detail-value">{t.category || 'Uncategorized'}</span>
                           </div>
+                          {t.engines && t.engines.length > 0 && (
+                            <div className="tech-modal-card-cat" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '0.2rem' }}>
+                              <span className="tech-modal-card-detail-label">Detected by</span>
+                              <div className="tech-engine-badges-list">
+                                {t.engines.map((eng, ei) => (
+                                  <span key={ei} className={`tech-engine-pill tech-engine-${eng.toLowerCase().replace(/[^a-z0-9]/g, '')}`}>
+                                    {eng}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className={`tech-modal-card-status ${t.outdated ? 'eol' : 'ok'}`}>
                           {t.outdated ? (

@@ -700,6 +700,119 @@
   background: #EF4444;
 }
 
+.tech-source-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tech-source-fingerprinthub {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+.tech-source-webanalyze {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+}
+
+.tech-source-wappalyzer,
+.tech-source-wappalyzerjs,
+.tech-source-wappalyzergo,
+.tech-source-wappalyzernext {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.tech-source-whatcms {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.tech-source-headeranalysis,
+.tech-source-header,
+.tech-source-httpx,
+.tech-source-whatweb {
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
+}
+
+.tech-engine-badges-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.tech-engine-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tech-engine-fingerprinthub {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+
+.tech-engine-webanalyze {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.tech-engine-wappalyzer,
+.tech-engine-wappalyzerjs,
+.tech-engine-wappalyzergo,
+.tech-engine-wappalyzernext {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.tech-engine-whatcms {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.tech-engine-headeranalysis,
+.tech-engine-header,
+.tech-engine-httpx,
+.tech-engine-whatweb {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.tech-pipeline-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(59, 130, 246, 0.04);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.75rem;
+}
+
+.tech-pipeline-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
 .tech-eol-icon {
   color: #F87171;
 }

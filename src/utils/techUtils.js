@@ -11,33 +11,41 @@
 ═════════════════════════════════════════════════════════ */
 
 export const parseTechEntry = (raw = '') => {
-  let name = raw || '';
+  let name = (raw || '').trim();
   let version = '';
   let category = 'Miscellaneous';
   let engines = [];
   let source = '';
 
-  // Extract source tags like [FingerprintHub], [Webanalyze], [WhatCMS], [Header Analysis], [Wappalyzer]
-  const sourceMatch = name.match(/\s*\[(FingerprintHub|Webanalyze|WhatCMS|Header Analysis|Wappalyzer|HTTPX)\]\s*$/i);
-  if (sourceMatch) {
-    source = sourceMatch[1];
-    engines.push(source);
-    name = name.slice(0, sourceMatch.index).trim();
+  // Extract trailing (engine1, engine2) tag first (e.g. "(wappalyzer-js, wappalyzergo)")
+  const engineParenMatch = name.match(/\s*\(([a-z0-9-_]+(?:,\s*[a-z0-9-_]+)*)\)\s*$/i);
+  if (engineParenMatch) {
+    const matched = engineParenMatch[1].split(',').map(s => s.trim()).filter(Boolean);
+    engines.push(...matched);
+    name = name.slice(0, engineParenMatch.index).trim();
   }
 
-  // Extract trailing (engine1, engine2) tag
-  const engineMatch = name.match(/\s*\(([a-z0-9-]+(?:,\s*[a-z0-9-]+)*)\)\s*$/);
-  if (engineMatch) {
-    const matchedEngines = engineMatch[1].split(',').map(s => s.trim()).filter(Boolean);
-    engines.push(...matchedEngines);
-    name = name.slice(0, engineMatch.index).trim();
+  // Extract square bracket tags repeatedly (e.g. [FingerprintHub], [Webanalyze], [WhatCMS], [Header Analysis], [Wappalyzer], [Category])
+  const KNOWN_ENGINES = ['FingerprintHub', 'Webanalyze', 'WhatCMS', 'Header Analysis', 'Wappalyzer', 'HTTPX', 'WhatWeb'];
+  let match;
+  while ((match = name.match(/\s*\[([^\]]+)\]\s*$/))) {
+    const tag = match[1].trim();
+    const isEngine = KNOWN_ENGINES.some(ke => ke.toLowerCase() === tag.toLowerCase());
+    if (isEngine) {
+      source = tag;
+      engines.push(tag);
+    } else {
+      category = tag;
+    }
+    name = name.slice(0, match.index).trim();
   }
 
-  // Extract trailing [Category] tag
-  const catMatch = name.match(/\s*\[(.*?)\]$/);
-  if (catMatch) {
-    category = catMatch[1].trim();
-    name = name.replace(catMatch[0], '').trim();
+  // Also check if any engine paren was before square brackets
+  const engineParenMatch2 = name.match(/\s*\(([a-z0-9-_]+(?:,\s*[a-z0-9-_]+)*)\)\s*$/i);
+  if (engineParenMatch2) {
+    const matched = engineParenMatch2[1].split(',').map(s => s.trim()).filter(Boolean);
+    engines.push(...matched);
+    name = name.slice(0, engineParenMatch2.index).trim();
   }
 
   // Split name / version
@@ -62,7 +70,19 @@ export const parseTechEntry = (raw = '') => {
   version = String(version || '').trim().replace(/^v/i, '');
   version = version.split(' (')[0].split(' ')[0].trim();
 
-  return { name: name || raw, version, category, engines: Array.from(new Set(engines)), source };
+  // Deduplicate and fallback
+  const uniqueEngines = Array.from(new Set(engines));
+  if (uniqueEngines.length === 0 && raw) {
+    uniqueEngines.push('Wappalyzer');
+  }
+
+  return {
+    name: name || raw,
+    version,
+    category,
+    engines: uniqueEngines,
+    source: source || (uniqueEngines.length > 0 ? uniqueEngines[0] : 'Wappalyzer')
+  };
 };
 
 /* ── EOL / outdated knowledge base ───────────────────────
