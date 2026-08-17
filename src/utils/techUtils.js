@@ -85,6 +85,57 @@ export const parseTechEntry = (raw = '') => {
   };
 };
 
+/**
+ * Deduplicates an array of technology strings or objects by technology name,
+ * merging versions, categories, and detection engines into single unique records.
+ */
+export const deduplicateTechnologies = (techList = []) => {
+  if (!Array.isArray(techList)) return [];
+
+  const map = new Map();
+
+  techList.forEach(item => {
+    if (!item) return;
+    const parsed = typeof item === 'string' ? parseTechEntry(item) : item;
+    const key = (parsed.name || '').trim().toLowerCase();
+    if (!key) return;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        name: parsed.name,
+        version: parsed.version || '',
+        category: (parsed.category && parsed.category !== 'Miscellaneous') ? parsed.category : '',
+        engines: Array.isArray(parsed.engines) ? [...parsed.engines] : (parsed.source ? [parsed.source] : []),
+        source: parsed.source || '',
+      });
+    } else {
+      const existing = map.get(key);
+      // Prefer non-empty version or more specific version
+      if (!existing.version && parsed.version) {
+        existing.version = parsed.version;
+      }
+      // Prefer specific category over empty / Miscellaneous
+      if ((!existing.category || existing.category === 'Miscellaneous') && parsed.category && parsed.category !== 'Miscellaneous') {
+        existing.category = parsed.category;
+      }
+      // Merge engines
+      const newEngines = Array.isArray(parsed.engines) ? parsed.engines : (parsed.source ? [parsed.source] : []);
+      newEngines.forEach(eng => {
+        if (eng && !existing.engines.includes(eng)) {
+          existing.engines.push(eng);
+        }
+      });
+    }
+  });
+
+  return Array.from(map.values()).map(t => {
+    let str = t.name;
+    if (t.version) str += `/${t.version}`;
+    if (t.category && t.category !== 'Miscellaneous') str += ` [${t.category}]`;
+    return str;
+  });
+};
+
 /* ── EOL / outdated knowledge base ───────────────────────
    A lightweight built-in reference of common platforms and
    the minimum version that is still vendor-supported. If a

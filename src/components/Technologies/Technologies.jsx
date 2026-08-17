@@ -4,6 +4,7 @@ import TechTable from './TechTable';
 import ScanSelector from '../common/ScanSelector';
 import './Technologies.css';
 import { api } from '../../utils/api';
+import { deduplicateTechnologies } from '../../utils/techUtils';
 
 const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelectedDomain, scansList, handleSelectScan }) => {
   const [subdomainTechs, setSubdomainTechs] = useState([]);
@@ -46,13 +47,13 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         const techList = Array.isArray(techData) ? techData : ((techData && techData.results) || []);
         const subList = Array.isArray(subData) ? subData : ((subData && subData.results) || []);
 
-        // Tech map: domain -> sorted unique technologies
+        // Tech map: domain -> sorted unique technologies (deduplicated by tech name)
         const techMap = {};
         techList.forEach(item => {
           const host = item.domain || item.subdomain || '';
           if (!host) return;
           const techs = Array.isArray(item.technologies) ? item.technologies : [];
-          const cleaned = Array.from(new Set(techs.map(t => (t || '').trim()).filter(Boolean)));
+          const cleaned = deduplicateTechnologies(techs);
           if (cleaned.length) techMap[host] = cleaned;
         });
 
@@ -61,8 +62,11 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
         const addRow = (host, src) => {
           if (!host || rowsByHost[host]) return;
           const rawTechs = Array.isArray(src.technologies) ? src.technologies : [];
-          const cleanedTechs = Array.from(new Set(rawTechs.map(t => (t || '').trim()).filter(Boolean)));
-          const finalTechs = techMap[host] || cleanedTechs;
+          const combined = [
+            ...(techMap[host] || []),
+            ...rawTechs
+          ];
+          const finalTechs = deduplicateTechnologies(combined);
 
           // Only include subdomains which actually have technologies
           if (!finalTechs || finalTechs.length === 0) return;

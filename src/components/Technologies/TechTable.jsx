@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { RefreshCw, X, ArrowUpDown, Eye, AlertTriangle, Boxes, CheckCircle2, Globe, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import TechBadge from './TechBadge';
-import { parseTechEntry, getEolInfo, techCategoryIcon } from '../../utils/techUtils';
+import { parseTechEntry, getEolInfo, techCategoryIcon, deduplicateTechnologies } from '../../utils/techUtils';
 import './Technologies.css';
 
 // Max technology badges shown inline per row before the "+N more" button.
@@ -104,7 +104,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
 
   /* ── Modal summary stats ─────────────────────────────── */
-  const modalTechs = selectedSubdomainModal?.technologies || [];
+  const modalTechs = deduplicateTechnologies(selectedSubdomainModal?.technologies || []);
   const modalParsed = modalTechs.map(t => {
     const { name, version, category, engines, source } = parseTechEntry(t);
     const eol = getEolInfo(name, version);
