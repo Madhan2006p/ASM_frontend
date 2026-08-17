@@ -82,13 +82,14 @@ const Login = ({ onLogin, onNavigate }) => {
             )}
 
             <div className="form-group">
-              <label>E-mail:</label>
+              <label>Email or Username:</label>
               <input
-                type="email"
+                type="text"
                 name="email"
-                placeholder="e.g. John doe@gmail.com"
+                placeholder="e.g. admin@hit or admin"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="username"
                 required
               />
               {errors.email && <span className="error-msg">{errors.email}</span>}
@@ -102,6 +103,7 @@ const Login = ({ onLogin, onNavigate }) => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 required
               />
               {errors.password && <span className="error-msg">{errors.password}</span>}
