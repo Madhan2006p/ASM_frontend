@@ -47,13 +47,12 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
   }, [activeScan]);
 
   const loadVulns = useCallback(async () => {
-    if (!activeScanId) {
-      setVulnerabilities([]);
-      return;
-    }
     try {
       setLoading(true);
-      const data = await api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`);
+      const ep = activeScanId
+        ? `/api/attacksurface/vulnerabilities/?scan=${activeScanId}`
+        : (selectedDomain ? `/api/attacksurface/vulnerabilities/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/vulnerabilities/`);
+      const data = await api.get(ep);
       const list = Array.isArray(data) ? data : (data.results || []);
 
       const mapped = list.map(v => ({
@@ -94,7 +93,7 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
     } finally {
       setLoading(false);
     }
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   useEffect(() => {
     loadVulns();

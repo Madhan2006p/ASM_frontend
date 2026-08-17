@@ -12,17 +12,23 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
 
   useEffect(() => {
     const generateAttackPaths = async () => {
-      if (!activeScanId) {
-        setPaths([]);
-        return;
-      }
       try {
         setLoading(true);
+        const vEp = activeScanId
+          ? `/api/attacksurface/vulnerabilities/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/vulnerabilities/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/vulnerabilities/`);
+        const pEp = activeScanId
+          ? `/api/attacksurface/open-ports/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/open-ports/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/open-ports/`);
+        const eEp = activeScanId
+          ? `/api/attacksurface/endpoints/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/endpoints/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/endpoints/`);
+
         // Fetch real data to synthesize paths
         const [vulnsData, portsData, endpointsData] = await Promise.all([
-          api.get(`/api/attacksurface/vulnerabilities/?scan=${activeScanId}`).catch(() => []),
-          api.get(`/api/attacksurface/open-ports/?scan=${activeScanId}`).catch(() => []),
-          api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`).catch(() => [])
+          api.get(vEp).catch(() => []),
+          api.get(pEp).catch(() => []),
+          api.get(eEp).catch(() => [])
         ]);
 
         const vulns = Array.isArray(vulnsData) ? vulnsData : (vulnsData.results || []);
@@ -91,7 +97,7 @@ const AttackPathAnalysisDashboard = ({ activeScanId, assignedDomains, selectedDo
       }
     };
     generateAttackPaths();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   return (
     <div className="global-page-container page-animate">
