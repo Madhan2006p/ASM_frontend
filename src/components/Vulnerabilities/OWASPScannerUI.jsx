@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
-  RefreshCw, Download, Activity,
+  RefreshCw, Activity,
 } from 'lucide-react';
 import { api } from '../../utils/api';
 import PageHeaderCard from '../common/PageHeaderCard';
@@ -105,26 +105,8 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
     return () => { if (interval) clearInterval(interval); };
   }, [activeScanId, isVulnScanRunning, loadVulns]);
 
-  // Derived stats
-  const totalCount = vulnerabilities.length;
-
   // No manual filters — show every finding for the selected scan
   const filteredRows = useMemo(() => vulnerabilities, [vulnerabilities]);
-
-  const exportCsv = () => {
-    const header = 'OWASP Category,Title,CVE,CWE,Severity,CVSS,Affected Assets,Source';
-    const rows = filteredRows.map(r => {
-      const cat = r.owasp_rank ? `A${String(r.owasp_rank).padStart(2, '0')}` : 'Uncategorized';
-      return `"${cat}","${r.title}","${r.cve}","${r.cwe}","${r.severity}",${r.cvss},"${(r.affected_assets || []).join(', ')}","${r.source_tool}"`;
-    });
-    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'owasp_top10_vulnerabilities.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className="global-page-container page-animate">
@@ -173,16 +155,10 @@ const OWASPScannerUI = ({ activeScanId, assignedDomains, selectedDomain, setSele
           </div>
         )}
 
-        {/* ── Export row ── */}
+        {/* ── Findings header ── */}
         <div className="vuln-section-header" style={{ marginBottom: '1rem' }}>
           <Activity size={16} />
           <span>Vulnerability Findings</span>
-          <span style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
-            <button onClick={exportCsv} disabled={totalCount === 0}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)', borderRadius: '6px', padding: '0.3rem 0.75rem', fontSize: '0.75rem', cursor: 'pointer' }}>
-              <Download size={13} /> Export CSV
-            </button>
-          </span>
         </div>
 
         {/* ── Findings table (reuses the existing table) ── */}
