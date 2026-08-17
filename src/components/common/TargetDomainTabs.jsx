@@ -8,7 +8,7 @@ const TargetDomainTabs = ({
   selectedDomain = '',
   setSelectedDomain
 }) => {
-  // Put scanned targets with existing scan data FIRST, then other assigned domains
+  const assignedList = Array.isArray(assignedDomains) ? assignedDomains : [];
   const scanTargets = useMemo(
     () => (Array.isArray(scansList) ? scansList.map(s => s.target).filter(Boolean) : []),
     [scansList]
