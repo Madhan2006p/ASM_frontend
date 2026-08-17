@@ -368,6 +368,7 @@
 /* Terminal Style Table tweaks */
 .port-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   text-align: left;
 }

@@ -765,13 +765,95 @@ body {
   background-color: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  /* overflow:clip clips visual overflow without affecting z-index stacking context
-     so absolute-positioned dropdowns can appear above the table */
-  overflow: clip;
+  /* Horizontal scrollbar so wide tables can be scrolled; vertical overflow stays
+     clipped so the wrapper never becomes a vertical scroll container. */
+  overflow-x: auto;
+  overflow-y: clip;
   box-shadow: var(--shadow-sm);
 }
 
 table { width: 100%; border-collapse: collapse; text-align: left; }
+
+/* Wide tables keep their natural content width so the wrapper scrolls
+   horizontally instead of crushing the columns (see .sub-table-scroll). */
+.global-table-wrapper > table,
+.vuln-table-wrapper > table,
+.sub-table-card > table {
+  min-width: max-content;
+}
+
+/* Slim, theme-consistent scrollbars on horizontally scrollable tables */
+.global-table-wrapper,
+.sub-table-card,
+.vuln-table-wrapper,
+.ssl-table-wrapper,
+.vm-table-wrapper,
+.mv-table-wrapper,
+.ff-table-container,
+.table-container-modern,
+.scanners-table-wrap,
+.sub-table-scroll,
+.tech-table-responsive-wrapper {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
+}
+
+.global-table-wrapper::-webkit-scrollbar,
+.sub-table-card::-webkit-scrollbar,
+.vuln-table-wrapper::-webkit-scrollbar,
+.ssl-table-wrapper::-webkit-scrollbar,
+.vm-table-wrapper::-webkit-scrollbar,
+.mv-table-wrapper::-webkit-scrollbar,
+.ff-table-container::-webkit-scrollbar,
+.table-container-modern::-webkit-scrollbar,
+.scanners-table-wrap::-webkit-scrollbar,
+.sub-table-scroll::-webkit-scrollbar,
+.tech-table-responsive-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.global-table-wrapper::-webkit-scrollbar-track,
+.sub-table-card::-webkit-scrollbar-track,
+.vuln-table-wrapper::-webkit-scrollbar-track,
+.ssl-table-wrapper::-webkit-scrollbar-track,
+.vm-table-wrapper::-webkit-scrollbar-track,
+.mv-table-wrapper::-webkit-scrollbar-track,
+.ff-table-container::-webkit-scrollbar-track,
+.table-container-modern::-webkit-scrollbar-track,
+.scanners-table-wrap::-webkit-scrollbar-track,
+.sub-table-scroll::-webkit-scrollbar-track,
+.tech-table-responsive-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.global-table-wrapper::-webkit-scrollbar-thumb,
+.sub-table-card::-webkit-scrollbar-thumb,
+.vuln-table-wrapper::-webkit-scrollbar-thumb,
+.ssl-table-wrapper::-webkit-scrollbar-thumb,
+.vm-table-wrapper::-webkit-scrollbar-thumb,
+.mv-table-wrapper::-webkit-scrollbar-thumb,
+.ff-table-container::-webkit-scrollbar-thumb,
+.table-container-modern::-webkit-scrollbar-thumb,
+.scanners-table-wrap::-webkit-scrollbar-thumb,
+.sub-table-scroll::-webkit-scrollbar-thumb,
+.tech-table-responsive-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+  border-radius: 4px;
+}
+
+.global-table-wrapper::-webkit-scrollbar-thumb:hover,
+.sub-table-card::-webkit-scrollbar-thumb:hover,
+.vuln-table-wrapper::-webkit-scrollbar-thumb:hover,
+.ssl-table-wrapper::-webkit-scrollbar-thumb:hover,
+.vm-table-wrapper::-webkit-scrollbar-thumb:hover,
+.mv-table-wrapper::-webkit-scrollbar-thumb:hover,
+.ff-table-container::-webkit-scrollbar-thumb:hover,
+.table-container-modern::-webkit-scrollbar-thumb:hover,
+.scanners-table-wrap::-webkit-scrollbar-thumb:hover,
+.sub-table-scroll::-webkit-scrollbar-thumb:hover,
+.tech-table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.6);
+}
 
 th {
   padding: 0.85rem 1.25rem;

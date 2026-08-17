@@ -358,6 +358,7 @@
 /* Endpoints / Open Ports style table */
 .mv-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   text-align: left;
 }

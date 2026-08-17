@@ -150,6 +150,7 @@
 
 .modern-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
 }
 

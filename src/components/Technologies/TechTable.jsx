@@ -232,10 +232,10 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                           )}
                         </div>
                       </td>
-                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={row.createdDate}>
                         {row.createdDate || '—'}
                       </td>
-                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={row.updatedDate}>
                         {row.updatedDate || '—'}
                       </td>
                     </tr>

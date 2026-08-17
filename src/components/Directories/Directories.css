@@ -249,7 +249,7 @@
   overflow: hidden;
 }
 
-.dir-table { width: 100%; border-collapse: collapse; text-align: left; }
+.dir-table { width: 100%; min-width: max-content; border-collapse: collapse; text-align: left; }
 .dir-table th { padding: 1rem 1.5rem; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); }
 .dir-table td { padding: 1.5rem; border-bottom: 1px solid var(--border-color); vertical-align: middle; font-size: 0.875rem; color: var(--text-primary); }
 

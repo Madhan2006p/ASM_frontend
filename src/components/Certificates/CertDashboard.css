@@ -518,6 +518,7 @@
 
 .ssl-table {
   width: 100%;
+  min-width: max-content;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.875rem;
