@@ -190,19 +190,21 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
             <thead>
               <tr>
                 <th style={{ width: '4%' }}>S.No</th>
-                <th style={{ width: '18%' }}>Domain</th>
-                <th style={{ width: '8%' }}>Status</th>
-                <th style={{ width: '12%' }}>Title</th>
-                <th style={{ width: '21%' }}>IP Addresses</th>
-                <th style={{ width: '15%' }}>Ports</th>
-                <th style={{ width: '12%' }}>Screenshot</th>
-                <th style={{ width: '10%' }}>Location</th>
+                <th style={{ width: '16%' }}>Domain</th>
+                <th style={{ width: '7%' }}>Status</th>
+                <th style={{ width: '10%' }}>Title</th>
+                <th style={{ width: '16%' }}>IP Addresses</th>
+                <th style={{ width: '12%' }}>Ports</th>
+                <th style={{ width: '10%' }}>Screenshot</th>
+                <th style={{ width: '8%' }}>Location</th>
+                <th style={{ width: '9%' }}>Created Date</th>
+                <th style={{ width: '8%' }}>Updated Date</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="10" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Fetching subdomain intelligence...
                   </td>
@@ -289,13 +291,19 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
                         {item.location ? item.location : '-'}
                       </div>
                     </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.created_date}>
+                      {formatDate(item.created_date)}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.updated_date}>
+                      {formatDate(item.updated_date)}
+                    </td>
                   </tr>
                   );
               })}
 
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
+                  <td colSpan="10" style={{textAlign: 'center', padding: '3rem', color: 'var(--text-muted)'}}>
                     {getEmptyStateText()}
                   </td>
                 </tr>
