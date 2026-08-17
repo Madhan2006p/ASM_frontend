@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronRight, User, LogOut, Shield, CreditCard, Bell, AlertTriangle, Search, Building2, Sun, Moon } from 'lucide-react';
+import { User, LogOut, Shield, CreditCard, Bell, AlertTriangle, Search, Building2, Sun, Moon } from 'lucide-react';
 import { BASE_URL } from '../../utils/api';
 import './Header.css';
 
@@ -9,18 +9,6 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
   
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
-
-  const getParentLabel = () => {
-    if (['Asset Discovery Dashboard', 'Subdomain Discovery', 'Endpoints', 'Open Ports', 'Directories', 'Technologies', 'SSL Certificates'].includes(activePage)) return 'ASSET DISCOVERY';
-    if (['Vulnerabilities'].includes(activePage)) return 'VULNERABILITY MANAGEMENT';
-    if (['Email Security Dashboard', 'Email Security'].includes(activePage)) return 'EMAIL SECURITY';
-    if (['Mobile Security Dashboard', 'Mobile Security'].includes(activePage)) return 'MOBILE SECURITY';
-    if (['Attack Path Analysis Dashboard'].includes(activePage)) return 'ATTACK PATH ANALYSIS';
-    if (['Surface Web'].includes(activePage)) return 'SURFACE WEB MONITORING';
-    if (['Brand Monitoring Dashboard', 'Suspicious Domain', 'Phishing Domain', 'Impersonating Account', 'Anti Malware'].includes(activePage)) return 'BRAND MONITORING';
-    if (['Marketplace', 'Settings'].includes(activePage)) return 'MANAGE';
-    return 'DASHBOARD';
-  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -45,18 +33,8 @@ const Header = ({ activePage, setActivePage, onLogout, user, assignedDomains = [
 
   return (
     <div className="header">
-      <div className="header-breadcrumbs">
-        {activePage === 'Executive Dashboard' ? (
-          <div className="header-page-title">
-            <h1 style={{ fontSize: '0.68rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'inherit' }}>EXECUTIVE DASHBOARD</h1>
-          </div>
-        ) : (
-          <>
-            <span className="breadcrumb-link">{getParentLabel()}</span>
-            <ChevronRight size={14} className="breadcrumb-separator" />
-            <span className="breadcrumb-current">{activePage}</span>
-          </>
-        )}
+      <div className="header-left">
+        {/* Breadcrumbs removed */}
       </div>
 
       <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center' }}>
