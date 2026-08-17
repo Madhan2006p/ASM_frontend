@@ -231,6 +231,17 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
     return risk === 'HIGH' || risk === 'CRITICAL';
   }).length;
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return String(dateStr).split('T')[0] || '—';
+      return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
+    } catch {
+      return '—';
+    }
+  };
+
   return (
     <div className="global-page-container">
       <div className="global-max-width">
@@ -265,19 +276,21 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                 <th>Subdomain Scope</th>
                 <th>Risk Level</th>
                 <th>Status</th>
-                <th>Last Detected</th>
+                <th>Created Date</th>
+                <th>Updated Date</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Loading directories from scan database...
                   </td>
                 </tr>
               ) : currentData.map(item => {
-                const dateStr = item.created ? new Date(item.created).toLocaleDateString() : 'Recent';
+                const createdStr = formatDate(item.created_date || item.created_at || item.created || item.directories_created);
+                const updatedStr = formatDate(item.updated_date || item.updated_at || item.updated || item.created);
                 return (
                   <tr key={item.id}>
                     <td className="dir-path">
@@ -324,13 +337,18 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
                     <td>
                       <span className={`dir-status-pill ${getStatusClass(item.status)}`}>{item.status}</span>
                     </td>
-                    <td className="dir-last-seen">{dateStr}</td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.created_date || item.created_at || item.created || item.directories_created}>
+                      {createdStr}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.updated_date || item.updated_at || item.updated}>
+                      {updatedStr}
+                    </td>
                   </tr>
                 );
               })}
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No directories found for this scan.
                   </td>
                 </tr>

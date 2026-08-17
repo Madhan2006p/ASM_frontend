@@ -108,9 +108,11 @@ const CertVulnerabilitiesTable = ({
                 <th>Domain</th>
                 <th>IP</th>
                 <th>SSL Grade</th>
-                <th>Vulnerability</th>
+                <th>Vulnerability / Misconfiguration</th>
                 <th>Severity</th>
                 <th>Status</th>
+                <th>Created Date</th>
+                <th>Updated Date</th>
               </tr>
             </thead>
 
@@ -127,15 +129,20 @@ const CertVulnerabilitiesTable = ({
                       {row.domain}
                     </td>
                     <td style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
-                      {row.ip || '103.243.32.9'}
+                      {row.ip && row.ip !== '—' ? row.ip : <span style={{ color: '#EF4444', fontSize: '0.78rem', fontWeight: 600 }}>DNS Not Found</span>}
                     </td>
                     <td>
                       <span className={`ssl-grade-badge grade-${gradeKey}`}>
                         {row.sslGrade || 'B'}
                       </span>
                     </td>
-                    <td style={{ fontWeight: '600', color: 'var(--brand-primary)', maxWidth: '240px' }}>
-                      {row.vulnerability}
+                    <td style={{ fontWeight: '600', color: 'var(--brand-primary)', maxWidth: '280px' }} title={row.description}>
+                      <div>{row.vulnerability}</div>
+                      {row.description && row.description !== 'SSL security vulnerability detected.' && (
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal', marginTop: '0.2rem', lineHeight: '1.2' }}>
+                          {row.description}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <span className={`ssl-severity-pill ${sevKey}`}>
@@ -143,9 +150,15 @@ const CertVulnerabilitiesTable = ({
                       </span>
                     </td>
                     <td>
-                      <span className={`ssl-status-badge ${row.status?.toLowerCase().replace(/\s+/g, '-') || 'unreviewed'}`}>
-                        {row.status || 'Unreviewed'}
+                      <span className={`ssl-status-badge ${row.status?.toLowerCase().replace(/\s+/g, '-') || 'open'}`}>
+                        {row.status || 'Open'}
                       </span>
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={row.created_date || row.created}>
+                      {row.created || '—'}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={row.updated_date || row.updated}>
+                      {row.updated || '—'}
                     </td>
                   </tr>
                 );
@@ -153,7 +166,7 @@ const CertVulnerabilitiesTable = ({
 
               {paginatedVulns.length === 0 && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={9}>
                     <div className="ssl-empty-container">
                       <ShieldAlert size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">

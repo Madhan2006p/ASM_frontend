@@ -83,7 +83,8 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
               severity: mapSeverity(portNum),
               risk: mapRiskScore(portNum),
               status: 'Open',
-              lastSeen: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : 'Recent'
+              createdDate: item.created_date || item.created_at,
+              updatedDate: item.updated_date || item.updated_at
             });
           });
         });
@@ -98,6 +99,17 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     };
     loadPorts();
   }, [activeScanId]);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return String(dateStr).split('T')[0] || '—';
+      return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
+    } catch {
+      return '—';
+    }
+  };
 
   const filteredData = portsList.filter(item => {
     if (severityFilter === 'All') return true;
@@ -119,9 +131,9 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(currentPage + 1); };
 
   const exportToCSV = () => {
-    const headers = ['Host', 'IP Address', 'Port', 'Protocol', 'Service', 'Severity', 'Risk Score', 'Status', 'Last Seen'];
+    const headers = ['Host', 'IP Address', 'Port', 'Protocol', 'Service', 'Severity', 'Risk Score', 'Status', 'Created At', 'Updated At'];
     const csvRows = filteredData.map(item => [
-      item.host, item.ipStr || item.ip, item.port, item.protocol, item.service, item.severity, item.risk, item.status, item.lastSeen
+      item.host, item.ipStr || item.ip, item.port, item.protocol, item.service, item.severity, item.risk, item.status, formatDate(item.createdDate), formatDate(item.updatedDate)
     ].map(val => `"${val}"`).join(','));
     
     const csvContent = [headers.join(','), ...csvRows].join('\n');
@@ -181,13 +193,14 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                 <th>Severity</th>
                 <th>Risk Score</th>
                 <th>Status</th>
-                <th>Last Seen</th>
+                <th>Created Date</th>
+                <th>Updated Date</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Loading open ports from database...
                   </td>
@@ -237,12 +250,17 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                   <td>
                     <span className="op-status-pill">{item.status}</span>
                   </td>
-                  <td className="op-last-seen">{item.lastSeen}</td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.createdDate}>
+                    {formatDate(item.createdDate)}
+                  </td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={item.updatedDate}>
+                    {formatDate(item.updatedDate)}
+                  </td>
                 </tr>
               ))}
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No open ports found for this scan.
                   </td>
                 </tr>

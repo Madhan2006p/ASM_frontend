@@ -175,6 +175,14 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                       </span>
                     </div>
                   </th>
+                  <th style={{ width: '8%', cursor: 'pointer' }} onClick={() => handleSort('updatedDate')}>
+                    <div className="th-content">
+                      Updated Date
+                      <span className="th-icons">
+                        <ArrowUpDown size={12} className="header-icon" />
+                      </span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -226,6 +234,9 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                       </td>
                       <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
                         {row.createdDate || '—'}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                        {row.updatedDate || '—'}
                       </td>
                     </tr>
                   );

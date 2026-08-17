@@ -147,6 +147,8 @@ const CertificatesTable = ({
                 <th>RDNS</th>
                 <th>SSL Grade</th>
                 <th>Iss Name</th>
+                <th>Created Date</th>
+                <th>Updated Date</th>
               </tr>
             </thead>
 
@@ -195,13 +197,27 @@ const CertificatesTable = ({
                     >
                       {cleanIssuerName(row.issuer)}
                     </td>
+                    <td
+                      style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      onClick={() => onSelectCert && onSelectCert(row)}
+                      title={row.created_date || row.created_at || row.created}
+                    >
+                      {row.created || '—'}
+                    </td>
+                    <td
+                      style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
+                      onClick={() => onSelectCert && onSelectCert(row)}
+                      title={row.updated_date || row.updated_at || row.updated}
+                    >
+                      {row.updated || '—'}
+                    </td>
                   </tr>
                 );
               })}
 
               {paginatedCerts.length === 0 && (
                 <tr>
-                  <td colSpan={7}>
+                  <td colSpan={9}>
                     <div className="ssl-empty-container">
                       <ShieldCheck size={44} color="#94A3B8" />
                       <div className="ssl-empty-title">

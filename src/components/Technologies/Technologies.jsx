@@ -64,16 +64,26 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           // Only include subdomains which actually have technologies
           if (!finalTechs || finalTechs.length === 0) return;
 
-          let dateStr;
-          const rawDate = src.created_at || src.created_date || src.discovered_at || src.created;
+          let dateStr = '—';
+          const rawDate = src.created_date || src.created_at || src.discovered_at || src.created;
           if (rawDate) {
             try {
-              dateStr = new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+              const d = new Date(rawDate);
+              dateStr = isNaN(d.getTime()) ? String(rawDate).split('T')[0] : d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
             } catch {
               dateStr = String(rawDate);
             }
-          } else {
-            dateStr = '—';
+          }
+
+          let updatedStr = '—';
+          const rawUpdated = src.updated_date || src.updated_at || src.last_scan || src.updated;
+          if (rawUpdated) {
+            try {
+              const d = new Date(rawUpdated);
+              updatedStr = isNaN(d.getTime()) ? String(rawUpdated).split('T')[0] : d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
+            } catch {
+              updatedStr = String(rawUpdated);
+            }
           }
 
           rowsByHost[host] = {
@@ -83,6 +93,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
             status: src.status || 'Active',
             title: src.title || '-',
             createdDate: dateStr,
+            updatedDate: updatedStr,
             technologies: finalTechs,
           };
         };

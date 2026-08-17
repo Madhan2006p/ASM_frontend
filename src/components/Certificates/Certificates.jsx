@@ -50,6 +50,17 @@ const Certificates = ({
         const certData = await api.get(certEndpoint).catch(() => []);
         const certResults = Array.isArray(certData) ? certData : (certData.results || []);
 
+        const formatDate = (dateStr) => {
+          if (!dateStr) return '—';
+          try {
+            const d = new Date(dateStr);
+            if (isNaN(d.getTime())) return String(dateStr).split('T')[0] || '—';
+            return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
+          } catch {
+            return '—';
+          }
+        };
+
         {
           const mappedCerts = certResults.map((c, idx) => {
             const isError = c.cipher_suite?.startsWith('Connection error') || c.cipher_suite?.startsWith('Error');
@@ -73,6 +84,8 @@ const Certificates = ({
             }
 
             const certStatus = isExpired ? 'Expired' : (isError ? 'Invalid' : (c.status || 'Valid'));
+            const createdStr = formatDate(c.created_date || c.created_at);
+            const updatedStr = formatDate(c.updated_date || c.updated_at);
 
             return {
               id: c.id || `api-cert-${idx}`,
@@ -91,8 +104,12 @@ const Certificates = ({
               status: certStatus,
               location: c.location || 'India',
               locationFlag: c.location?.includes('US') ? '🇺🇸' : '🇮🇳',
-              created: c.created_at ? new Date(c.created_at).toLocaleDateString() : '—',
-              updated: c.updated_at ? new Date(c.updated_at).toLocaleDateString() : '—',
+              created: createdStr,
+              updated: updatedStr,
+              created_date: c.created_date || c.created_at,
+              updated_date: c.updated_date || c.updated_at,
+              created_at: c.created_at,
+              updated_at: c.updated_at,
               daysLeft,
               isTrusted: c.is_trusted !== undefined ? c.is_trusted : !isExpired,
               tlsVersion: isError ? 'None' : 'TLS 1.3',
@@ -110,27 +127,121 @@ const Certificates = ({
         const vulnData = await api.get(vulnEndpoint).catch(() => []);
         const vulnResults = Array.isArray(vulnData) ? vulnData : (vulnData.results || []);
         
-        const sslVulnsOnly = vulnResults.filter(v => 
-          (v.finding && v.finding.toLowerCase().includes('ssl')) ||
-          (v.template_id && v.template_id.toLowerCase().includes('ssl')) ||
-          (v.vulnerability_id && v.vulnerability_id.toLowerCase().includes('ssl'))
-        );
+        const sslKeywords = ['ssl', 'tls', 'cipher', 'certificate', 'hsts', 'poodle', 'beast', 'heartbleed', 'robot', 'sweet32', 'drown', 'logjam', 'freak', 'crime', 'breach', 'renegotiation', 'sni', 'ocsp'];
+        const isSslRelated = (v) => {
+          const text = `${v.finding || ''} ${v.template_id || ''} ${v.vulnerability_id || ''} ${v.description || ''}`.toLowerCase();
+          return sslKeywords.some(kw => text.includes(kw));
+        };
 
-        {
-          const mappedVulns = sslVulnsOnly.map((v, idx) => ({
-            id: v.id || `api-vuln-${idx}`,
-            sNo: idx + 1,
-            vulnerability: v.finding || v.vulnerability_id || 'SSL Configuration Risk',
-            domain: v.subdomain || v.domain || 'target.com',
-            cveId: v.cve || 'N/A',
-            severity: (v.severity || 'MEDIUM').toUpperCase(),
-            description: v.description || 'SSL security vulnerability detected.',
-            created: v.discovered_at ? new Date(v.discovered_at).toLocaleDateString() : '21-12-2024',
-            updated: '20-03-2025'
-          }));
+        const sslVulnsFromDb = vulnResults.filter(isSslRelated);
+        const mappedVulnsList = [];
+        const seenVulnKeys = new Set();
 
-          setVulnerabilities(mappedVulns);
-        }
+        // 1. Add DB Vulnerabilities
+        sslVulnsFromDb.forEach((v, idx) => {
+          const dom = v.subdomain || v.domain || 'target.com';
+          const title = v.finding || v.vulnerability_id || 'SSL Configuration Risk';
+          const key = `${dom}::${title}`.toLowerCase();
+          if (!seenVulnKeys.has(key)) {
+            seenVulnKeys.add(key);
+            mappedVulnsList.push({
+              id: v.id || `api-vuln-${idx}`,
+              sNo: mappedVulnsList.length + 1,
+              vulnerability: title,
+              domain: dom,
+              ip: '—',
+              sslGrade: 'C',
+              cveId: v.cve || 'N/A',
+              severity: (v.severity || 'MEDIUM').toUpperCase(),
+              status: v.finding_status || 'Open',
+              description: v.description || 'SSL/TLS security misconfiguration detected.',
+              created: formatDate(v.discovered_at || v.created_at),
+              updated: formatDate(v.discovered_at || v.created_at),
+              created_date: v.discovered_at || v.created_at,
+              updated_date: v.discovered_at || v.created_at,
+            });
+          }
+        });
+
+        // 2. Derive SSL/TLS Misconfigurations from Certificate scan results
+        certResults.forEach((c) => {
+          const dom = c.subdomain || c.domain || '';
+          if (!dom) return;
+          const ip = c.ip || '—';
+          const grade = c.ssl_grade || 'B';
+          const createdDate = c.created_date || c.created_at;
+          const updatedDate = c.updated_date || c.updated_at;
+
+          const addMisconfig = (title, severity, desc) => {
+            const key = `${dom}::${title}`.toLowerCase();
+            if (!seenVulnKeys.has(key)) {
+              seenVulnKeys.add(key);
+              mappedVulnsList.push({
+                id: `misconfig-${dom}-${title}`.replace(/[^a-zA-Z0-9-]/g, '_'),
+                sNo: mappedVulnsList.length + 1,
+                vulnerability: title,
+                domain: dom,
+                ip: ip,
+                sslGrade: grade,
+                cveId: 'N/A',
+                severity: severity.toUpperCase(),
+                status: 'Open',
+                description: desc,
+                created: formatDate(createdDate),
+                updated: formatDate(updatedDate),
+                created_date: createdDate,
+                updated_date: updatedDate,
+              });
+            }
+          };
+
+          // Check if expired
+          if (c.expiry_date) {
+            const parts = c.expiry_date.split('-');
+            if (parts.length === 3) {
+              const expiry = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+              if (!isNaN(expiry.getTime()) && expiry < new Date()) {
+                addMisconfig('Expired SSL/TLS Certificate', 'HIGH', `Certificate expired on ${c.expiry_date}. Clients will encounter security warnings.`);
+              }
+            }
+          }
+          if (c.days_left !== undefined && c.days_left <= 0) {
+            addMisconfig('Expired SSL/TLS Certificate', 'HIGH', 'Certificate has passed its validity period.');
+          }
+
+          // Check if untrusted
+          if (c.is_trusted === false) {
+            addMisconfig('Untrusted / Self-Signed SSL Certificate', 'HIGH', 'Certificate is self-signed or not signed by a recognized Certificate Authority.');
+          }
+
+          // Check domain alignment
+          if (c.domain_aligned === false) {
+            addMisconfig('Certificate Hostname Mismatch (SAN Mismatch)', 'MEDIUM', `Certificate Common Name / SAN does not match host "${dom}".`);
+          }
+
+          // Check weak ciphers
+          if (c.weak_ciphers && Array.isArray(c.weak_ciphers) && c.weak_ciphers.length > 0) {
+            c.weak_ciphers.forEach(wc => {
+              addMisconfig(`Weak Cipher Suite: ${wc}`, 'HIGH', `Server supports insecure/deprecated cipher suite (${wc}).`);
+            });
+          }
+
+          // Check certificate vulnerabilities array
+          if (c.vulnerabilities && Array.isArray(c.vulnerabilities) && c.vulnerabilities.length > 0) {
+            c.vulnerabilities.forEach(cv => {
+              addMisconfig(String(cv), 'MEDIUM', `SSL/TLS audit finding: ${cv}`);
+            });
+          }
+
+          // Check poor SSL grade
+          if (['C', 'D', 'E', 'F'].includes((c.ssl_grade || '').toUpperCase())) {
+            addMisconfig(`Suboptimal SSL Grade (${c.ssl_grade})`, 'MEDIUM', `Server received a low SSL/TLS grade (${c.ssl_grade}) due to security parameter weakness.`);
+          }
+        });
+
+        // Re-number sNo
+        mappedVulnsList.forEach((item, i) => { item.sNo = i + 1; });
+        setVulnerabilities(mappedVulnsList);
 
         // Fetch subdomains to derive targets without SSL certificates
         const subEndpoint = activeScanId
@@ -155,8 +266,10 @@ const Certificates = ({
           teamAction: 'Unassigned',
           location: s.location || 'India',
           locationFlag: s.location?.includes('US') ? '🇺🇸' : '🇮🇳',
-          created: s.created_at ? new Date(s.created_at).toLocaleDateString() : '—',
-          updated: s.updated_at ? new Date(s.updated_at).toLocaleDateString() : '—'
+          created: formatDate(s.created_date || s.created_at),
+          updated: formatDate(s.updated_date || s.updated_at),
+          created_date: s.created_date || s.created_at,
+          updated_date: s.updated_date || s.updated_at,
         }));
 
         setNoCerts(mappedNoCerts);

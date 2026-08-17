@@ -107,8 +107,19 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     }, 3000);
   };
 
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return String(dateStr).split('T')[0] || '—';
+      return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0].substring(0, 5);
+    } catch {
+      return '—';
+    }
+  };
+
   const exportToCSV = () => {
-    const headers = ['ID', 'Path', 'Method', 'Status', 'Risk Score', 'Asset', 'Authentication', 'Discovered'];
+    const headers = ['ID', 'Path', 'Method', 'Status', 'Risk Score', 'Asset', 'Authentication', 'Created At', 'Updated At'];
     
     const csvRows = filteredData.map(ep => [
       `EP-${ep.id}`,
@@ -118,7 +129,8 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       mapRisk(ep.threat_count),
       ep.subdomain_name || getAssetFromUrl(ep.http_url, ''),
       mapAuth(ep.http_status),
-      ep.discovered_at ? new Date(ep.discovered_at).toLocaleDateString() : 'Recent'
+      formatDate(ep.created_date || ep.created_at || ep.discovered_at),
+      formatDate(ep.updated_date || ep.updated_at || ep.last_scan)
     ].map(val => `"${val}"`).join(','));
     
     const csvContent = [headers.join(','), ...csvRows].join('\n');
@@ -162,11 +174,11 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         <PageHeaderCard 
           title="Endpoints"
           stats={[
-            { label: 'ALL ROUTES', value: totalRoutes.toString(), subtext: 'Total cataloged', onClick: () => setRiskFilter('All Risks') },
-            { label: 'CRITICAL', value: criticalCount.toString(), subtext: 'Immediate action', onClick: () => setRiskFilter('Critical') },
-            { label: 'HIGH RISK', value: highCount.toString(), subtext: 'Prioritize review', onClick: () => setRiskFilter('High') },
-            { label: 'MEDIUM RISK', value: mediumCount.toString(), subtext: 'Monitor & plan', onClick: () => setRiskFilter('Medium') },
-            { label: 'LOW RISK', value: lowCount.toString(), subtext: 'Minimal impact', onClick: () => setRiskFilter('Low') }
+            { label: 'ALL ROUTES', value: totalRoutes.toString(), subtext: 'Discovered APIs', onClick: () => { setMethodFilter('All Methods'); setRiskFilter('All Risks'); } },
+            { label: 'CRITICAL RISK', value: criticalCount.toString(), subtext: 'High threat routes', onClick: () => setRiskFilter('Critical') },
+            { label: 'HIGH RISK', value: highCount.toString(), subtext: 'Elevated threats', onClick: () => setRiskFilter('High') },
+            { label: 'MEDIUM RISK', value: mediumCount.toString(), subtext: 'Moderate exposure', onClick: () => setRiskFilter('Medium') },
+            { label: 'LOW RISK', value: lowCount.toString(), subtext: 'Standard endpoints', onClick: () => setRiskFilter('Low') }
           ]}
         />
 
@@ -180,12 +192,14 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                 <th>Risk Score</th>
                 <th>Asset</th>
                 <th>Authentication</th>
+                <th>Created Date</th>
+                <th>Updated Date</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     <RefreshCw className="spin" size={24} style={{ margin: '0 auto 0.5rem auto', display: 'block' }} />
                     Loading endpoints from database...
                   </td>
@@ -195,13 +209,14 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                 const asset = ep.subdomain_name || getAssetFromUrl(ep.http_url, 'Default Asset');
                 const risk = mapRisk(ep.threat_count);
                 const auth = mapAuth(ep.http_status);
-                const dateStr = ep.discovered_at ? new Date(ep.discovered_at).toLocaleDateString() : 'Recent';
+                const createdStr = formatDate(ep.created_date || ep.created_at || ep.discovered_at);
+                const updatedStr = formatDate(ep.updated_date || ep.updated_at || ep.last_scan);
                 return (
                   <tr key={ep.id}>
                     <td>
                       <div className="ep-path">{path}</div>
                       <div className="ep-id-row">
-                        <span className="ep-id-badge">EP-{ep.id}</span> • Discovered {dateStr}
+                        <span className="ep-id-badge">EP-{ep.id}</span>
                       </div>
                     </td>
                     <td>
@@ -225,12 +240,18 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
                         {auth}
                       </span>
                     </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={ep.created_date || ep.created_at || ep.discovered_at}>
+                      {createdStr}
+                    </td>
+                    <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', whiteSpace: 'nowrap' }} title={ep.updated_date || ep.updated_at || ep.last_scan}>
+                      {updatedStr}
+                    </td>
                   </tr>
                 );
               })}
               {!loading && currentData.length === 0 && (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>
                     No endpoints found for this scan.
                   </td>
                 </tr>
