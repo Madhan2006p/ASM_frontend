@@ -116,14 +116,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
   return (
     <div className="card tech-table-card">
 
-      {/* 3-Engine Technology Pipeline Banner */}
-      <div className="tech-pipeline-strip">
-        <span className="tech-pipeline-label">⚡ 3-Engine Detection Suite:</span>
-        <span className="tech-engine-pill tech-engine-wappalyzer">1. Wappalyzer Multi-Runner (Go + JS + Browser)</span>
-        <span className="tech-engine-pill tech-engine-whatcms">2. WhatCMS Engine</span>
-        <span className="tech-engine-pill tech-engine-headeranalysis">3. Heuristic HTTP Headers</span>
-      </div>
-
       {/* 8-Column Reference Table */}
       <div className="card global-table-wrapper" style={{ padding: '0', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
         {loading ? (
@@ -216,7 +208,7 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                         {/* Inline badges (capped) + "+N more" button → full popup */}
                         <div className="tech-badges-wrap">
                           {techs.slice(0, INLINE_BADGE_LIMIT).map((tech, tIdx) => (
-                            <TechBadge key={tIdx} raw={tech} showEngine={true} />
+                            <TechBadge key={tIdx} raw={tech} />
                           ))}
                           {techs.length === 0 && (
                             <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No technologies</span>
@@ -371,18 +363,6 @@ const TechTable = ({ onDataFiltered, subdomainTechs = [], loading, selectedDomai
                             <span className="tech-modal-card-detail-label">Category</span>
                             <span className="tech-modal-card-detail-value">{t.category || 'Uncategorized'}</span>
                           </div>
-                          {t.engines && t.engines.length > 0 && (
-                            <div className="tech-modal-card-cat" style={{ alignItems: 'flex-start', flexDirection: 'column', gap: '0.2rem' }}>
-                              <span className="tech-modal-card-detail-label">Detected by</span>
-                              <div className="tech-engine-badges-list">
-                                {t.engines.map((eng, ei) => (
-                                  <span key={ei} className={`tech-engine-pill tech-engine-${eng.toLowerCase().replace(/[^a-z0-9]/g, '')}`}>
-                                    {eng}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
                         <div className={`tech-modal-card-status ${t.outdated ? 'eol' : 'ok'}`}>
                           {t.outdated ? (
