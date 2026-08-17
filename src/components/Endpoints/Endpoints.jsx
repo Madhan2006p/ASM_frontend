@@ -20,16 +20,15 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
   const [selectedEndpoint, setSelectedEndpoint] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Fetch endpoints on mount and when activeScanId changes
+  // Fetch endpoints on mount and when activeScanId or selectedDomain changes
   useEffect(() => {
     const loadEndpoints = async () => {
-      if (!activeScanId) {
-        setEndpoints([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/endpoints/?scan=${activeScanId}`);
+        const endpoint = activeScanId
+          ? `/api/attacksurface/endpoints/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/endpoints/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/endpoints/`);
+        const data = await api.get(endpoint);
         const list = Array.isArray(data) ? data : (data.results || []);
         list.sort((a, b) => (b.threat_count || 0) - (a.threat_count || 0));
         setEndpoints(list);
@@ -41,7 +40,7 @@ const Endpoints = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       }
     };
     loadEndpoints();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   const getPathFromUrl = (urlStr) => {
     try {

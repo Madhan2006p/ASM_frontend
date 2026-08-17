@@ -47,6 +47,14 @@ const SubdomainDiscovery = ({ activeScanId, activeTarget, scansList, handleSelec
             list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
           } catch (e) { /* skip failed */ }
         }
+      } else {
+        // Fallback: fetch direct domain or all subdomains
+        const ep = selectedDomain
+          ? `/api/attacksurface/subdomains/?domain=${encodeURIComponent(selectedDomain)}`
+          : `/api/attacksurface/subdomains/`;
+        const data = await api.get(ep).catch(() => []);
+        const list = Array.isArray(data) ? data : (data.results || []);
+        list.forEach(item => { if (!seenIds.has(item.id)) { seenIds.add(item.id); allData.push(item); } });
       }
 
       setSubdomains(allData);

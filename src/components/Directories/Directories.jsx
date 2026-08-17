@@ -33,13 +33,12 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
   // Fetch directories
   useEffect(() => {
     const loadDirectories = async () => {
-      if (!activeScanId) {
-        setDirectories([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/directories/?scan=${activeScanId}`);
+        const endpoint = activeScanId
+          ? `/api/attacksurface/directories/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/directories/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/directories/`);
+        const data = await api.get(endpoint);
         const list = Array.isArray(data) ? data : (data.results || []);
         setDirectories(list);
       } catch (e) {
@@ -50,7 +49,7 @@ const Directories = ({ activeScanId, assignedDomains, selectedDomain, setSelecte
       }
     };
     loadDirectories();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   // ── Legacy fallbacks (only used for rows stored before the analysis engine) ──
   const getPathFromUrl = (urlStr) => {

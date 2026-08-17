@@ -15,10 +15,6 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
   // "No technologies" state) instead of only hosts that had techs.
   useEffect(() => {
     const loadTechnologies = async () => {
-      if (!activeScanId) {
-        setSubdomainTechs([]);
-        return;
-      }
       try {
         setLoading(true);
 
@@ -35,10 +31,17 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
           return host;
         };
 
+        const techEndpoint = activeScanId
+          ? `/api/attacksurface/technologies/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/technologies/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/technologies/`);
+        const subEndpoint = activeScanId
+          ? `/api/attacksurface/subdomains/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/subdomains/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/subdomains/`);
+
         // 1) Technology rows (domain -> technologies) from the tech phase
         const [techData, subData] = await Promise.all([
-          api.get(`/api/attacksurface/technologies/?scan=${activeScanId}`).catch(() => []),
-          api.get(`/api/attacksurface/subdomains/?scan=${activeScanId}`).catch(() => []),
+          api.get(techEndpoint).catch(() => []),
+          api.get(subEndpoint).catch(() => []),
         ]);
         const techList = Array.isArray(techData) ? techData : ((techData && techData.results) || []);
         const subList = Array.isArray(subData) ? subData : ((subData && subData.results) || []);
@@ -111,7 +114,7 @@ const Technologies = ({ activeScanId, assignedDomains, selectedDomain, setSelect
       }
     };
     loadTechnologies();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   const [techFilter, setTechFilter] = useState('ALL'); // 'ALL' | 'ACTIVE' | 'INACTIVE' | 'WITH_VERSION'
 

@@ -37,16 +37,15 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
     return 3.0;
   };
 
-  // Fetch open ports on activeScanId change
+  // Fetch open ports on activeScanId or selectedDomain change
   useEffect(() => {
     const loadPorts = async () => {
-      if (!activeScanId) {
-        setPortsList([]);
-        return;
-      }
       try {
         setLoading(true);
-        const data = await api.get(`/api/attacksurface/open-ports/?scan=${activeScanId}`);
+        const endpoint = activeScanId
+          ? `/api/attacksurface/open-ports/?scan=${activeScanId}`
+          : (selectedDomain ? `/api/attacksurface/open-ports/?domain=${encodeURIComponent(selectedDomain)}` : `/api/attacksurface/open-ports/`);
+        const data = await api.get(endpoint);
         const list = Array.isArray(data) ? data : (data.results || []);
         
         // Flatten domain -> ports list
@@ -98,7 +97,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
       }
     };
     loadPorts();
-  }, [activeScanId]);
+  }, [activeScanId, selectedDomain]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
