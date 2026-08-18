@@ -50,6 +50,7 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
         
         // Flatten domain -> ports list
         const flat = [];
+        const seenPortKeys = new Set();
         list.forEach((item) => {
           const ports = Array.isArray(item.ports) ? item.ports : [];
           // IP Address(es) resolved by the backend (same values as Subdomain Discovery)
@@ -69,6 +70,12 @@ const OpenPorts = ({ activeScanId, assignedDomains, selectedDomain, setSelectedD
             const product = typeof p === 'object' ? p.product : '';
             const version = typeof p === 'object' ? p.version : '';
             
+            const dedupeKey = `${(item.domain || '').toLowerCase()}:${portNum}:${(proto || 'tcp').toLowerCase()}`;
+            if (seenPortKeys.has(dedupeKey)) {
+              return;
+            }
+            seenPortKeys.add(dedupeKey);
+
             flat.push({
               id: `${item.id}-${idx}`,
               host: item.domain,
